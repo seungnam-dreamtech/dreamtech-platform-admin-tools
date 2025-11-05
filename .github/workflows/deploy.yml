@@ -1,0 +1,59 @@
+name: Deploy to S3 + CloudFront
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build
+      env:
+        NODE_ENV: production
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+    - name: Deploy to S3
+      run: |
+        # Upload static assets with long cache
+        # 정적 자원을 긴 캐시와 함께 업로드
+        aws s3 sync dist/ s3://${{ vars.S3_BUCKET_NAME }} \
+          --delete \
+          --cache-control "public, max-age=31536000" \
+          --exclude "*.html" \
+          --exclude "*.json"
+
+        # Upload HTML files with no cache
+        # HTML 파일을 캐시 없이 업로드
+        aws s3 sync dist/ s3://${{ vars.S3_BUCKET_NAME }} \
+          --cache-control "no-cache, no-store, must-revalidate" \
+          --include "*.html" \
+          --include "*.json"
+
+    - name: Invalidate CloudFront
+      if: vars.CLOUDFRONT_DISTRIBUTION_ID != ''
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --paths "/*"

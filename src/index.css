@@ -1,0 +1,80 @@
+/* Global styles for DreamTech Admin UI */
+/* DreamTech 관리 UI를 위한 전역 스타일 */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f0f2f5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Ant Design customizations */
+/* Ant Design 커스터마이징 */
+.ant-layout {
+  background: #f0f2f5;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #1890ff;
+}
+
+/* Custom trigger styling */
+/* 커스텀 트리거 스타일링 */
+.trigger {
+  padding: 0 24px;
+  font-size: 18px;
+  line-height: 64px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.trigger:hover {
+  color: #1890ff;
+}
+
+/* Responsive design helpers */
+/* 반응형 디자인 도우미 */
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    position: fixed !important;
+    left: 0;
+    z-index: 999;
+    height: 100vh;
+  }
+
+  .ant-layout-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* Loading and error states */
+/* 로딩 및 에러 상태 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.error-container {
+  text-align: center;
+  padding: 50px;
+}
+
+/* Card hover effects */
+/* 카드 호버 효과 */
+.ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease;
+}

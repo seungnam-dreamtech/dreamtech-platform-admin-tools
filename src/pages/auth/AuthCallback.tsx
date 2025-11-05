@@ -1,0 +1,135 @@
+// OIDC 인증 콜백 페이지
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Spin, Alert, Card } from 'antd';
+import { useAuth } from '../../hooks/useAuth';
+import { ROUTES } from '../../constants';
+
+const AuthCallback: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, handleAuthCallback } = useAuth();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 인증 상태가 true가 되면 대시보드로 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated && !isProcessing) {
+      console.log('🎉 AuthCallback: Authentication state changed to true, redirecting to dashboard');
+      navigate(ROUTES.DASHBOARD, { replace: true });
+    }
+  }, [isAuthenticated, isProcessing, navigate]);
+
+  // 초기 콜백 처리
+  useEffect(() => {
+    let cancelled = false;
+
+    const processCallback = async () => {
+      try {
+        // URL에서 authorization code 확인
+        const urlParams = new URLSearchParams(location.search);
+        const code = urlParams.get('code');
+        const errorParam = urlParams.get('error');
+
+        if (errorParam) {
+          throw new Error(`인증 오류: ${errorParam}`);
+        }
+
+        if (!code) {
+          throw new Error('Authorization code가 없습니다.');
+        }
+
+        console.log('🔄 AuthCallback: Processing authorization code...');
+        setIsProcessing(true);
+
+        // AuthContext의 handleAuthCallback 사용 (단일 UserManager 인스턴스 사용)
+        const user = await handleAuthCallback();
+
+        // 컴포넌트가 언마운트되었으면 상태 업데이트 하지 않음
+        if (cancelled) return;
+
+        if (user) {
+          console.log('🎉 AuthCallback: Authentication successful', {
+            user: user.profile,
+            isExpired: user.expired,
+            accessToken: user.access_token ? 'present' : 'missing'
+          });
+
+          // URL에서 code와 state 파라미터 제거
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, '', cleanUrl);
+
+          // AuthContext가 이미 사용자 상태를 업데이트했으므로 추가 작업 불필요
+        } else {
+          throw new Error('No user returned from authentication');
+        }
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error('Authentication callback error:', error);
+        setError(error instanceof Error ? error.message : '로그인 처리 중 오류가 발생했습니다.');
+
+        // 3초 후 로그인 페이지로 리다이렉트
+        setTimeout(() => {
+          if (!cancelled) {
+            navigate(ROUTES.LOGIN, { replace: true });
+          }
+        }, 3000);
+      } finally {
+        if (!cancelled) {
+          setIsProcessing(false);
+        }
+      }
+    };
+
+    processCallback();
+
+    // Cleanup 함수
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, location.search, handleAuthCallback]);
+
+  if (error) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      }}>
+        <Card style={{ width: 400, textAlign: 'center' }}>
+          <Alert
+            message="로그인 실패"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+          <p>잠시 후 로그인 페이지로 이동합니다...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    }}>
+      <Card style={{ width: 400, textAlign: 'center' }}>
+        <Spin size="large" />
+        <p style={{ marginTop: 16 }}>
+          {isProcessing ? '로그인 처리 중...' : '인증 완료, 대시보드로 이동 중...'}
+        </p>
+      </Card>
+    </div>
+  );
+};
+
+export default AuthCallback;
