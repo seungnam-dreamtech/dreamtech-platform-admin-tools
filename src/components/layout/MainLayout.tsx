@@ -40,68 +40,78 @@ const MainLayout: React.FC = () => {
       label: '대시보드',
     },
     {
-      key: 'users',
-      icon: <TeamOutlined />,
-      label: '사용자 관리',
+      key: 'gateway',
+      icon: <ApiOutlined />,
+      label: '게이트웨이',
       children: [
         {
-          key: ROUTES.USERS,
-          label: '플랫폼 사용자',
-        },
-        {
-          key: '/users/oauth-clients',
-          label: 'OAuth 클라이언트',
+          key: ROUTES.SERVICES,
+          label: '라우팅 설정',
         },
       ],
     },
     {
-      key: 'access-control',
+      key: 'auth-user-management',
       icon: <SafetyOutlined />,
-      label: '권한 & 역할',
+      label: '인증/인가/사용자',
       children: [
         {
-          key: '/access/permissions',
-          label: '권한 정의',
+          key: 'user-management',
+          label: '사용자 관리',
+          children: [
+            {
+              key: ROUTES.USERS,
+              label: '플랫폼 사용자',
+            },
+            {
+              key: '/users/oauth-clients',
+              label: 'OAuth 클라이언트',
+            },
+          ],
         },
         {
-          key: '/access/roles',
-          label: '역할 관리',
+          key: 'access-control',
+          label: '권한 관리',
+          children: [
+            {
+              key: '/access/permissions',
+              label: '권한 정의',
+            },
+            {
+              key: '/access/roles',
+              label: '역할 관리',
+            },
+          ],
         },
         {
           key: '/access/templates',
           label: '권한 템플릿',
         },
-      ],
-    },
-    {
-      key: 'system',
-      icon: <SettingOutlined />,
-      label: '시스템 설정',
-      children: [
         {
-          key: '/system/services',
-          label: '서비스 스코프',
-        },
-        {
-          key: '/system/user-types',
-          label: '사용자 유형',
+          key: 'system-settings',
+          label: '시스템 설정',
+          children: [
+            {
+              key: '/system/services',
+              label: '서비스 스코프',
+            },
+            {
+              key: '/system/user-types',
+              label: '사용자 유형',
+            },
+          ],
         },
       ],
-    },
-    {
-      key: ROUTES.SERVICES,
-      icon: <ApiOutlined />,
-      label: 'API Gateway',
     },
     {
       key: ROUTES.SCHEDULER,
       icon: <ScheduleOutlined />,
-      label: '스케줄링',
+      label: '스케줄러',
     },
     {
       key: ROUTES.NOTIFICATIONS,
       icon: <NotificationOutlined />,
-      label: '알림 관리',
+      label: '알림 서비스',
     },
     {
       key: ROUTES.MONITORING,
