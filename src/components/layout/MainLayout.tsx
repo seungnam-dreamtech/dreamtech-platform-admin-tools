@@ -60,6 +60,10 @@ const MainLayout: React.FC = () => {
           label: '사용자 관리',
           children: [
             {
+              key: '/system/user-types',
+              label: '사용자 유형',
+            },
+            {
               key: ROUTES.USERS,
               label: '플랫폼 사용자',
             },
@@ -70,34 +74,30 @@ const MainLayout: React.FC = () => {
           ],
         },
         {
-          key: 'access-control',
-          label: '권한 관리',
-          children: [
-            {
-              key: '/access/permissions',
-              label: '권한 정의',
-            },
-            {
-              key: '/access/roles',
-              label: '역할 관리',
-            },
-          ],
-        },
-        {
-          key: '/access/templates',
-          label: '권한 템플릿',
-        },
-        {
-          key: 'system-settings',
-          label: '시스템 설정',
+          key: 'service-management',
+          label: '서비스 관리',
           children: [
             {
               key: '/system/services',
               label: '서비스 스코프',
             },
+          ],
+        },
+        {
+          key: 'access-control',
+          label: '권한 관리',
+          children: [
             {
-              key: '/system/user-types',
-              label: '사용자 유형',
+              key: '/access/roles',
+              label: '역할 관리',
+            },
+            {
+              key: '/access/permissions',
+              label: '권한 정의',
+            },
+            {
+              key: '/access/templates',
+              label: '권한 템플릿',
             },
           ],
         },
