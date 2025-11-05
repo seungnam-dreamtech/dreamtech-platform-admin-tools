@@ -51,55 +51,51 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: 'auth-user-management',
-      icon: <SafetyOutlined />,
-      label: '인증/인가/사용자',
+      key: 'user-management',
+      icon: <TeamOutlined />,
+      label: '사용자 관리',
       children: [
         {
-          key: 'user-management',
-          label: '사용자 관리',
-          children: [
-            {
-              key: '/system/user-types',
-              label: '사용자 유형',
-            },
-            {
-              key: ROUTES.USERS,
-              label: '플랫폼 사용자',
-            },
-            {
-              key: '/users/oauth-clients',
-              label: 'OAuth 클라이언트',
-            },
-          ],
+          key: '/system/user-types',
+          label: '사용자 유형',
         },
         {
-          key: 'service-management',
-          label: '서비스 관리',
-          children: [
-            {
-              key: '/system/services',
-              label: '서비스 스코프',
-            },
-          ],
+          key: ROUTES.USERS,
+          label: '플랫폼 사용자',
         },
         {
-          key: 'access-control',
-          label: '권한 관리',
-          children: [
-            {
-              key: '/access/roles',
-              label: '역할 관리',
-            },
-            {
-              key: '/access/permissions',
-              label: '권한 정의',
-            },
-            {
-              key: '/access/templates',
-              label: '권한 템플릿',
-            },
-          ],
+          key: '/users/oauth-clients',
+          label: 'OAuth 클라이언트',
+        },
+      ],
+    },
+    {
+      key: 'service-management',
+      icon: <ApiOutlined />,
+      label: '서비스 관리',
+      children: [
+        {
+          key: '/system/services',
+          label: '서비스 스코프',
+        },
+      ],
+    },
+    {
+      key: 'access-control',
+      icon: <SafetyOutlined />,
+      label: '권한 관리',
+      children: [
+        {
+          key: '/access/roles',
+          label: '역할 관리',
+        },
+        {
+          key: '/access/permissions',
+          label: '권한 정의',
+        },
+        {
+          key: '/access/templates',
+          label: '권한 템플릿',
         },
       ],
     },
