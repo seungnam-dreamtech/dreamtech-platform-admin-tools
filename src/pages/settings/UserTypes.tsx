@@ -1,7 +1,7 @@
 // 사용자 유형 관리 페이지
 
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Tag, message, Popconfirm, Input, Typography, Alert, Switch } from 'antd';
+import { Table, Button, Space, Tag, message, Popconfirm, Input, Switch } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { UserTypeFormModal } from '../../components/settings/UserTypeFormModal';
@@ -9,7 +9,6 @@ import { userManagementService } from '../../services/userManagementService';
 import type { UserTypeDefinition } from '../../types/user-management';
 
 const { Search } = Input;
-const { Title, Text } = Typography;
 
 export default function UserTypes() {
   const [userTypes, setUserTypes] = useState<UserTypeDefinition[]>([]);
@@ -102,18 +101,16 @@ export default function UserTypes() {
   // 테이블 컬럼 정의
   const columns: ColumnsType<UserTypeDefinition> = [
     {
-      title: '유형 ID',
+      title: <span style={{ fontSize: '11px' }}>유형 ID</span>,
       dataIndex: 'type_id',
       key: 'type_id',
-      width: 180,
+      width: 150,
       sorter: (a, b) => a.type_id.localeCompare(b.type_id),
       render: (typeId, record) => (
         <Space direction="vertical" size={0}>
-          <Tag color="cyan" style={{ fontSize: '13px', fontWeight: 'bold' }}>
-            {typeId}
-          </Tag>
+          <span style={{ fontWeight: 500, fontSize: '12px' }}>{typeId}</span>
           {record.is_system_type && (
-            <Tag color="gold" style={{ fontSize: '11px' }}>
+            <Tag color="gold" style={{ fontSize: '10px', margin: 0 }}>
               시스템 타입
             </Tag>
           )}
@@ -121,34 +118,36 @@ export default function UserTypes() {
       ),
     },
     {
-      title: '표시명',
+      title: <span style={{ fontSize: '11px' }}>표시명</span>,
       dataIndex: 'display_name',
       key: 'display_name',
-      width: 200,
+      width: 150,
       sorter: (a, b) => a.display_name.localeCompare(b.display_name),
-      render: (text) => <Text strong>{text}</Text>,
+      render: (text) => <span style={{ fontSize: '12px', fontWeight: 500 }}>{text}</span>,
     },
     {
-      title: '설명',
+      title: <span style={{ fontSize: '11px' }}>설명</span>,
       dataIndex: 'description',
       key: 'description',
+      width: 250,
       ellipsis: true,
+      render: (text) => <span style={{ fontSize: '11px', color: '#666' }}>{text || '-'}</span>,
     },
     {
-      title: '표시 순서',
+      title: <span style={{ fontSize: '11px' }}>표시 순서</span>,
       dataIndex: 'display_order',
       key: 'display_order',
-      width: 100,
+      width: 90,
       align: 'center',
       sorter: (a, b) => a.display_order - b.display_order,
       defaultSortOrder: 'ascend',
-      render: (order) => <Text type="secondary">{order}</Text>,
+      render: (order) => <span style={{ fontSize: '11px', color: '#999' }}>{order}</span>,
     },
     {
-      title: '활성 상태',
+      title: <span style={{ fontSize: '11px' }}>상태</span>,
       dataIndex: 'is_active',
       key: 'is_active',
-      width: 100,
+      width: 70,
       align: 'center',
       filters: [
         { text: '활성', value: true },
@@ -157,6 +156,7 @@ export default function UserTypes() {
       onFilter: (value, record) => record.is_active === value,
       render: (isActive: boolean, record) => (
         <Switch
+          size="small"
           checked={isActive}
           onChange={(checked) => handleToggleActive(record.type_id, checked)}
           disabled={record.is_system_type}
@@ -164,32 +164,31 @@ export default function UserTypes() {
       ),
     },
     {
-      title: '작업',
+      title: <span style={{ fontSize: '11px' }}>작업</span>,
       key: 'actions',
-      width: 120,
+      width: 100,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
           <Button
             icon={<EditOutlined />}
             size="small"
+            type="text"
             onClick={() => {
               setSelectedUserType(record);
               setModalOpen(true);
             }}
-          >
-            수정
-          </Button>
+          />
           {!record.is_system_type && (
             <Popconfirm
               title="사용자 유형 삭제"
-              description="이 사용자 유형을 삭제하시겠습니까? 이 유형의 사용자가 있을 경우 삭제할 수 없습니다."
+              description="이 사용자 유형을 삭제하시겠습니까?"
               onConfirm={() => handleDelete(record.type_id)}
               okText="삭제"
               cancelText="취소"
               okButtonProps={{ danger: true }}
             >
-              <Button icon={<DeleteOutlined />} size="small" danger />
+              <Button icon={<DeleteOutlined />} size="small" type="text" danger />
             </Popconfirm>
           )}
         </Space>
@@ -198,87 +197,56 @@ export default function UserTypes() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* 안내 메시지 */}
-          <Alert
-            message="사용자 유형 (User Type) 관리"
-            description={
-              <div>
-                <p>사용자 유형은 AuthX 권한 시스템의 기초입니다.</p>
-                <ul style={{ marginLeft: -16, marginBottom: 0 }}>
-                  <li><strong>권한 우선순위</strong>: User Type 기반 기본 역할 (우선순위 90) → Template (85) → Individual (최고)</li>
-                  <li><strong>자동 역할 부여</strong>: 사용자 생성 시 User Type에 따라 기본 플랫폼 역할이 자동으로 할당됩니다</li>
-                  <li><strong>변경 불가</strong>: 사용자 생성 후에는 User Type을 변경할 수 없으므로 신중하게 설정하세요</li>
-                </ul>
-              </div>
-            }
-            type="info"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-
-          {/* 헤더 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Title level={3} style={{ margin: 0 }}>
-                사용자 유형 관리
-              </Title>
-              <Text type="secondary">
-                사용자 유형과 기본 역할 매핑을 관리합니다
-              </Text>
-            </div>
-            <Space>
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={fetchUserTypes}
-                loading={loading}
-              >
-                새로고침
-              </Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setSelectedUserType(null);
-                  setModalOpen(true);
-                }}
-              >
-                사용자 유형 추가
-              </Button>
-            </Space>
-          </div>
-
-          {/* 검색 */}
-          <Search
-            placeholder="유형명 또는 설명으로 검색"
-            allowClear
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            style={{ width: 400 }}
-          />
-
-          {/* 통계 */}
-          <div>
-            <Text type="secondary">전체 사용자 유형: </Text>
-            <Text strong style={{ fontSize: '16px' }}>{userTypes.length}개</Text>
-          </div>
-
-          {/* 테이블 */}
-          <Table
-            columns={columns}
-            dataSource={filteredUserTypes}
-            rowKey="type_id"
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `총 ${total}개`,
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+            사용자 유형 ({filteredUserTypes.length}개)
+          </span>
+          <span style={{ marginLeft: 8, color: '#999' }}>
+            사용자 유형과 기본 역할 매핑 관리
+          </span>
+        </div>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={fetchUserTypes} loading={loading}>
+            새로고침
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setSelectedUserType(null);
+              setModalOpen(true);
             }}
-          />
+          >
+            사용자 유형 추가
+          </Button>
         </Space>
-      </Card>
+      </div>
+
+      {/* 검색 */}
+      <Search
+        placeholder="유형명 또는 설명으로 검색"
+        allowClear
+        value={searchKeyword}
+        onChange={(e) => setSearchKeyword(e.target.value)}
+        style={{ width: 400 }}
+      />
+
+      {/* 테이블 */}
+      <Table
+        columns={columns}
+        dataSource={filteredUserTypes}
+        rowKey="type_id"
+        loading={loading}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `총 ${total}개`,
+        }}
+        scroll={{ x: 1000 }}
+      />
 
       {/* 사용자 유형 추가/수정 모달 */}
       <UserTypeFormModal
@@ -290,6 +258,6 @@ export default function UserTypes() {
         onSave={handleSave}
         userType={selectedUserType}
       />
-    </div>
+    </Space>
   );
 }
