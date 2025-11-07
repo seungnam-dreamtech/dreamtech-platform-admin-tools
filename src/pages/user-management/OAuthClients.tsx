@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Card,
   Table,
   Button,
   Space,
   Tag,
   message,
   Input,
-  Typography,
   Select,
   Tooltip,
   Popconfirm,
@@ -25,12 +23,10 @@ import {
   DeleteOutlined,
   ReloadOutlined,
   CopyOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
   ApiOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import type { OAuthClient, ClientType, UserType, ClientAuthorityType, UserTypeDefinition } from '../../types/user-management';
+import type { OAuthClient, ClientType, ClientAuthorityType, UserTypeDefinition } from '../../types/user-management';
 import {
   MOCK_OAUTH_CLIENTS,
   MOCK_SERVICES,
@@ -42,7 +38,6 @@ import {
 import { ClientAuthorityTypesManager } from '../../components/oauth/ClientAuthorityTypesManager';
 
 const { Search } = Input;
-const { Title, Text } = Typography;
 
 export default function OAuthClients() {
   const [clients, setClients] = useState<OAuthClient[]>([]);
@@ -61,7 +56,7 @@ export default function OAuthClients() {
     try {
       // TODO: 실제 API 연동
       // const data = await userManagementService.getUserTypeDefinitions();
-      const data = MOCK_USER_TYPE_DEFINITIONS.filter(type => type.isActive);
+      const data = MOCK_USER_TYPE_DEFINITIONS.filter(type => type.is_active);
       setUserTypeDefinitions(data);
     } catch (error) {
       message.error('User Type 정의 조회에 실패했습니다');
@@ -113,8 +108,7 @@ export default function OAuthClients() {
       filtered = filtered.filter(
         client =>
           client.clientName.toLowerCase().includes(keyword) ||
-          client.clientId.toLowerCase().includes(keyword) ||
-          client.serviceName?.toLowerCase().includes(keyword)
+          client.clientId.toLowerCase().includes(keyword)
       );
     }
 
@@ -124,7 +118,7 @@ export default function OAuthClients() {
   // 클라이언트 추가/수정
   const handleSave = async () => {
     try {
-      const values = await form.validateFields();
+      await form.validateFields();
       if (selectedClient) {
         // 수정
         message.success('OAuth 클라이언트가 수정되었습니다');
@@ -144,6 +138,7 @@ export default function OAuthClients() {
   // 클라이언트 삭제
   const handleDelete = async (id: string) => {
     try {
+      console.log('Deleting client:', id);
       message.success('OAuth 클라이언트가 삭제되었습니다');
       fetchClients();
     } catch (error) {
@@ -172,11 +167,6 @@ export default function OAuthClients() {
     message.success('Client Secret이 클립보드에 복사되었습니다');
   };
 
-  // Client Type별 통계
-  const typeStats = CLIENT_TYPE_OPTIONS.map(type => ({
-    ...type,
-    count: clients.filter(c => c.clientType === type.value).length,
-  }));
 
   // 모달 열기
   const handleOpenModal = (client?: OAuthClient) => {
@@ -203,101 +193,101 @@ export default function OAuthClients() {
   // 테이블 컬럼 정의
   const columns: ColumnsType<OAuthClient> = [
     {
-      title: '클라이언트 정보',
+      title: <span style={{ fontSize: '11px' }}>클라이언트 정보</span>,
       key: 'client',
-      width: 300,
+      width: 220,
       fixed: 'left',
       render: (_, record) => (
-        <Space direction="vertical" size="small">
-          <Space>
-            <ApiOutlined style={{ fontSize: '16px', color: '#1890ff' }} />
-            <Text strong>{record.clientName}</Text>
+        <Space direction="vertical" size={0}>
+          <Space size="small">
+            <ApiOutlined style={{ fontSize: '12px', color: '#1890ff' }} />
+            <span style={{ fontSize: '12px', fontWeight: 500 }}>{record.clientName}</span>
           </Space>
-          <Text type="secondary" style={{ fontSize: '12px' }} copyable>
+          <span style={{ fontSize: '10px', color: '#999' }}>
             {record.clientId}
-          </Text>
-          {record.serviceName && (
-            <Tag color="cyan" style={{ fontSize: '11px' }}>
-              {record.serviceName}
-            </Tag>
-          )}
+          </span>
         </Space>
       ),
     },
     {
-      title: '클라이언트 타입',
+      title: <span style={{ fontSize: '11px' }}>타입</span>,
       dataIndex: 'clientType',
       key: 'clientType',
-      width: 150,
+      width: 120,
       render: (type: ClientType) => {
         const typeOption = CLIENT_TYPE_OPTIONS.find(t => t.value === type);
-        return <Tag color="blue">{typeOption?.label || type}</Tag>;
+        return <Tag color="blue" style={{ fontSize: '10px', margin: 0 }}>{typeOption?.label || type}</Tag>;
       },
     },
     {
-      title: '상태',
+      title: <span style={{ fontSize: '11px' }}>상태</span>,
       dataIndex: 'enabled',
       key: 'enabled',
-      width: 100,
-      render: (enabled: boolean) => (
-        <Tag color={enabled ? 'green' : 'red'}>{enabled ? '활성' : '비활성'}</Tag>
+      width: 70,
+      align: 'center',
+      render: (enabled: boolean, record) => (
+        <Switch
+          size="small"
+          checked={enabled}
+          onChange={() => handleToggleEnabled(record)}
+        />
       ),
     },
     {
-      title: 'Grant Types',
+      title: <span style={{ fontSize: '11px' }}>Grant Types</span>,
       dataIndex: 'grantTypes',
       key: 'grantTypes',
-      width: 200,
+      width: 150,
       render: (types: string[]) => (
         <Tooltip title={types.join(', ')}>
           <Space size={[0, 4]} wrap>
             {types.slice(0, 2).map(type => (
-              <Tag key={type} style={{ fontSize: '11px', margin: 0 }}>
+              <Tag key={type} style={{ fontSize: '10px', margin: 0 }}>
                 {type}
               </Tag>
             ))}
             {types.length > 2 && (
-              <Tag style={{ fontSize: '11px', margin: 0 }}>+{types.length - 2}</Tag>
+              <Tag style={{ fontSize: '10px', margin: 0 }}>+{types.length - 2}</Tag>
             )}
           </Space>
         </Tooltip>
       ),
     },
     {
-      title: '생성 가능 User Type',
+      title: <span style={{ fontSize: '11px' }}>생성 가능 User Type</span>,
       dataIndex: 'authorityTypes',
       key: 'authorityTypes',
-      width: 180,
+      width: 150,
       render: (authorityTypes: ClientAuthorityType[]) => {
         if (!authorityTypes || authorityTypes.length === 0) {
-          return <Text type="secondary">없음</Text>;
+          return <span style={{ fontSize: '11px', color: '#999' }}>없음</span>;
         }
         return (
           <Tooltip
             title={authorityTypes
               .map(
                 at => {
-                  const userTypeDef = userTypeDefinitions.find(ut => ut.typeId === at.userType);
-                  return `${userTypeDef?.displayName || at.userType}${at.isDefault ? ' (기본)' : ''}`;
+                  const userTypeDef = userTypeDefinitions.find(ut => ut.type_id === at.userType);
+                  return `${userTypeDef?.display_name || at.userType}${at.isDefault ? ' (기본)' : ''}`;
                 }
               )
               .join(', ')}
           >
             <Space size={[0, 4]} wrap>
               {authorityTypes.slice(0, 2).map(at => {
-                const userTypeDef = userTypeDefinitions.find(ut => ut.typeId === at.userType);
+                const userTypeDef = userTypeDefinitions.find(ut => ut.type_id === at.userType);
                 return (
                   <Tag
                     key={at.userType}
                     color={at.isDefault ? 'gold' : 'purple'}
-                    style={{ fontSize: '11px', margin: 0 }}
+                    style={{ fontSize: '10px', margin: 0 }}
                   >
-                    {userTypeDef?.displayName || at.userType}
+                    {userTypeDef?.display_name || at.userType}
                   </Tag>
                 );
               })}
               {authorityTypes.length > 2 && (
-                <Tag style={{ fontSize: '11px', margin: 0 }}>+{authorityTypes.length - 2}</Tag>
+                <Tag style={{ fontSize: '10px', margin: 0 }}>+{authorityTypes.length - 2}</Tag>
               )}
             </Space>
           </Tooltip>
@@ -305,87 +295,82 @@ export default function OAuthClients() {
       },
     },
     {
-      title: 'Scopes',
+      title: <span style={{ fontSize: '11px' }}>Scopes</span>,
       dataIndex: 'scopes',
       key: 'scopes',
-      width: 120,
+      width: 80,
+      align: 'center',
       render: (scopes: string[]) => (
         <Tooltip title={scopes.join(', ')}>
-          <Badge count={scopes.length} showZero color="green" />
+          <Badge count={scopes.length} showZero color="green" style={{ fontSize: '10px' }} />
         </Tooltip>
       ),
     },
     {
-      title: 'Redirect URIs',
+      title: <span style={{ fontSize: '11px' }}>URIs</span>,
       dataIndex: 'redirectUris',
       key: 'redirectUris',
-      width: 120,
+      width: 80,
+      align: 'center',
       render: (uris: string[]) => (
         <Tooltip title={uris.join('\n')}>
-          <Badge count={uris.length} showZero color="purple" />
+          <Badge count={uris.length} showZero color="purple" style={{ fontSize: '10px' }} />
         </Tooltip>
       ),
     },
     {
-      title: 'PKCE',
+      title: <span style={{ fontSize: '11px' }}>PKCE</span>,
       dataIndex: 'requirePkce',
       key: 'requirePkce',
-      width: 80,
+      width: 70,
       align: 'center',
       render: (required: boolean) =>
         required ? (
-          <Tag color="green" style={{ fontSize: '11px' }}>
+          <Tag color="green" style={{ fontSize: '10px', margin: 0 }}>
             필수
           </Tag>
         ) : (
-          <Tag color="default" style={{ fontSize: '11px' }}>
+          <Tag color="default" style={{ fontSize: '10px', margin: 0 }}>
             선택
           </Tag>
         ),
     },
     {
-      title: '토큰 유효기간',
+      title: <span style={{ fontSize: '11px' }}>토큰 유효기간</span>,
       key: 'tokenValidity',
-      width: 150,
+      width: 120,
       render: (_, record) => (
-        <Space direction="vertical" size="small">
-          <Text style={{ fontSize: '12px' }}>
+        <Space direction="vertical" size={0}>
+          <span style={{ fontSize: '10px', color: '#666' }}>
             Access: {record.accessTokenValidity ? `${record.accessTokenValidity}s` : '-'}
-          </Text>
-          <Text style={{ fontSize: '12px' }}>
+          </span>
+          <span style={{ fontSize: '10px', color: '#666' }}>
             Refresh: {record.refreshTokenValidity ? `${record.refreshTokenValidity}s` : '-'}
-          </Text>
+          </span>
         </Space>
       ),
     },
     {
-      title: '작업',
+      title: <span style={{ fontSize: '11px' }}>작업</span>,
       key: 'actions',
-      width: 240,
+      width: 130,
       fixed: 'right',
       render: (_, record) => (
-        <Space size="small" wrap>
+        <Space size="small">
           <Tooltip title="Client Secret 복사">
             <Button
               icon={<CopyOutlined />}
               size="small"
+              type="text"
               onClick={() => handleCopySecret(record.clientId)}
-            />
-          </Tooltip>
-          <Tooltip title={record.enabled ? '비활성화' : '활성화'}>
-            <Switch
-              size="small"
-              checked={record.enabled}
-              onChange={() => handleToggleEnabled(record)}
             />
           </Tooltip>
           <Button
             icon={<EditOutlined />}
             size="small"
+            type="text"
             onClick={() => handleOpenModal(record)}
-          >
-            수정
-          </Button>
+          />
           <Popconfirm
             title="OAuth 클라이언트 삭제"
             description={`"${record.clientName}" 클라이언트를 삭제하시겠습니까?`}
@@ -394,7 +379,7 @@ export default function OAuthClients() {
             cancelText="취소"
             okButtonProps={{ danger: true }}
           >
-            <Button icon={<DeleteOutlined />} size="small" danger />
+            <Button icon={<DeleteOutlined />} size="small" type="text" danger />
           </Popconfirm>
         </Space>
       ),
@@ -402,142 +387,74 @@ export default function OAuthClients() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Card>
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* 통계 카드 */}
-          <Card title="OAuth 클라이언트 통계" size="small">
-            <Space size="large" wrap>
-              <div>
-                <Text type="secondary">전체 클라이언트</Text>
-                <div>
-                  <Text strong style={{ fontSize: '24px', color: '#1890ff' }}>
-                    {clients.length}
-                  </Text>
-                  <Text type="secondary" style={{ marginLeft: 4 }}>
-                    개
-                  </Text>
-                </div>
-              </div>
-              <div>
-                <Text type="secondary">활성 클라이언트</Text>
-                <div>
-                  <Text strong style={{ fontSize: '24px', color: 'green' }}>
-                    {clients.filter(c => c.enabled).length}
-                  </Text>
-                  <Text type="secondary" style={{ marginLeft: 4 }}>
-                    개
-                  </Text>
-                </div>
-              </div>
-              <div>
-                <Text type="secondary">비활성 클라이언트</Text>
-                <div>
-                  <Text strong style={{ fontSize: '24px', color: 'red' }}>
-                    {clients.filter(c => !c.enabled).length}
-                  </Text>
-                  <Text type="secondary" style={{ marginLeft: 4 }}>
-                    개
-                  </Text>
-                </div>
-              </div>
-            </Space>
-          </Card>
-
-          {/* Client Type별 통계 */}
-          <Card title="클라이언트 타입별 분포" size="small">
-            <Space size="large" wrap>
-              {typeStats.map(stat => (
-                <div key={stat.value}>
-                  <Text type="secondary">{stat.label}</Text>
-                  <div>
-                    <Text strong style={{ fontSize: '20px' }}>
-                      {stat.count}
-                    </Text>
-                    <Text type="secondary" style={{ marginLeft: 4 }}>
-                      개
-                    </Text>
-                  </div>
-                </div>
-              ))}
-            </Space>
-          </Card>
-
-          {/* 헤더 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Title level={3} style={{ margin: 0 }}>
-                OAuth 클라이언트 관리
-              </Title>
-              <Text type="secondary">OAuth2/OpenID Connect 클라이언트를 관리합니다</Text>
-            </div>
-            <Space>
-              <Button icon={<ReloadOutlined />} onClick={fetchClients} loading={loading}>
-                새로고침
-              </Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => handleOpenModal()}
-              >
-                클라이언트 추가
-              </Button>
-            </Space>
-          </div>
-
-          {/* 검색 및 필터 */}
-          <Space size="middle" wrap>
-            <Select
-              style={{ width: 200 }}
-              value={filterClientType}
-              onChange={setFilterClientType}
-              options={[
-                { label: '전체 타입', value: 'ALL' },
-                ...CLIENT_TYPE_OPTIONS,
-              ]}
-            />
-            <Select
-              style={{ width: 150 }}
-              value={filterEnabled}
-              onChange={setFilterEnabled}
-              options={[
-                { label: '전체 상태', value: 'ALL' },
-                { label: '활성', value: 'enabled' },
-                { label: '비활성', value: 'disabled' },
-              ]}
-            />
-            <Search
-              placeholder="클라이언트명, Client ID, 서비스로 검색"
-              allowClear
-              value={searchKeyword}
-              onChange={e => setSearchKeyword(e.target.value)}
-              style={{ width: 400 }}
-            />
-          </Space>
-
-          {/* 필터링 결과 */}
-          <div>
-            <Text type="secondary">검색 결과: </Text>
-            <Text strong style={{ fontSize: '16px' }}>
-              {filteredClients.length}개
-            </Text>
-          </div>
-
-          {/* 테이블 */}
-          <Table
-            columns={columns}
-            dataSource={filteredClients}
-            rowKey="id"
-            loading={loading}
-            scroll={{ x: 1600 }}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: total => `총 ${total}개`,
-            }}
-          />
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+            OAuth 클라이언트 ({filteredClients.length}개)
+          </span>
+          <span style={{ marginLeft: 8, color: '#999' }}>
+            OAuth2/OpenID Connect 클라이언트 관리
+          </span>
+        </div>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={fetchClients} loading={loading}>
+            새로고침
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => handleOpenModal()}
+          >
+            클라이언트 추가
+          </Button>
         </Space>
-      </Card>
+      </div>
+
+      {/* 검색 및 필터 */}
+      <Space size="middle" wrap>
+        <Select
+          style={{ width: 200 }}
+          value={filterClientType}
+          onChange={setFilterClientType}
+          options={[
+            { label: '전체 타입', value: 'ALL' },
+            ...CLIENT_TYPE_OPTIONS,
+          ]}
+        />
+        <Select
+          style={{ width: 150 }}
+          value={filterEnabled}
+          onChange={setFilterEnabled}
+          options={[
+            { label: '전체 상태', value: 'ALL' },
+            { label: '활성', value: 'enabled' },
+            { label: '비활성', value: 'disabled' },
+          ]}
+        />
+        <Search
+          placeholder="클라이언트명, Client ID, 서비스로 검색"
+          allowClear
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+          style={{ width: 400 }}
+        />
+      </Space>
+
+      {/* 테이블 */}
+      <Table
+        columns={columns}
+        dataSource={filteredClients}
+        rowKey="id"
+        loading={loading}
+        scroll={{ x: 1400 }}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: total => `총 ${total}개`,
+        }}
+      />
 
       {/* OAuth 클라이언트 추가/수정 모달 */}
       <Modal
@@ -575,7 +492,7 @@ export default function OAuthClients() {
             name="clientType"
             rules={[{ required: true, message: '클라이언트 타입을 선택하세요' }]}
           >
-            <Select placeholder="클라이언트 타입 선택" options={CLIENT_TYPE_OPTIONS} />
+            <Select placeholder="클라이언트 타입 선택" options={[...CLIENT_TYPE_OPTIONS]} />
           </Form.Item>
 
           <Form.Item
@@ -643,7 +560,7 @@ export default function OAuthClients() {
             <Select
               mode="multiple"
               placeholder="Grant Type 선택"
-              options={GRANT_TYPE_OPTIONS}
+              options={[...GRANT_TYPE_OPTIONS]}
             />
           </Form.Item>
 
@@ -656,6 +573,6 @@ export default function OAuthClients() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </Space>
   );
 }
