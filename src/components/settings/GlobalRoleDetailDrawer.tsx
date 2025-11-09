@@ -280,7 +280,7 @@ export function GlobalRoleDetailDrawer({
               style={{ height: '496px' }}
               bodyStyle={{ height: 'calc(100% - 38px)', padding: 0, overflow: 'hidden' }}
             >
-              <RoleHierarchyGraph roleHierarchy={roleHierarchy} currentRoleId={role.role_id} />
+              <RoleHierarchyGraph allRoles={allRoles} currentRoleId={role.role_id} />
             </Card>
           </Col>
 
