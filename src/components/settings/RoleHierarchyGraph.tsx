@@ -194,9 +194,9 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
   );
 
   // 노드와 엣지 생성
-  const { initialNodes, initialEdges } = useMemo(() => {
+  const layoutedElements = useMemo(() => {
     if (allRoles.length === 0) {
-      return { initialNodes: [], initialEdges: [] };
+      return { nodes: [], edges: [] };
     }
 
     // 모든 역할을 노드로 생성
@@ -248,8 +248,8 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
     return getLayoutedElements(nodes, edges, 'TB');
   }, [allRoles, currentRoleId, ancestors, descendants]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedElements.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedElements.edges);
 
   const onInit = useCallback((reactFlowInstance: any) => {
     // 초기 뷰를 중앙에 맞춤
