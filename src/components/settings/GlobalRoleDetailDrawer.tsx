@@ -23,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import type { GlobalRole } from '../../types/user-management';
 import type { DataNode } from 'antd/es/tree';
+import { RoleHierarchyGraph } from './RoleHierarchyGraph';
 
 const { Text } = Typography;
 
@@ -260,63 +261,31 @@ export function GlobalRoleDetailDrawer({
           </Descriptions>
         </Card>
 
-        {/* 하단: 역할 계층/권한 목록 & JWT 페이로드 */}
+        {/* 하단: 역할 계층 그래프 & 권한/JWT 정보 */}
         <Row gutter={16}>
           <Col span={12}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <Card
-                size="small"
-                title={
-                  <Space>
-                    <ApartmentOutlined />
-                    <span style={{ fontSize: '13px' }}>역할 계층 구조</span>
-                    {roleHierarchy.length > 1 && (
-                      <Tooltip title="하위 역할은 상위 역할의 모든 권한을 자동으로 상속받습니다">
-                        <QuestionCircleOutlined style={{ fontSize: '12px', color: '#1890ff' }} />
-                      </Tooltip>
-                    )}
-                  </Space>
-                }
-                style={{ height: '140px' }}
-                bodyStyle={{ height: 'calc(100% - 38px)', overflowY: 'auto' }}
-              >
-                {roleHierarchy.length > 1 ? (
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    {roleHierarchy.map((r, index) => (
-                      <div key={r.role_id} style={{ display: 'flex', alignItems: 'center' }}>
-                        <div
-                          style={{
-                            width: index * 24,
-                            height: 1,
-                            borderTop: index > 0 ? '2px dashed #d9d9d9' : 'none',
-                          }}
-                        />
-                        <Tag
-                          color={r.role_id === role.role_id ? 'blue' : 'default'}
-                          style={{
-                            fontSize: '11px',
-                            padding: '4px 10px',
-                            fontWeight: r.role_id === role.role_id ? 'bold' : 'normal',
-                          }}
-                        >
-                          {r.role_id}
-                          {r.role_id === role.role_id && ' (현재)'}
-                        </Tag>
-                        <Text type="secondary" style={{ fontSize: '10px', marginLeft: 8 }}>
-                          Level {r.authority_level} · {r.permissions.length}개 권한
-                        </Text>
-                      </div>
-                    ))}
-                  </Space>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-                    <Text type="secondary" style={{ fontSize: '11px' }}>
-                      최상위 역할입니다. 부모 역할이 없습니다.
-                    </Text>
-                  </div>
-                )}
-              </Card>
+            <Card
+              size="small"
+              title={
+                <Space>
+                  <ApartmentOutlined />
+                  <span style={{ fontSize: '13px' }}>역할 계층 구조</span>
+                  {roleHierarchy.length > 1 && (
+                    <Tooltip title="하위 역할은 상위 역할의 모든 권한을 자동으로 상속받습니다. 드래그, 줌, 팬 가능">
+                      <QuestionCircleOutlined style={{ fontSize: '12px', color: '#1890ff' }} />
+                    </Tooltip>
+                  )}
+                </Space>
+              }
+              style={{ height: '496px' }}
+              bodyStyle={{ height: 'calc(100% - 38px)', padding: 0, overflow: 'hidden' }}
+            >
+              <RoleHierarchyGraph roleHierarchy={roleHierarchy} currentRoleId={role.role_id} />
+            </Card>
+          </Col>
 
+          <Col span={12}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <Card
                 size="small"
                 title={
@@ -337,7 +306,7 @@ export function GlobalRoleDetailDrawer({
                     )}
                   </Space>
                 }
-                style={{ height: '340px' }}
+                style={{ height: '240px' }}
                 bodyStyle={{ height: 'calc(100% - 38px)', overflowY: 'auto' }}
               >
                 <Tree
@@ -347,38 +316,36 @@ export function GlobalRoleDetailDrawer({
                   style={{ fontSize: '12px' }}
                 />
               </Card>
-            </div>
-          </Col>
 
-          <Col span={12}>
-            <Card
-              size="small"
-              title={
-                <Space>
-                  <CodeOutlined />
-                  <span style={{ fontSize: '13px' }}>JWT 페이로드 미리보기</span>
-                  <Tooltip title="사용자에게 이 역할이 할당되면 JWT 토큰에 다음과 같은 형태로 포함됩니다">
-                    <QuestionCircleOutlined style={{ fontSize: '12px', color: '#faad14' }} />
-                  </Tooltip>
-                </Space>
-              }
-              style={{ height: '496px' }}
-              bodyStyle={{ height: 'calc(100% - 38px)', overflowY: 'auto' }}
-            >
-              <pre
-                style={{
-                  background: '#f5f5f5',
-                  padding: '12px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  margin: 0,
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                }}
+              <Card
+                size="small"
+                title={
+                  <Space>
+                    <CodeOutlined />
+                    <span style={{ fontSize: '13px' }}>JWT 페이로드 미리보기</span>
+                    <Tooltip title="사용자에게 이 역할이 할당되면 JWT 토큰에 다음과 같은 형태로 포함됩니다">
+                      <QuestionCircleOutlined style={{ fontSize: '12px', color: '#faad14' }} />
+                    </Tooltip>
+                  </Space>
+                }
+                style={{ height: '240px' }}
+                bodyStyle={{ height: 'calc(100% - 38px)', overflowY: 'auto' }}
               >
-                {JSON.stringify(jwtPayloadPreview, null, 2)}
-              </pre>
-            </Card>
+                <pre
+                  style={{
+                    background: '#f5f5f5',
+                    padding: '12px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    margin: 0,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {JSON.stringify(jwtPayloadPreview, null, 2)}
+                </pre>
+              </Card>
+            </div>
           </Col>
         </Row>
       </div>
