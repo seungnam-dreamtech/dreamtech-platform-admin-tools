@@ -2,8 +2,6 @@
 
 import { useCallback, useMemo } from 'react';
 import ReactFlow, {
-  Node,
-  Edge,
   Controls,
   Background,
   MarkerType,
@@ -12,6 +10,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
 } from 'reactflow';
+import type { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Tag, Space, Typography } from 'antd';
 import { SafetyOutlined, CrownOutlined } from '@ant-design/icons';
