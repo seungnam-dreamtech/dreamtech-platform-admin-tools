@@ -117,10 +117,7 @@ function RoleNode({ data }: { data: any }) {
         border: `2px solid ${borderColor}`,
         background: backgroundColor,
         minWidth: '200px',
-        boxShadow: isHighlighted
-          ? `0 4px 12px ${shadowColor}`
-          : '0 2px 6px rgba(0,0,0,0.08)',
-        opacity: isHighlighted ? 1 : 0.6,
+        boxShadow: `0 4px 12px ${shadowColor}`,
         transition: 'all 0.3s ease',
       }}
     >
@@ -199,8 +196,12 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
       return { nodes: [], edges: [] };
     }
 
-    // 모든 역할을 노드로 생성
-    const nodes: Node[] = allRoles.map((role) => ({
+    // 선택된 역할과 관련된 역할들만 필터링 (조상 + 현재 + 자손)
+    const relatedRoleIds = new Set([currentRoleId, ...ancestors, ...descendants]);
+    const relatedRoles = allRoles.filter(role => relatedRoleIds.has(role.role_id));
+
+    // 관련된 역할만 노드로 생성
+    const nodes: Node[] = relatedRoles.map((role) => ({
       id: role.role_id,
       type: 'roleNode',
       position: { x: 0, y: 0 }, // dagre가 자동 계산
@@ -214,29 +215,26 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
       targetPosition: Position.Top,
     }));
 
-    // 모든 부모-자식 관계를 엣지로 생성
+    // 관련된 역할들 사이의 부모-자식 관계만 엣지로 생성
     const edges: Edge[] = [];
-    allRoles.forEach((role) => {
-      if (role.parent_role_id) {
-        const isHighlightedEdge =
-          (role.role_id === currentRoleId && ancestors.has(role.parent_role_id)) ||
-          (descendants.has(role.role_id) && role.parent_role_id === currentRoleId) ||
-          (ancestors.has(role.parent_role_id) && descendants.has(role.role_id));
+    relatedRoles.forEach((role) => {
+      if (role.parent_role_id && relatedRoleIds.has(role.parent_role_id)) {
+        const isHighlightedEdge = true; // 모든 엣지 강조 (관련된 것만 표시하므로)
 
         edges.push({
           id: `${role.parent_role_id}-${role.role_id}`,
           source: role.parent_role_id,
           target: role.role_id,
           type: ConnectionLineType.SmoothStep,
-          animated: isHighlightedEdge,
+          animated: role.role_id === currentRoleId || descendants.has(role.role_id),
           style: {
-            stroke: isHighlightedEdge ? '#1890ff' : '#d9d9d9',
-            strokeWidth: isHighlightedEdge ? 2.5 : 1.5,
-            opacity: isHighlightedEdge ? 1 : 0.4,
+            stroke: '#1890ff',
+            strokeWidth: 2,
+            opacity: 1,
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: isHighlightedEdge ? '#1890ff' : '#d9d9d9',
+            color: '#1890ff',
             width: 18,
             height: 18,
           },
@@ -278,9 +276,9 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
     );
   }
 
-  const totalRoles = allRoles.length;
-  const activeRoles = allRoles.filter(r => r.is_active).length;
-  const relatedRoles = 1 + ancestors.size + descendants.size;
+  const relatedRolesCount = 1 + ancestors.size + descendants.size;
+  const ancestorCount = ancestors.size;
+  const descendantCount = descendants.size;
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -319,10 +317,13 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         }}>
           <Space direction="vertical" size={4}>
             <Text style={{ fontSize: '10px', color: '#666' }}>
-              <Badge color="#1890ff" /> 전체 역할: {totalRoles}개 (활성: {activeRoles})
+              <Badge color="#1890ff" /> 총 {relatedRolesCount}개 역할
             </Text>
             <Text style={{ fontSize: '10px', color: '#666' }}>
-              <Badge color="#52c41a" /> 관련 역할: {relatedRoles}개
+              <Badge color="#52c41a" /> 상위: {ancestorCount}개
+            </Text>
+            <Text style={{ fontSize: '10px', color: '#666' }}>
+              <Badge color="#faad14" /> 하위: {descendantCount}개
             </Text>
           </Space>
         </Panel>
