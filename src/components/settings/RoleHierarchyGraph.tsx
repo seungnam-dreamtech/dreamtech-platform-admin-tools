@@ -225,18 +225,26 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
           id: `${parentId}-${role.role_id}`,
           source: parentId,
           target: role.role_id,
-          type: ConnectionLineType.SmoothStep,
+          type: 'smoothstep',
           animated: role.role_id === currentRoleId || descendants.has(role.role_id),
           style: {
             stroke: '#1890ff',
-            strokeWidth: 2.5,
-            opacity: 1,
+            strokeWidth: 3,
           },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: '#1890ff',
-            width: 20,
-            height: 20,
+            width: 25,
+            height: 25,
+          },
+          label: '상속',
+          labelStyle: {
+            fill: '#1890ff',
+            fontWeight: 600,
+            fontSize: 12,
+          },
+          labelBgStyle: {
+            fill: '#fff',
           },
         });
       } else {
@@ -294,8 +302,14 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         attributionPosition="bottom-right"
         minZoom={0.4}
         maxZoom={2}
+        nodesDraggable={true}
+        nodesConnectable={false}
+        elementsSelectable={true}
+        zoomOnScroll={true}
+        panOnScroll={false}
         defaultEdgeOptions={{
-          type: ConnectionLineType.SmoothStep,
+          type: 'smoothstep',
+          animated: true,
         }}
       >
         <Background color="#f0f0f0" gap={20} size={1} />
