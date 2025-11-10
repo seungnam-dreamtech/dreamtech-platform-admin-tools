@@ -208,8 +208,8 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         isAncestor: ancestors.has(role.role_id),
         isDescendant: descendants.has(role.role_id),
       },
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
+      sourcePosition: 'bottom' as const,
+      targetPosition: 'top' as const,
     }));
 
     // 관련된 역할들 사이의 부모-자식 관계만 엣지로 생성
