@@ -252,13 +252,26 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
       }
     });
     console.log('🔗 생성된 엣지 총 개수:', edges.length);
+    console.log('🔗 엣지 상세:', edges);
+    console.log('🔗 노드 상세:', nodes);
 
     // dagre 레이아웃 적용
-    return getLayoutedElements(nodes, edges, 'TB');
+    const layouted = getLayoutedElements(nodes, edges, 'TB');
+    console.log('📐 레이아웃 적용 후 노드 위치:', layouted.nodes.map(n => ({
+      id: n.id,
+      position: n.position,
+    })));
+    console.log('📐 레이아웃 적용 후 엣지:', layouted.edges);
+
+    return layouted;
   }, [allRoles, currentRoleId, ancestors, descendants]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedElements.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedElements.edges);
+
+  console.log('⚛️ React State - 노드 개수:', nodes.length, '엣지 개수:', edges.length);
+  console.log('⚛️ React State - 노드:', nodes);
+  console.log('⚛️ React State - 엣지:', edges);
 
   const onInit = useCallback((reactFlowInstance: any) => {
     // 초기 뷰를 중앙에 맞춤
