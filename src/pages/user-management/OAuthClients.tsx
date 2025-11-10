@@ -28,14 +28,13 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { OAuthClient, ClientType, ClientAuthorityType, UserTypeDefinition } from '../../types/user-management';
 import {
-  MOCK_OAUTH_CLIENTS,
-  MOCK_SERVICES,
-  MOCK_USER_TYPE_DEFINITIONS,
   CLIENT_TYPE_OPTIONS,
   GRANT_TYPE_OPTIONS,
   COMMON_SCOPES,
 } from '../../constants/user-management';
 import { ClientAuthorityTypesManager } from '../../components/oauth/ClientAuthorityTypesManager';
+import { userManagementService } from '../../services/userManagementService';
+import { formatTokenDuration } from '../../utils/tokenUtils';
 
 const { Search } = Input;
 
@@ -54,23 +53,20 @@ export default function OAuthClients() {
   // User Type Definitions 조회
   const fetchUserTypeDefinitions = async () => {
     try {
-      // TODO: 실제 API 연동
-      // const data = await userManagementService.getUserTypeDefinitions();
-      const data = MOCK_USER_TYPE_DEFINITIONS.filter(type => type.is_active);
-      setUserTypeDefinitions(data);
+      const data = await userManagementService.getUserTypeDefinitions();
+      const activeTypes = data.filter(type => type.is_active);
+      setUserTypeDefinitions(activeTypes);
     } catch (error) {
       message.error('User Type 정의 조회에 실패했습니다');
       console.error(error);
     }
   };
 
-  // 클라이언트 목록 조회
+  // 클라이언트 목록 조회 (비활성화된 것 포함)
   const fetchClients = async () => {
     setLoading(true);
     try {
-      // TODO: 실제 API 연동
-      // const data = await userManagementService.getOAuthClients();
-      const data: OAuthClient[] = [...MOCK_OAUTH_CLIENTS];
+      const data = await userManagementService.getClients({ includeDeleted: true });
       setClients(data);
       setFilteredClients(data);
     } catch (error) {
@@ -90,15 +86,15 @@ export default function OAuthClients() {
   useEffect(() => {
     let filtered = [...clients];
 
-    // Client Type 필터
+    // Client Type 필터 (optional 필드이므로 존재 여부 체크)
     if (filterClientType !== 'ALL') {
-      filtered = filtered.filter(client => client.clientType === filterClientType);
+      filtered = filtered.filter(client => client.client_type === filterClientType);
     }
 
-    // Enabled 필터
+    // Enabled 필터 (deleted_at 기반: null이면 활성, 값 있으면 비활성)
     if (filterEnabled !== 'ALL') {
       filtered = filtered.filter(client =>
-        filterEnabled === 'enabled' ? client.enabled : !client.enabled
+        filterEnabled === 'enabled' ? !client.deleted_at : !!client.deleted_at
       );
     }
 
@@ -107,8 +103,8 @@ export default function OAuthClients() {
       const keyword = searchKeyword.toLowerCase();
       filtered = filtered.filter(
         client =>
-          client.clientName.toLowerCase().includes(keyword) ||
-          client.clientId.toLowerCase().includes(keyword)
+          client.client_name.toLowerCase().includes(keyword) ||
+          client.client_id.toLowerCase().includes(keyword)
       );
     }
 
