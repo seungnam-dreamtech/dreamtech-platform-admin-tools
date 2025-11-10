@@ -40,6 +40,16 @@ export function GlobalRoleDetailDrawer({
   allRoles,
   onClose,
 }: GlobalRoleDetailDrawerProps) {
+  // 모달이 열릴 때 데이터 확인
+  if (open && role) {
+    console.log('📋 상세 모달 열림:', {
+      role_id: role.role_id,
+      parent_role_id: role.parent_role_id,
+      parent_role: role.parent_role,
+      allRoles_count: allRoles.length,
+    });
+  }
+
   // 역할 계층 구조 생성 (부모 → 자식)
   const roleHierarchy = useMemo(() => {
     if (!role) return [];

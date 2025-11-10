@@ -43,6 +43,13 @@ export default function GlobalRolesTab() {
       if (rolesList.length > 0) {
         console.log('🔍 First role sample:', rolesList[0]);
         console.log('🔍 Roles with parent_role_id:', rolesList.filter(r => r.parent_role_id));
+        console.log('🔍 Roles with parent_role:', rolesList.filter(r => r.parent_role));
+        console.log('🔍 모든 역할의 부모 정보:', rolesList.map(r => ({
+          id: r.role_id,
+          parent_role_id: r.parent_role_id,
+          parent_role: r.parent_role,
+          has_parent: !!(r.parent_role_id || r.parent_role),
+        })));
       }
 
       setRoles(rolesList);
