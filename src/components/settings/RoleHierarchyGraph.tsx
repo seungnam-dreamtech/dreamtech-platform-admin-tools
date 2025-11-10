@@ -10,6 +10,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Panel,
+  Handle,
 } from 'reactflow';
 import type { Node, Edge } from 'reactflow';
 import dagre from 'dagre';
@@ -121,39 +122,43 @@ function RoleNode({ data }: { data: any }) {
 
   return (
     <Tooltip title={tooltipContent} placement="top">
-      <div
-        style={{
-          padding: '8px 16px',
-          borderRadius: '20px',
-          border: `2px solid ${borderColor}`,
-          background: backgroundColor,
-          color: textColor,
-          minWidth: '120px',
-          textAlign: 'center',
-          cursor: 'pointer',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          transition: 'all 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-        }}
-      >
-        <Text
-          strong
+      <>
+        <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
+        <div
           style={{
-            fontSize: '13px',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            border: `2px solid ${borderColor}`,
+            background: backgroundColor,
             color: textColor,
-            userSelect: 'none',
+            minWidth: '120px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
           }}
         >
-          {role.role_id}
-        </Text>
-      </div>
+          <Text
+            strong
+            style={{
+              fontSize: '13px',
+              color: textColor,
+              userSelect: 'none',
+            }}
+          >
+            {role.role_id}
+          </Text>
+        </div>
+        <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
+      </>
     </Tooltip>
   );
 }
