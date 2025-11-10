@@ -178,15 +178,22 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
     const relatedRoleIds = new Set([currentRoleId, ...ancestors, ...descendants]);
     const relatedRoles = allRoles.filter(role => relatedRoleIds.has(role.role_id));
 
-    console.log('🔍 디버깅:', {
+    console.log('🔍 그래프 디버깅:', {
       currentRoleId,
       ancestors: Array.from(ancestors),
       descendants: Array.from(descendants),
       relatedRoleIds: Array.from(relatedRoleIds),
+      allRoles: allRoles.map(r => ({
+        id: r.role_id,
+        parent_role_id: r.parent_role_id,
+        parent_role: r.parent_role,
+        computed_parent_id: r.parent_role_id || r.parent_role?.role_id,
+      })),
       relatedRoles: relatedRoles.map(r => ({
         id: r.role_id,
         parent_role_id: r.parent_role_id,
         parent_role: r.parent_role,
+        computed_parent_id: r.parent_role_id || r.parent_role?.role_id,
       })),
     });
 
@@ -207,9 +214,13 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
 
     // 관련된 역할들 사이의 부모-자식 관계만 엣지로 생성
     const edges: Edge[] = [];
+    console.log('🔗 엣지 생성 시작...');
     relatedRoles.forEach((role) => {
       const parentId = role.parent_role_id || role.parent_role?.role_id;
+      console.log(`  역할 ${role.role_id}의 부모 ID:`, parentId, '/ 관련 ID에 포함:', relatedRoleIds.has(parentId || ''));
+
       if (parentId && relatedRoleIds.has(parentId)) {
+        console.log(`    ✅ 엣지 생성: ${parentId} → ${role.role_id}`);
         edges.push({
           id: `${parentId}-${role.role_id}`,
           source: parentId,
@@ -228,8 +239,11 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
             height: 20,
           },
         });
+      } else {
+        console.log(`    ❌ 엣지 생성 안됨 - parentId: ${parentId}, 존재 여부: ${parentId && relatedRoleIds.has(parentId)}`);
       }
     });
+    console.log('🔗 생성된 엣지 총 개수:', edges.length);
 
     // dagre 레이아웃 적용
     return getLayoutedElements(nodes, edges, 'TB');
