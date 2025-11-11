@@ -1,14 +1,31 @@
 // 사용자 유형 관리 페이지
 
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, message, Popconfirm, Input, Switch } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
+  Switch,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { UserTypeFormModal } from '../../components/settings/UserTypeFormModal';
 import { userManagementService } from '../../services/userManagementService';
 import type { UserTypeDefinition } from '../../types/user-management';
-
-const { Search } = Input;
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function UserTypes() {
   const [userTypes, setUserTypes] = useState<UserTypeDefinition[]>([]);
@@ -17,6 +34,9 @@ export default function UserTypes() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserTypeDefinition | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userTypeToDelete, setUserTypeToDelete] = useState<string | null>(null);
+  const snackbar = useSnackbar();
 
   // User Type 목록 조회
   const fetchUserTypes = async () => {
@@ -27,7 +47,7 @@ export default function UserTypes() {
       setUserTypes(data);
       setFilteredUserTypes(data);
     } catch (error) {
-      message.error('사용자 유형 목록 조회에 실패했습니다');
+      snackbar.error('사용자 유형 목록 조회에 실패했습니다');
       console.error('Failed to fetch user types:', error);
     } finally {
       setLoading(false);
@@ -43,7 +63,7 @@ export default function UserTypes() {
     if (searchKeyword) {
       const keyword = searchKeyword.toLowerCase();
       const filtered = userTypes.filter(
-        type =>
+        (type) =>
           type.display_name.toLowerCase().includes(keyword) ||
           type.type_id.toLowerCase().includes(keyword) ||
           type.description.toLowerCase().includes(keyword)
@@ -63,13 +83,13 @@ export default function UserTypes() {
       } else {
         // 추가 모드: 새로운 유형 생성
         await userManagementService.createUserTypeDefinition(userTypeData);
-        message.success('새 사용자 유형이 추가되었습니다');
+        snackbar.success('새 사용자 유형이 추가되었습니다');
         fetchUserTypes();
       }
       setModalOpen(false);
       setSelectedUserType(null);
     } catch (error) {
-      message.error('사용자 유형 저장에 실패했습니다');
+      snackbar.error('사용자 유형 저장에 실패했습니다');
       console.error('Failed to save user type:', error);
     }
   };
@@ -78,10 +98,10 @@ export default function UserTypes() {
   const handleToggleActive = async (typeId: string, isActive: boolean) => {
     try {
       await userManagementService.toggleUserTypeActivation(typeId, isActive);
-      message.success(`사용자 유형이 ${isActive ? '활성화' : '비활성화'}되었습니다`);
+      snackbar.success(`사용자 유형이 ${isActive ? '활성화' : '비활성화'}되었습니다`);
       fetchUserTypes();
     } catch (error) {
-      message.error('사용자 유형 상태 변경에 실패했습니다');
+      snackbar.error('사용자 유형 상태 변경에 실패했습니다');
       console.error('Failed to toggle user type:', error);
     }
   };
@@ -90,131 +110,143 @@ export default function UserTypes() {
   const handleDelete = async (typeId: string) => {
     try {
       await userManagementService.deleteUserTypeDefinition(typeId);
-      message.success('사용자 유형이 삭제되었습니다');
+      snackbar.success('사용자 유형이 삭제되었습니다');
       fetchUserTypes();
     } catch (error) {
-      message.error('사용자 유형 삭제에 실패했습니다');
+      snackbar.error('사용자 유형 삭제에 실패했습니다');
       console.error('Failed to delete user type:', error);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setUserTypeToDelete(null);
     }
   };
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<UserTypeDefinition> = [
+  const confirmDelete = (typeId: string) => {
+    setUserTypeToDelete(typeId);
+    setDeleteConfirmOpen(true);
+  };
+
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
     {
-      title: <span style={{ fontSize: '11px' }}>유형 ID</span>,
-      dataIndex: 'type_id',
-      key: 'type_id',
+      field: 'type_id',
+      headerName: '유형 ID',
       width: 150,
-      sorter: (a, b) => a.type_id.localeCompare(b.type_id),
-      render: (typeId, record) => (
-        <Space direction="vertical" size={0}>
-          <span style={{ fontWeight: 500, fontSize: '12px' }}>{typeId}</span>
-          {record.is_system_type && (
-            <Tag color="gold" style={{ fontSize: '10px', margin: 0 }}>
-              시스템 타입
-            </Tag>
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <Typography variant="body2" fontWeight={500}>
+            {params.row.type_id}
+          </Typography>
+          {params.row.is_system_type && (
+            <Chip label="시스템 타입" color="warning" size="small" sx={{ width: 'fit-content' }} />
           )}
-        </Space>
+        </Box>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>표시명</span>,
-      dataIndex: 'display_name',
-      key: 'display_name',
+      field: 'display_name',
+      headerName: '표시명',
       width: 150,
-      sorter: (a, b) => a.display_name.localeCompare(b.display_name),
-      render: (text) => <span style={{ fontSize: '12px', fontWeight: 500 }}>{text}</span>,
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.display_name}
+        </Typography>
+      ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>설명</span>,
-      dataIndex: 'description',
-      key: 'description',
+      field: 'description',
+      headerName: '설명',
       width: 250,
-      ellipsis: true,
-      render: (text) => <span style={{ fontSize: '11px', color: '#666' }}>{text || '-'}</span>,
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
+        <Typography variant="body2" color="textSecondary" noWrap>
+          {params.row.description || '-'}
+        </Typography>
+      ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>표시 순서</span>,
-      dataIndex: 'display_order',
-      key: 'display_order',
-      width: 90,
+      field: 'display_order',
+      headerName: '표시 순서',
+      width: 100,
       align: 'center',
-      sorter: (a, b) => a.display_order - b.display_order,
-      defaultSortOrder: 'ascend',
-      render: (order) => <span style={{ fontSize: '11px', color: '#999' }}>{order}</span>,
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
+        <Typography variant="body2" color="textSecondary">
+          {params.row.display_order}
+        </Typography>
+      ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>상태</span>,
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 70,
+      field: 'is_active',
+      headerName: '상태',
+      width: 80,
       align: 'center',
-      filters: [
-        { text: '활성', value: true },
-        { text: '비활성', value: false },
-      ],
-      onFilter: (value, record) => record.is_active === value,
-      render: (isActive: boolean, record) => (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
         <Switch
           size="small"
-          checked={isActive}
-          onChange={(checked) => handleToggleActive(record.type_id, checked)}
-          disabled={record.is_system_type}
+          checked={params.row.is_active}
+          onChange={(e) => handleToggleActive(params.row.type_id, e.target.checked)}
+          disabled={params.row.is_system_type}
         />
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>작업</span>,
-      key: 'actions',
-      width: 100,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            icon={<EditOutlined />}
+      field: 'actions',
+      headerName: '작업',
+      width: 120,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
+        <Box>
+          <IconButton
             size="small"
-            type="text"
             onClick={() => {
-              setSelectedUserType(record);
+              setSelectedUserType(params.row);
               setModalOpen(true);
             }}
-          />
-          {!record.is_system_type && (
-            <Popconfirm
-              title="사용자 유형 삭제"
-              description="이 사용자 유형을 삭제하시겠습니까?"
-              onConfirm={() => handleDelete(record.type_id)}
-              okText="삭제"
-              cancelText="취소"
-              okButtonProps={{ danger: true }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+          {!params.row.is_system_type && (
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => confirmDelete(params.row.type_id)}
             >
-              <Button icon={<DeleteOutlined />} size="small" type="text" danger />
-            </Popconfirm>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
           )}
-        </Space>
+        </Box>
       ),
     },
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Box sx={{ width: '100%', height: '100%' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
             사용자 유형 ({filteredUserTypes.length}개)
-          </span>
-          <span style={{ marginLeft: 8, color: '#999' }}>
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
             사용자 유형과 기본 역할 매핑 관리
-          </span>
-        </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchUserTypes} loading={loading}>
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchUserTypes}
+            disabled={loading}
+          >
             새로고침
           </Button>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => {
               setSelectedUserType(null);
               setModalOpen(true);
@@ -222,31 +254,52 @@ export default function UserTypes() {
           >
             사용자 유형 추가
           </Button>
-        </Space>
-      </div>
+        </Box>
+      </Box>
 
       {/* 검색 */}
-      <Search
-        placeholder="유형명 또는 설명으로 검색"
-        allowClear
-        value={searchKeyword}
-        onChange={(e) => setSearchKeyword(e.target.value)}
-        style={{ width: 400 }}
-      />
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          placeholder="유형명 또는 설명으로 검색"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          size="small"
+          sx={{ width: 400 }}
+          slotProps={{
+            input: {
+              endAdornment: searchKeyword && (
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              ),
+            },
+          }}
+        />
+      </Box>
 
       {/* 테이블 */}
-      <Table
-        columns={columns}
-        dataSource={filteredUserTypes}
-        rowKey="type_id"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개`,
-        }}
-        scroll={{ x: 1000 }}
-      />
+      <Box sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredUserTypes}
+          columns={columns}
+          getRowId={(row) => row.type_id}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+            sorting: { sortModel: [{ field: 'display_order', sort: 'asc' }] },
+          }}
+          disableRowSelectionOnClick
+          sx={{
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
+      </Box>
 
       {/* 사용자 유형 추가/수정 모달 */}
       <UserTypeFormModal
@@ -258,6 +311,24 @@ export default function UserTypes() {
         onSave={handleSave}
         userType={selectedUserType}
       />
-    </Space>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>사용자 유형 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>이 사용자 유형을 삭제하시겠습니까?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>취소</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => userTypeToDelete && handleDelete(userTypeToDelete)}
+          >
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

@@ -1,14 +1,27 @@
 // 플랫폼 서비스 관리 페이지
 
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, message, Input, Switch } from 'antd';
-import { PlusOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
+  Switch,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Refresh as RefreshIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { ServiceFormModal } from '../../components/settings/ServiceFormModal';
 import { userManagementService } from '../../services/userManagementService';
 import type { ServiceScope } from '../../types/user-management';
-
-const { Search } = Input;
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function PlatformServices() {
   const [services, setServices] = useState<ServiceScope[]>([]);
@@ -17,6 +30,7 @@ export default function PlatformServices() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceScope | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const snackbar = useSnackbar();
 
   // 서비스 목록 조회
   const fetchServices = async () => {
@@ -27,7 +41,7 @@ export default function PlatformServices() {
       setServices(data);
       setFilteredServices(data);
     } catch (error) {
-      message.error('서비스 목록 조회에 실패했습니다');
+      snackbar.error('서비스 목록 조회에 실패했습니다');
       console.error('Failed to fetch services:', error);
     } finally {
       setLoading(false);
@@ -43,7 +57,7 @@ export default function PlatformServices() {
     if (searchKeyword) {
       const keyword = searchKeyword.toLowerCase();
       const filtered = services.filter(
-        service =>
+        (service) =>
           service.service_id.toLowerCase().includes(keyword) ||
           service.description.toLowerCase().includes(keyword)
       );
@@ -65,13 +79,13 @@ export default function PlatformServices() {
           service_id: serviceData.service_id,
           description: serviceData.description,
         });
-        message.success('새 서비스가 추가되었습니다');
+        snackbar.success('새 서비스가 추가되었습니다');
         fetchServices();
       }
       setModalOpen(false);
       setSelectedService(null);
     } catch (error) {
-      message.error('서비스 저장에 실패했습니다');
+      snackbar.error('서비스 저장에 실패했습니다');
       console.error('Failed to save service:', error);
     }
   };
@@ -80,124 +94,126 @@ export default function PlatformServices() {
   const handleToggleActive = async (serviceId: string, isActive: boolean) => {
     try {
       await userManagementService.updateServiceScope(serviceId, { is_active: isActive });
-      message.success(`서비스가 ${isActive ? '활성화' : '비활성화'}되었습니다`);
+      snackbar.success(`서비스가 ${isActive ? '활성화' : '비활성화'}되었습니다`);
       fetchServices();
     } catch (error) {
-      message.error('서비스 상태 변경에 실패했습니다');
+      snackbar.error('서비스 상태 변경에 실패했습니다');
       console.error('Failed to toggle service:', error);
     }
   };
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<ServiceScope> = [
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
     {
-      title: <span style={{ fontSize: '11px' }}>ID</span>,
-      dataIndex: 'id',
-      key: 'id',
+      field: 'id',
+      headerName: 'ID',
       width: 70,
-      sorter: (a, b) => a.id - b.id,
-      render: (id) => <span style={{ fontSize: '11px', color: '#999' }}>#{id}</span>,
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <Typography variant="body2" color="textSecondary">
+          #{params.row.id}
+        </Typography>
+      ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>서비스 ID</span>,
-      dataIndex: 'service_id',
-      key: 'service_id',
+      field: 'service_id',
+      headerName: '서비스 ID',
       width: 180,
-      sorter: (a, b) => a.service_id.localeCompare(b.service_id),
-      render: (serviceId) => (
-        <span style={{ fontWeight: 500, fontSize: '12px' }}>{serviceId}</span>
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.service_id}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>설명</span>,
-      dataIndex: 'description',
-      key: 'description',
+      field: 'description',
+      headerName: '설명',
       width: 250,
-      ellipsis: true,
-      render: (text) => <span style={{ fontSize: '11px', color: '#666' }}>{text || '-'}</span>,
-    },
-    {
-      title: <span style={{ fontSize: '11px' }}>비트 위치</span>,
-      dataIndex: 'bit_position',
-      key: 'bit_position',
-      width: 90,
-      align: 'center',
-      sorter: (a, b) => a.bit_position - b.bit_position,
-      render: (position) => (
-        <Tag color="purple" style={{ fontSize: '10px', margin: 0 }}>
-          Bit {position}
-        </Tag>
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <Typography variant="body2" color="textSecondary" noWrap>
+          {params.row.description || '-'}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>상태</span>,
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 70,
+      field: 'bit_position',
+      headerName: '비트 위치',
+      width: 110,
       align: 'center',
-      filters: [
-        { text: '활성', value: true },
-        { text: '비활성', value: false },
-      ],
-      onFilter: (value, record) => record.is_active === value,
-      render: (isActive: boolean, record) => (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <Chip label={`Bit ${params.row.bit_position}`} color="secondary" size="small" />
+      ),
+    },
+    {
+      field: 'is_active',
+      headerName: '상태',
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
         <Switch
           size="small"
-          checked={isActive}
-          onChange={(checked) => handleToggleActive(record.service_id, checked)}
+          checked={params.row.is_active}
+          onChange={(e) => handleToggleActive(params.row.service_id, e.target.checked)}
         />
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>생성일</span>,
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 100,
-      sorter: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      render: (date) => (
-        <span style={{ fontSize: '10px', color: '#999' }}>
-          {new Date(date).toLocaleDateString('ko-KR')}
-        </span>
+      field: 'created_at',
+      headerName: '생성일',
+      width: 110,
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <Typography variant="body2" color="textSecondary">
+          {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>작업</span>,
-      key: 'actions',
+      field: 'actions',
+      headerName: '작업',
       width: 80,
-      fixed: 'right',
-      render: (_, record) => (
-        <Button
-          icon={<EditOutlined />}
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <IconButton
           size="small"
-          type="text"
           onClick={() => {
-            setSelectedService(record);
+            setSelectedService(params.row);
             setModalOpen(true);
           }}
-        />
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
       ),
     },
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Box sx={{ width: '100%', height: '100%' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
             플랫폼 서비스 ({filteredServices.length}개)
-          </span>
-          <span style={{ marginLeft: 8, color: '#999' }}>
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
             플랫폼의 마이크로서비스 스코프 관리
-          </span>
-        </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchServices} loading={loading}>
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchServices}
+            disabled={loading}
+          >
             새로고침
           </Button>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => {
               setSelectedService(null);
               setModalOpen(true);
@@ -205,31 +221,52 @@ export default function PlatformServices() {
           >
             서비스 추가
           </Button>
-        </Space>
-      </div>
+        </Box>
+      </Box>
 
       {/* 검색 */}
-      <Search
-        placeholder="서비스명 또는 설명으로 검색"
-        allowClear
-        value={searchKeyword}
-        onChange={(e) => setSearchKeyword(e.target.value)}
-        style={{ width: 400 }}
-      />
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          placeholder="서비스명 또는 설명으로 검색"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          size="small"
+          sx={{ width: 400 }}
+          slotProps={{
+            input: {
+              endAdornment: searchKeyword && (
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+            },
+          }}
+        />
+      </Box>
 
       {/* 테이블 */}
-      <Table
-        columns={columns}
-        dataSource={filteredServices}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개`,
-        }}
-        scroll={{ x: 1200 }}
-      />
+      <Box sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredServices}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+            sorting: { sortModel: [{ field: 'id', sort: 'asc' }] },
+          }}
+          disableRowSelectionOnClick
+          sx={{
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
+      </Box>
 
       {/* 서비스 추가/수정 모달 */}
       <ServiceFormModal
@@ -241,6 +278,6 @@ export default function PlatformServices() {
         onSave={handleSave}
         service={selectedService}
       />
-    </Space>
+    </Box>
   );
 }

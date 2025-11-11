@@ -1,14 +1,25 @@
 import React from 'react';
-import { Row, Col, Card, Statistic, Progress, Typography, Table } from 'antd';
 import {
-  ArrowUpOutlined,
-  UserOutlined,
-  ApiOutlined,
-  ScheduleOutlined,
-  NotificationOutlined,
-} from '@ant-design/icons';
-
-const { Title } = Typography;
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  LinearProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from '@mui/material';
+import {
+  TrendingUp as TrendingUpIcon,
+  Person as PersonIcon,
+  Api as ApiIcon,
+  Schedule as ScheduleIcon,
+  Notifications as NotificationsIcon,
+} from '@mui/icons-material';
 
 // Dashboard page component showing system overview
 // 시스템 개요를 보여주는 대시보드 페이지 컴포넌트
@@ -31,117 +42,239 @@ const Dashboard: React.FC = () => {
     { name: 'FastAPI 서비스 #2', status: 'healthy', uptime: 99.4 },
   ];
 
-  const columns = [
-    {
-      title: '서비스명',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: '상태',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <span style={{
-          color: status === 'healthy' ? '#52c41a' :
-                status === 'degraded' ? '#faad14' : '#f5222d'
-        }}>
-          {status === 'healthy' ? '정상' :
-           status === 'degraded' ? '저하됨' : '비정상'}
-        </span>
-      ),
-    },
-    {
-      title: '가동 시간',
-      dataIndex: 'uptime',
-      key: 'uptime',
-      render: (uptime: number) => `${uptime}%`,
-    },
-  ];
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy':
+        return '#4caf50';
+      case 'degraded':
+        return '#ff9800';
+      default:
+        return '#f44336';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'healthy':
+        return '정상';
+      case 'degraded':
+        return '저하됨';
+      default:
+        return '비정상';
+    }
+  };
+
+  // Statistic Card Component
+  const StatisticCard = ({
+    title,
+    value,
+    icon,
+    color,
+    showTrend = false,
+  }: {
+    title: string;
+    value: number;
+    icon: React.ReactNode;
+    color: string;
+    showTrend?: boolean;
+  }) => (
+    <Card>
+      <CardContent>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box>
+            <Typography color="textSecondary" gutterBottom variant="body2">
+              {title}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+              <Typography variant="h4" component="div" sx={{ color, fontWeight: 600 }}>
+                {value.toLocaleString()}
+              </Typography>
+              {showTrend && (
+                <TrendingUpIcon sx={{ ml: 1, color: '#4caf50', fontSize: 20 }} />
+              )}
+            </Box>
+          </Box>
+          <Box sx={{ color, opacity: 0.8 }}>{icon}</Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div>
-      <Title level={2}>대시보드</Title>
+    <Box>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+        대시보드
+      </Typography>
 
       {/* System Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="총 사용자"
-              value={systemStats.totalUsers}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: '#3f8600' }}
-              suffix={<ArrowUpOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="활성 서비스"
-              value={systemStats.activeServices}
-              prefix={<ApiOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="예약된 작업"
-              value={systemStats.scheduledJobs}
-              prefix={<ScheduleOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="총 알림"
-              value={systemStats.notifications}
-              prefix={<NotificationOutlined />}
-              valueStyle={{ color: '#eb2f96' }}
-              suffix={<ArrowUpOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(4, 1fr)',
+          },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <StatisticCard
+          title="총 사용자"
+          value={systemStats.totalUsers}
+          icon={<PersonIcon sx={{ fontSize: 40 }} />}
+          color="#3f8600"
+          showTrend
+        />
+        <StatisticCard
+          title="활성 서비스"
+          value={systemStats.activeServices}
+          icon={<ApiIcon sx={{ fontSize: 40 }} />}
+          color="#1976d2"
+        />
+        <StatisticCard
+          title="예약된 작업"
+          value={systemStats.scheduledJobs}
+          icon={<ScheduleIcon sx={{ fontSize: 40 }} />}
+          color="#7b1fa2"
+        />
+        <StatisticCard
+          title="총 알림"
+          value={systemStats.notifications}
+          icon={<NotificationsIcon sx={{ fontSize: 40 }} />}
+          color="#c2185b"
+          showTrend
+        />
+      </Box>
 
-      {/* Service Status Overview */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card title="서비스 상태">
-            <Table
-              dataSource={serviceStatus}
-              columns={columns}
-              rowKey="name"
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
+      {/* Service Status & System Performance */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: '2fr 1fr',
+          },
+          gap: 2,
+        }}
+      >
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              서비스 상태
+            </Typography>
+            <TableContainer component={Paper} elevation={0}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>서비스명</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>상태</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>가동 시간</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {serviceStatus.map((service) => (
+                    <TableRow key={service.name} hover>
+                      <TableCell>{service.name}</TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: getStatusColor(service.status), fontWeight: 500 }}
+                        >
+                          {getStatusText(service.status)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{service.uptime}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
 
         {/* System Performance */}
-        <Col xs={24} lg={8}>
-          <Card title="시스템 성능">
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ marginBottom: 8 }}>CPU 사용률</div>
-              <Progress percent={65} status="active" />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ marginBottom: 8 }}>메모리 사용률</div>
-              <Progress percent={78} status="active" />
-            </div>
-            <div>
-              <div style={{ marginBottom: 8 }}>디스크 사용률</div>
-              <Progress percent={45} />
-            </div>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              시스템 성능
+            </Typography>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                CPU 사용률
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={65}
+                  sx={{
+                    flexGrow: 1,
+                    height: 8,
+                    borderRadius: 4,
+                    bgcolor: 'rgba(25, 118, 210, 0.12)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                      bgcolor: '#1976d2',
+                    },
+                  }}
+                />
+                <Typography variant="body2" sx={{ ml: 2, minWidth: 40, fontWeight: 500 }}>
+                  65%
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                메모리 사용률
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={78}
+                  sx={{
+                    flexGrow: 1,
+                    height: 8,
+                    borderRadius: 4,
+                    bgcolor: 'rgba(25, 118, 210, 0.12)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                      bgcolor: '#1976d2',
+                    },
+                  }}
+                />
+                <Typography variant="body2" sx={{ ml: 2, minWidth: 40, fontWeight: 500 }}>
+                  78%
+                </Typography>
+              </Box>
+            </Box>
+            <Box>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                디스크 사용률
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={45}
+                  sx={{
+                    flexGrow: 1,
+                    height: 8,
+                    borderRadius: 4,
+                    bgcolor: 'rgba(76, 175, 80, 0.12)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                      bgcolor: '#4caf50',
+                    },
+                  }}
+                />
+                <Typography variant="body2" sx={{ ml: 2, minWidth: 40, fontWeight: 500 }}>
+                  45%
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   );
 };
 
