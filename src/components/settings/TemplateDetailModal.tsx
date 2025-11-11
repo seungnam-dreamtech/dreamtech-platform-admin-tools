@@ -1,5 +1,16 @@
 // Permission Template 상세 모달
-import { Modal, Descriptions, Tag, Space, Empty } from 'antd';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Box,
+  Chip,
+  Typography,
+  Divider,
+  Paper,
+} from '@mui/material';
 import type { PermissionTemplate } from '../../types/user-management';
 
 interface TemplateDetailModalProps {
@@ -17,140 +28,180 @@ export default function TemplateDetailModal({
     return null;
   }
 
+  const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <Box sx={{ py: 1.5 }}>
+      <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+        {label}
+      </Typography>
+      <Box sx={{ mt: 0.5 }}>{children}</Box>
+    </Box>
+  );
+
   return (
-    <Modal
-      title={
-        <Space>
-          <span style={{ fontSize: '16px', fontWeight: 600 }}>{template.name}</span>
-          {template.is_active ? (
-            <Tag color="green">활성</Tag>
-          ) : (
-            <Tag color="default">비활성</Tag>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6" component="span">
+            {template.name}
+          </Typography>
+          <Chip label={template.is_active ? '활성' : '비활성'} color={template.is_active ? 'success' : 'default'} size="small" />
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <InfoRow label="ID">
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {template.id}
+            </Typography>
+          </InfoRow>
+
+          <Divider />
+
+          <InfoRow label="템플릿 이름">
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {template.name}
+            </Typography>
+          </InfoRow>
+
+          {template.category && (
+            <>
+              <Divider />
+              <InfoRow label="카테고리">
+                <Chip label={template.category} color="primary" size="small" />
+              </InfoRow>
+            </>
           )}
-        </Space>
-      }
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      width={800}
-    >
-      <Descriptions bordered column={1} size="small">
-        <Descriptions.Item label="ID">
-          <span style={{ fontSize: '12px', color: '#666' }}>{template.id}</span>
-        </Descriptions.Item>
 
-        <Descriptions.Item label="템플릿 이름">
-          <span style={{ fontSize: '12px', fontWeight: 500 }}>{template.name}</span>
-        </Descriptions.Item>
-
-        {template.category && (
-          <Descriptions.Item label="카테고리">
-            <Tag color="blue">{template.category}</Tag>
-          </Descriptions.Item>
-        )}
-
-        {template.description && (
-          <Descriptions.Item label="설명">
-            <span style={{ fontSize: '12px', color: '#666' }}>{template.description}</span>
-          </Descriptions.Item>
-        )}
-
-        <Descriptions.Item label="글로벌 역할">
-          {template.global_roles.length === 0 ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="글로벌 역할 없음"
-              style={{ margin: '8px 0' }}
-            />
-          ) : (
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              {template.global_roles.map((role) => (
-                <div
-                  key={role.role_id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '8px 12px',
-                    background: '#fafafa',
-                    borderRadius: '4px',
-                  }}
-                >
-                  <Space>
-                    <Tag color="purple" style={{ fontSize: '11px', margin: 0 }}>
-                      {role.role_id}
-                    </Tag>
-                    <span style={{ fontSize: '12px' }}>{role.display_name}</span>
-                  </Space>
-                  {role.description && (
-                    <span style={{ fontSize: '11px', color: '#999' }}>{role.description}</span>
-                  )}
-                </div>
-              ))}
-            </Space>
+          {template.description && (
+            <>
+              <Divider />
+              <InfoRow label="설명">
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {template.description}
+                </Typography>
+              </InfoRow>
+            </>
           )}
-        </Descriptions.Item>
 
-        <Descriptions.Item label="서비스 역할">
-          {template.service_roles.length === 0 ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="서비스 역할 없음"
-              style={{ margin: '8px 0' }}
-            />
-          ) : (
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              {template.service_roles.map((role) => (
-                <div
-                  key={`${role.service_id}:${role.role_name}`}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '8px 12px',
-                    background: '#fafafa',
-                    borderRadius: '4px',
-                  }}
-                >
-                  <Space>
-                    <Tag color="cyan" style={{ fontSize: '10px', margin: 0 }}>
-                      {role.service_id}
-                    </Tag>
-                    <Tag color="blue" style={{ fontSize: '10px', margin: 0 }}>
-                      {role.role_name}
-                    </Tag>
-                  </Space>
-                  {role.description && (
-                    <span style={{ fontSize: '11px', color: '#999' }}>{role.description}</span>
-                  )}
-                </div>
-              ))}
-            </Space>
+          <Divider />
+
+          <InfoRow label="글로벌 역할">
+            {template.global_roles.length === 0 ? (
+              <Box
+                sx={{
+                  py: 2,
+                  textAlign: 'center',
+                  color: 'text.secondary',
+                  fontSize: '14px',
+                }}
+              >
+                글로벌 역할 없음
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {template.global_roles.map((role) => (
+                  <Paper
+                    key={role.role_id}
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      bgcolor: 'grey.50',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label={role.role_id} size="small" color="secondary" />
+                      <Typography variant="body2">{role.display_name}</Typography>
+                    </Box>
+                    {role.description && (
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {role.description}
+                      </Typography>
+                    )}
+                  </Paper>
+                ))}
+              </Box>
+            )}
+          </InfoRow>
+
+          <Divider />
+
+          <InfoRow label="서비스 역할">
+            {template.service_roles.length === 0 ? (
+              <Box
+                sx={{
+                  py: 2,
+                  textAlign: 'center',
+                  color: 'text.secondary',
+                  fontSize: '14px',
+                }}
+              >
+                서비스 역할 없음
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {template.service_roles.map((role) => (
+                  <Paper
+                    key={`${role.service_id}:${role.role_name}`}
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      bgcolor: 'grey.50',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label={role.service_id} size="small" color="info" />
+                      <Chip label={role.role_name} size="small" color="primary" />
+                    </Box>
+                    {role.description && (
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {role.description}
+                      </Typography>
+                    )}
+                  </Paper>
+                ))}
+              </Box>
+            )}
+          </InfoRow>
+
+          <Divider />
+
+          <InfoRow label="생성 정보">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                생성자: {template.created_by}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                생성일: {new Date(template.created_at).toLocaleString('ko-KR')}
+              </Typography>
+            </Box>
+          </InfoRow>
+
+          {template.updated_at && (
+            <>
+              <Divider />
+              <InfoRow label="수정 정보">
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    수정자: {template.updated_by}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    수정일: {new Date(template.updated_at).toLocaleString('ko-KR')}
+                  </Typography>
+                </Box>
+              </InfoRow>
+            </>
           )}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="생성 정보">
-          <Space direction="vertical" size={0}>
-            <span style={{ fontSize: '11px', color: '#666' }}>
-              생성자: {template.created_by}
-            </span>
-            <span style={{ fontSize: '11px', color: '#999' }}>
-              생성일: {new Date(template.created_at).toLocaleString('ko-KR')}
-            </span>
-          </Space>
-        </Descriptions.Item>
-
-        {template.updated_at && (
-          <Descriptions.Item label="수정 정보">
-            <Space direction="vertical" size={0}>
-              <span style={{ fontSize: '11px', color: '#666' }}>
-                수정자: {template.updated_by}
-              </span>
-              <span style={{ fontSize: '11px', color: '#999' }}>
-                수정일: {new Date(template.updated_at).toLocaleString('ko-KR')}
-              </span>
-            </Space>
-          </Descriptions.Item>
-        )}
-      </Descriptions>
-    </Modal>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>닫기</Button>
+      </DialogActions>
+    </Dialog>
   );
 }
