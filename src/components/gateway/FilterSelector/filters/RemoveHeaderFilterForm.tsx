@@ -31,7 +31,7 @@ export const RemoveHeaderFilterForm: React.FC<RemoveHeaderFilterFormProps> = ({
   const placeholder = isParameter ? '예: debug' : '예: X-Request-Id';
 
   // name 또는 names 필드 처리
-  const names = 'names' in value ? value.names : (value.name ? [value.name] : ['']);
+  const names = 'names' in value ? (value.names || []) : (value.name ? [value.name] : ['']);
 
   const handleNameChange = (index: number, newValue: string) => {
     const newNames = [...names];
@@ -46,13 +46,13 @@ export const RemoveHeaderFilterForm: React.FC<RemoveHeaderFilterFormProps> = ({
 
   const handleAddName = () => {
     if ('names' in value) {
-      onChange({ ...value, names: [...names, ''] });
+      onChange({ ...value, names: [...(value.names || []), ''] });
     }
   };
 
   const handleRemoveName = (index: number) => {
     if ('names' in value) {
-      const newNames = names.filter((_, i) => i !== index);
+      const newNames = names.filter((_name: string, i: number) => i !== index);
       onChange({ ...value, names: newNames.length > 0 ? newNames : [''] });
     }
   };
@@ -69,7 +69,7 @@ export const RemoveHeaderFilterForm: React.FC<RemoveHeaderFilterFormProps> = ({
       </div>
 
       <Space direction="vertical" style={{ width: '100%' }} size="small">
-        {names.map((name, index) => (
+        {names.map((name: string, index: number) => (
           <Space key={index} style={{ width: '100%' }}>
             <Input
               value={name}

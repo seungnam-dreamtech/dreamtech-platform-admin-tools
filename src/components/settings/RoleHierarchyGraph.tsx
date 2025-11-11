@@ -213,8 +213,8 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         isAncestor: ancestors.has(role.role_id),
         isDescendant: descendants.has(role.role_id),
       },
-      sourcePosition: 'bottom' as const,
-      targetPosition: 'top' as const,
+      sourcePosition: Position.Bottom,
+      targetPosition: Position.Top,
     }));
 
     // 관련된 역할들 사이의 부모-자식 관계만 엣지로 생성
@@ -334,11 +334,9 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         <Controls
           showInteractive={false}
           style={{
-            button: {
-              backgroundColor: '#fff',
-              border: '1px solid #d9d9d9',
-              borderRadius: '4px',
-            },
+            backgroundColor: '#fff',
+            border: '1px solid #d9d9d9',
+            borderRadius: '4px',
           }}
         />
         <Panel

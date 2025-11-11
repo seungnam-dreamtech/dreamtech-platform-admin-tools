@@ -31,6 +31,7 @@ import {
   CLIENT_TYPE_OPTIONS,
   GRANT_TYPE_OPTIONS,
   COMMON_SCOPES,
+  MOCK_SERVICES,
 } from '../../constants/user-management';
 import { ClientAuthorityTypesManager } from '../../components/oauth/ClientAuthorityTypesManager';
 import { userManagementService } from '../../services/userManagementService';
@@ -361,7 +362,7 @@ export default function OAuthClients() {
       align: 'center',
       render: (uris?: string[]) => (
         <Tooltip title={uris?.join('\n') || ''}>
-          <Badge count={uris.length} showZero color="purple" style={{ fontSize: '10px' }} />
+          <Badge count={uris?.length || 0} showZero color="purple" style={{ fontSize: '10px' }} />
         </Tooltip>
       ),
     },
@@ -409,7 +410,7 @@ export default function OAuthClients() {
               icon={<CopyOutlined />}
               size="small"
               type="text"
-              onClick={() => handleCopySecret(record.clientId)}
+              onClick={() => handleCopySecret(record.client_id)}
             />
           </Tooltip>
           <Button

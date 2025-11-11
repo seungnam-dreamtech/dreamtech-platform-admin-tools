@@ -13,42 +13,42 @@ interface ClientAuthorityTypesManagerProps {
 
 export function ClientAuthorityTypesManager({ value = [], onChange, userTypeDefinitions }: ClientAuthorityTypesManagerProps) {
   // 선택된 User Type 목록
-  const selectedUserTypes = value.map(at => at.userType);
+  const selectedUserTypes = value.map(at => at.user_type);
 
   // 기본 User Type
-  const defaultUserType = value.find(at => at.isDefault)?.userType;
+  const defaultUserType = value.find(at => at.is_default)?.userType;
 
   // displayOrder 순으로 정렬된 User Type 목록
-  const sortedUserTypes = [...userTypeDefinitions].sort((a, b) => a.displayOrder - b.displayOrder);
+  const sortedUserTypes = [...userTypeDefinitions].sort((a, b) => a.display_order - b.display_order);
 
   // User Type 선택/해제
-  const handleUserTypeChange = (userType: UserType, checked: boolean) => {
+  const handleUserTypeChange = (user_type: UserType, checked: boolean) => {
     if (checked) {
       // 추가
       const newValue = [
         ...value,
         {
-          userType,
-          isDefault: value.length === 0, // 첫 번째 항목은 자동으로 기본값
+          user_type,
+          is_default: value.length === 0, // 첫 번째 항목은 자동으로 기본값
         },
       ];
       onChange?.(newValue);
     } else {
       // 제거
-      const newValue = value.filter(at => at.userType !== userType);
+      const newValue = value.filter(at => at.user_type !== user_type);
       // 기본값이 제거된 경우, 첫 번째 항목을 기본값으로 설정
-      if (defaultUserType === userType && newValue.length > 0) {
-        newValue[0].isDefault = true;
+      if (defaultUserType === user_type && newValue.length > 0) {
+        newValue[0].is_default = true;
       }
       onChange?.(newValue);
     }
   };
 
   // 기본 User Type 변경
-  const handleDefaultChange = (userType: UserType) => {
+  const handleDefaultChange = (user_type: UserType) => {
     const newValue = value.map(at => ({
       ...at,
-      isDefault: at.userType === userType,
+      is_default: at.user_type === user_type,
     }));
     onChange?.(newValue);
   };
@@ -79,15 +79,15 @@ export function ClientAuthorityTypesManager({ value = [], onChange, userTypeDefi
             <Space direction="vertical">
               {sortedUserTypes.map(userTypeDef => (
                 <Checkbox
-                  key={userTypeDef.typeId}
-                  checked={selectedUserTypes.includes(userTypeDef.typeId)}
-                  onChange={e => handleUserTypeChange(userTypeDef.typeId, e.target.checked)}
+                  key={userTypeDef.type_id}
+                  checked={selectedUserTypes.includes(userTypeDef.type_id)}
+                  onChange={e => handleUserTypeChange(userTypeDef.type_id, e.target.checked)}
                 >
                   <Space direction="vertical" size={0}>
                     <Space>
-                      <Text>{userTypeDef.displayName}</Text>
+                      <Text>{userTypeDef.display_name}</Text>
                       <Text type="secondary" style={{ fontSize: '11px' }}>
-                        ({userTypeDef.typeId})
+                        ({userTypeDef.type_id})
                       </Text>
                     </Space>
                     <Text type="secondary" style={{ fontSize: '11px' }}>
@@ -107,11 +107,11 @@ export function ClientAuthorityTypesManager({ value = [], onChange, userTypeDefi
               <Radio.Group value={defaultUserType} onChange={e => handleDefaultChange(e.target.value)}>
                 <Space direction="vertical">
                   {value.map(at => {
-                    const userTypeInfo = userTypeDefinitions.find(ut => ut.typeId === at.userType);
+                    const userTypeInfo = userTypeDefinitions.find(ut => ut.type_id === at.user_type);
                     return (
-                      <Radio key={at.userType} value={at.userType}>
+                      <Radio key={at.user_type} value={at.user_type}>
                         <Space>
-                          <Text>{userTypeInfo?.displayName || at.userType}</Text>
+                          <Text>{userTypeInfo?.display_name || at.user_type}</Text>
                           <Text type="secondary" style={{ fontSize: '12px' }}>
                             (회원가입 시 기본 선택)
                           </Text>

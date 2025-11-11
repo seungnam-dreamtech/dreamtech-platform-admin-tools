@@ -75,9 +75,9 @@ export default function PermissionSelector({
   const buildTreeData = (data: GroupedPermissions[], keyword: string) => {
     const lowerKeyword = keyword.toLowerCase();
 
-    const tree: TreeDataNode[] = data.map((serviceGroup) => {
+    const tree: (TreeDataNode | null)[] = data.map((serviceGroup) => {
       // 카테고리별 하위 노드 생성
-      const categoryNodes: TreeDataNode[] = Object.entries(serviceGroup.categories).map(
+      const categoryNodes: (TreeDataNode | null)[] = Object.entries(serviceGroup.categories).map(
         ([categoryName, permissions]) => {
           // 권한 필터링 (검색어가 있는 경우)
           const filteredPermissions = keyword

@@ -38,8 +38,8 @@ export function ServiceSubscriptionManager({
 
   // preSelectedServiceId가 있으면 자동 선택
   useEffect(() => {
-    if (preSelectedServiceId && !targetKeys.includes(preSelectedServiceId)) {
-      handleChange([...targetKeys, preSelectedServiceId]);
+    if (preSelectedServiceId && !targetKeys.includes(preSelectedServiceId) && handleChange) {
+      handleChange([...targetKeys, preSelectedServiceId], 'right', [preSelectedServiceId]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preSelectedServiceId]);
@@ -49,16 +49,16 @@ export function ServiceSubscriptionManager({
     key: service.id,
     title: service.displayName,
     description: service.description,
-    icon: service.icon,
+    icon: service.icon || '',
     defaultRole: service.defaultRole,
   }));
 
   const handleChange: TransferProps['onChange'] = (newTargetKeys) => {
-    setTargetKeys(newTargetKeys);
+    setTargetKeys(newTargetKeys as string[]);
 
     // onChange 콜백 호출
     if (onChange) {
-      const newSubscriptions: ServiceSubscription[] = newTargetKeys.map(serviceId => {
+      const newSubscriptions: ServiceSubscription[] = (newTargetKeys as string[]).map(serviceId => {
         // 기존 구독 정보가 있으면 유지
         const existing = value.find(sub => sub.serviceId === serviceId);
         if (existing) {
@@ -68,7 +68,7 @@ export function ServiceSubscriptionManager({
         // 새로 추가된 서비스는 기본 역할로 초기화
         const service = MOCK_SERVICES.find(s => s.id === serviceId);
         return {
-          serviceId,
+          serviceId: serviceId,
           serviceName: service?.displayName || serviceId,
           subscribedAt: new Date().toISOString(),
           status: 'active' as const,
