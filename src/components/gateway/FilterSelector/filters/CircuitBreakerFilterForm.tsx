@@ -1,6 +1,6 @@
 // CircuitBreaker Filter 폼 컴포넌트
 import React from 'react';
-import { Input, Space, Tag, Select } from 'antd';
+import { Input, Space, Tag } from 'antd';
 import type { ActuatorCircuitBreakerFilterArgs } from '../../../../types/gateway';
 
 interface CircuitBreakerFilterFormProps {

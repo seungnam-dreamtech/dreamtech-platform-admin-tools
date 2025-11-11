@@ -1,5 +1,6 @@
 // Spring Cloud Gateway Actuator API 데이터 변환 유틸리티
 // UI의 배열 형식을 API의 _genkey_N 형식으로 변환
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { ActuatorPredicate, ActuatorFilter } from '../types/gateway';
 

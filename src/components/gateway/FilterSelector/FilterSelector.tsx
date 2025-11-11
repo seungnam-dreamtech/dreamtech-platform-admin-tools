@@ -1,4 +1,5 @@
 // Filter 선택 및 관리 컴포넌트
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { Select, Button, Space, Card, Tag, Empty } from 'antd';
 import { PlusOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
@@ -76,7 +77,7 @@ export const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (!config) return null;
 
     let FormComponent: React.ComponentType<any> | null = null;
-    let formProps: any = { value: filter.args, onChange: (newArgs: any) => handleFilterChange(index, newArgs) };
+    const formProps: any = { value: filter.args, onChange: (newArgs: any) => handleFilterChange(index, newArgs) };
 
     switch (filter.name) {
       case 'AddRequestHeader':

@@ -26,16 +26,14 @@ import {
   ReloadOutlined,
   EditOutlined,
   DeleteOutlined,
-  ApiOutlined,
   PlusOutlined,
   FilterOutlined,
-  GlobalOutlined,
 } from '@ant-design/icons';
 
 const { Text } = Typography;
 import type { ColumnsType } from 'antd/es/table';
 import { gatewayService } from '../../services/gatewayService';
-import type { GatewayRoute, GatewayMetrics, RouteMetrics, RouteDefinitionResponse, ActuatorRouteResponse } from '../../types/gateway'
+import type { GatewayRoute, RouteMetrics, RouteDefinitionResponse, ActuatorRouteResponse } from '../../types/gateway'
 import { convertRouteDefinitionToGatewayRoute } from '../../utils/gatewayConverter';
 import { getFilterTypeColor, getPredicateTypeColor } from '../../utils/messageParser';
 import { parsePredicateString, parseFilterStrings } from '../../utils/routeParser';
@@ -54,7 +52,6 @@ const GatewayRoutes: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [routes, setRoutes] = useState<RouteWithMetrics[]>([]);
-  const [gatewayMetrics, setGatewayMetrics] = useState<GatewayMetrics | null>(null);
   const [routeMetrics, setRouteMetrics] = useState<RouteMetrics[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<GatewayRoute | null>(null);
@@ -97,12 +94,11 @@ const GatewayRoutes: React.FC = () => {
   const loadMetrics = async () => {
     try {
       console.log('📊 Loading gateway metrics...');
-      const [gatewayMetricsData, routeMetricsData] = await Promise.all([
+      const [, routeMetricsData] = await Promise.all([
         gatewayService.getGatewayMetrics().catch(() => null),
         gatewayService.getRouteMetrics().catch(() => [])
       ]);
 
-      setGatewayMetrics(gatewayMetricsData);
       setRouteMetrics(routeMetricsData);
     } catch (error) {
       console.error('Failed to load metrics:', error);

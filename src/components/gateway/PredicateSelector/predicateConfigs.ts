@@ -1,5 +1,4 @@
 // Predicate 타입별 설정 메타데이터
-import type { ActuatorPredicate } from '../../../types/gateway';
 
 export interface PredicateConfig {
   name: string;
@@ -7,6 +6,7 @@ export interface PredicateConfig {
   description: string;
   icon: string;
   category: 'basic' | 'header' | 'time' | 'advanced';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultArgs: Record<string, any>;
 }
 

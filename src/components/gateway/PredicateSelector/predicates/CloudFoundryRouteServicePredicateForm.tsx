@@ -9,10 +9,7 @@ interface CloudFoundryRouteServicePredicateFormProps {
   onChange: (value: ActuatorCloudFoundryRouteServicePredicateArgs) => void;
 }
 
-export const CloudFoundryRouteServicePredicateForm: React.FC<CloudFoundryRouteServicePredicateFormProps> = ({
-  value,
-  onChange
-}) => {
+export const CloudFoundryRouteServicePredicateForm: React.FC<CloudFoundryRouteServicePredicateFormProps> = () => {
   return (
     <div>
       <Alert

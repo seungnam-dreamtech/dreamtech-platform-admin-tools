@@ -1,4 +1,5 @@
 // Permission Template 추가/수정 모달
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import {
   Modal,
@@ -121,16 +122,6 @@ export default function TemplateFormModal({
     setHasChanges(touched);
   };
 
-  // 활성 상태 변경 처리
-  const handleActivationChange = (checked: boolean) => {
-    if (isEditing && template && checked !== template.is_active) {
-      setActivationChanged(true);
-      setNewActivationState(checked);
-    } else {
-      setActivationChanged(false);
-      setNewActivationState(undefined);
-    }
-  };
 
   const handleSave = async () => {
     try {

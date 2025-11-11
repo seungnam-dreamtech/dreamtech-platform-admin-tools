@@ -77,16 +77,6 @@ export function ServiceRoleFormModal({
     setHasChanges(touched);
   };
 
-  // 활성 상태 변경 처리
-  const handleActivationChange = (checked: boolean) => {
-    if (isEditing && role && checked !== role.is_active) {
-      setActivationChanged(true);
-      setNewActivationState(checked);
-    } else {
-      setActivationChanged(false);
-      setNewActivationState(undefined);
-    }
-  };
 
   // 권한 추가
   const handleAddPermission = () => {

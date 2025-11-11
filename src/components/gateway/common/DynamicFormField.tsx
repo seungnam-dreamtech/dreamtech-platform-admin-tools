@@ -1,11 +1,13 @@
 // 동적 필드 입력 공통 컴포넌트
 import React from 'react';
-import { Input, InputNumber, Select, Checkbox, DatePicker, Space, Button, Tag } from 'antd';
+import { Input, InputNumber, Select, Checkbox, DatePicker, Space, Button } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 
 interface DynamicFormFieldProps {
   label: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onChange: (value: any) => void;
   type: 'text' | 'number' | 'select' | 'checkbox' | 'datetime' | 'array';
   placeholder?: string;
@@ -74,7 +76,7 @@ export const DynamicFormField: React.FC<DynamicFormFieldProps> = ({
           />
         );
 
-      case 'array':
+      case 'array': {
         const arrayValue = Array.isArray(value) ? value : [];
         return (
           <Space direction="vertical" style={{ width: '100%' }}>
@@ -111,6 +113,7 @@ export const DynamicFormField: React.FC<DynamicFormFieldProps> = ({
             </Button>
           </Space>
         );
+      }
 
       default:
         return null;

@@ -1,6 +1,7 @@
 // 권한 정의 추가/수정 모달
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, Select, message, App } from 'antd';
+import { Modal, Form, Input, Select, App } from 'antd';
 import type { PermissionDefinition, ServiceScope } from '../../types/user-management';
 import { userManagementService } from '../../services/userManagementService';
 
@@ -32,6 +33,7 @@ export default function PermissionFormModal({
     if (open) {
       loadServices();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // 폼 초기화

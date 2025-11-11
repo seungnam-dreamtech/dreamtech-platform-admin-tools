@@ -1,6 +1,6 @@
 // Query Predicate 폼 컴포넌트
 import React from 'react';
-import { Input, Space, Tag, Checkbox } from 'antd';
+import { Input, Space, Tag } from 'antd';
 import type { ActuatorQueryPredicateArgs } from '../../../../types/gateway';
 
 interface QueryPredicateFormProps {

@@ -1,4 +1,5 @@
 // 서비스 역할 관리 탭
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import {

@@ -15,7 +15,6 @@ import {
   Card,
   Tooltip,
   Badge,
-  App,
 } from 'antd';
 import {
   PlusOutlined,
@@ -99,6 +98,7 @@ export default function PermissionManagement() {
   useEffect(() => {
     fetchServices();
     fetchPermissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 검색 및 필터링

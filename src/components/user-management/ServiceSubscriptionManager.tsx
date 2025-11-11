@@ -39,8 +39,9 @@ export function ServiceSubscriptionManager({
   // preSelectedServiceId가 있으면 자동 선택
   useEffect(() => {
     if (preSelectedServiceId && !targetKeys.includes(preSelectedServiceId)) {
-      handleChange([...targetKeys, preSelectedServiceId], 'right', [preSelectedServiceId]);
+      handleChange([...targetKeys, preSelectedServiceId]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preSelectedServiceId]);
 
   // Transfer 데이터 소스 생성
@@ -52,7 +53,7 @@ export function ServiceSubscriptionManager({
     defaultRole: service.defaultRole,
   }));
 
-  const handleChange: TransferProps['onChange'] = (newTargetKeys, direction, moveKeys) => {
+  const handleChange: TransferProps['onChange'] = (newTargetKeys) => {
     setTargetKeys(newTargetKeys);
 
     // onChange 콜백 호출

@@ -1,6 +1,6 @@
 // RequestSize Filter 폼 컴포넌트
 import React from 'react';
-import { Input, InputNumber, Space, Tag, Select } from 'antd';
+import { InputNumber, Space, Tag, Select } from 'antd';
 import type { ActuatorRequestSizeFilterArgs } from '../../../../types/gateway';
 
 interface RequestSizeFilterFormProps {

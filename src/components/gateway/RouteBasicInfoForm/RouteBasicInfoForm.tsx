@@ -1,4 +1,5 @@
 // 라우트 기본 정보 입력 폼
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { Input, InputNumber, Checkbox, Space, Tag } from 'antd';
 import { FormSection } from '../common/FormSection';

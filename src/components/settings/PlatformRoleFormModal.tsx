@@ -1,7 +1,7 @@
 // 플랫폼 역할 추가/수정 모달
 
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, Switch, Space, Button, Tag, Alert } from 'antd';
+import { Modal, Form, Input, Switch, Space, Button, Alert } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { PlatformRole } from '../../types/user-management';
 

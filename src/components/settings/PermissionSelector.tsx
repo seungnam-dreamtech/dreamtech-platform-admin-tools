@@ -31,6 +31,7 @@ export default function PermissionSelector({
   // 그룹화된 권한 데이터 로드
   useEffect(() => {
     loadGroupedPermissions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 체크된 키가 변경될 때 부모 컴포넌트에 알림
@@ -38,6 +39,7 @@ export default function PermissionSelector({
     if (onChange) {
       onChange(checkedKeys as string[]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkedKeys]);
 
   // value prop이 변경되면 체크 상태 업데이트
@@ -192,6 +194,7 @@ export default function PermissionSelector({
         setExpandedKeys(allKeys);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKeyword, groupedPermissions]);
 
   const handleCheck = (

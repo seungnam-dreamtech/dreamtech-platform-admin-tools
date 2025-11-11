@@ -1,4 +1,5 @@
 // 권한 템플릿 관리 페이지
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import {
@@ -95,7 +96,7 @@ export default function AuthorityTemplates() {
   }, [searchKeyword, filterUserType, templates]);
 
   // 템플릿 추가/수정
-  const handleSave = async (templateData: any) => {
+  const handleSave = async () => {
     try {
       if (selectedTemplate) {
         // 수정
@@ -114,7 +115,7 @@ export default function AuthorityTemplates() {
   };
 
   // 템플릿 삭제
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
     try {
       message.success('권한 템플릿이 삭제되었습니다');
       fetchTemplates();
