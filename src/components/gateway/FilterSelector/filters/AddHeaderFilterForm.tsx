@@ -1,6 +1,6 @@
 // AddRequestHeader / AddResponseHeader / AddRequestParameter 공통 폼
 import React from 'react';
-import { Input, Space, Tag } from 'antd';
+import { TextField, Stack, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorAddHeaderFilterArgs } from '../../../../types/gateway';
 
 interface AddHeaderFilterFormProps {
@@ -21,58 +21,60 @@ export const AddHeaderFilterForm: React.FC<AddHeaderFilterFormProps> = ({
   const valuePlaceholder = isParameter ? '예: 12345' : '예: {requestId}';
 
   return (
-    <div>
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        {/* Name */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              {nameLabel}
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Input
-            value={value.name}
-            onChange={(e) => onChange({ ...value, name: e.target.value })}
-            placeholder={namePlaceholder}
-          />
-        </div>
+    <Stack spacing={2}>
+      {/* Name */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          {nameLabel}
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <TextField
+          value={value.name || ''}
+          onChange={(e) => onChange({ ...value, name: e.target.value })}
+          placeholder={namePlaceholder}
+          fullWidth
+          size="small"
+        />
+      </Box>
 
-        {/* Value */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              {valueLabel}
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Input
-            value={value.value}
-            onChange={(e) => onChange({ ...value, value: e.target.value })}
-            placeholder={valuePlaceholder}
-          />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 SpEL 표현식 사용 가능 (예: <code>{'#{T(java.util.UUID).randomUUID().toString()}'}</code>)
-          </div>
-        </div>
-      </Space>
+      {/* Value */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          {valueLabel}
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <TextField
+          value={value.value || ''}
+          onChange={(e) => onChange({ ...value, value: e.target.value })}
+          placeholder={valuePlaceholder}
+          fullWidth
+          size="small"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 SpEL 표현식 사용 가능 (예: <code>{'#{T(java.util.UUID).randomUUID().toString()}'}</code>)
+        </Typography>
+      </Box>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>예시:</strong>
-        <div style={{ marginTop: '4px' }}>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">예시:</Typography>
+        <Box sx={{ mt: 0.5 }}>
           {isParameter ? (
             <>
-              • <Tag color="blue" style={{ fontSize: '11px' }}>version</Tag> = <Tag color="green" style={{ fontSize: '11px' }}>v1</Tag>
-              <div style={{ marginLeft: '8px', marginTop: '2px', color: '#666' }}>→ ?version=v1 추가</div>
+              • <Chip label="version" size="small" color="primary" /> = <Chip label="v1" size="small" color="success" />
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
+                → ?version=v1 추가
+              </Typography>
             </>
           ) : (
             <>
-              • <Tag color="blue" style={{ fontSize: '11px' }}>X-Response-Time</Tag> = <Tag color="green" style={{ fontSize: '11px' }}>{'#{T(System).currentTimeMillis()}'}</Tag>
-              <div style={{ marginLeft: '8px', marginTop: '2px', color: '#666' }}>→ 응답 시간 헤더 추가</div>
+              • <Chip label="X-Response-Time" size="small" color="primary" /> = <Chip label={'#{T(System).currentTimeMillis()}'} size="small" color="success" />
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
+                → 응답 시간 헤더 추가
+              </Typography>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Stack>
   );
 };
