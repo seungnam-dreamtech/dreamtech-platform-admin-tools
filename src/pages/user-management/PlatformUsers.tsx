@@ -3,27 +3,35 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Table,
+  Box,
   Button,
-  Space,
-  Tag,
-  message,
-  Input,
-  Select,
-  Badge,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
   Tooltip,
   Avatar,
-  Popconfirm,
-} from 'antd';
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Badge,
+} from '@mui/material';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  UserOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Person as PersonIcon,
+  Search as SearchIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import type { PlatformUser, UserType } from '../../types/user-management';
 import { UserDetailModal } from '../../components/user-management/UserDetailModal';
 import {
@@ -31,8 +39,7 @@ import {
   USER_TYPES,
   USER_STATUS_OPTIONS,
 } from '../../constants/user-management';
-
-const { Search } = Input;
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function PlatformUsers() {
   const [users, setUsers] = useState<PlatformUser[]>([]);
@@ -43,6 +50,11 @@ export default function PlatformUsers() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterUserType, setFilterUserType] = useState<UserType | 'ALL'>('ALL');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'active' | 'inactive' | 'suspended'>('ALL');
+  const snackbar = useSnackbar();
+
+  // 삭제 확인 다이얼로그
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   // 사용자 목록 조회
   const fetchUsers = async () => {
@@ -54,7 +66,7 @@ export default function PlatformUsers() {
       setUsers(data);
       setFilteredUsers(data);
     } catch (error) {
-      message.error('사용자 목록 조회에 실패했습니다');
+      snackbar.error('사용자 목록 조회에 실패했습니다');
       console.error(error);
     } finally {
       setLoading(false);
@@ -94,202 +106,206 @@ export default function PlatformUsers() {
     setFilteredUsers(filtered);
   }, [searchKeyword, filterUserType, filterStatus, users]);
 
+  // 사용자 삭제 확인
+  const confirmDelete = (id: string) => {
+    setUserToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
   // 사용자 삭제
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!userToDelete) return;
+
     try {
-      console.log('Deleting user:', id);
-      message.success('사용자가 삭제되었습니다');
+      console.log('Deleting user:', userToDelete);
+      snackbar.success('사용자가 삭제되었습니다');
       fetchUsers();
     } catch (error) {
-      message.error('사용자 삭제에 실패했습니다');
+      snackbar.error('사용자 삭제에 실패했습니다');
       console.error(error);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setUserToDelete(null);
     }
   };
 
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<PlatformUser> = [
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
     {
-      title: <span style={{ fontSize: '11px' }}>사용자</span>,
-      key: 'user',
-      width: 220,
-      fixed: 'left',
-      render: (_, record) => (
-        <Space size="small">
-          <Avatar size="small" icon={<UserOutlined />} src={record.profileImage} />
-          <div>
-            <div>
-              <span style={{ fontSize: '12px', fontWeight: 500 }}>{record.name}</span>
-            </div>
-            <div>
-              <span style={{ fontSize: '11px', color: '#999' }}>
-                {record.email}
-              </span>
-            </div>
-          </div>
-        </Space>
+      field: 'user',
+      headerName: '사용자',
+      width: 240,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Avatar sx={{ width: 32, height: 32 }} src={params.row.profileImage}>
+            <PersonIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="body2" fontWeight={500}>
+              {params.row.name}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              {params.row.email}
+            </Typography>
+          </Box>
+        </Box>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>User Type</span>,
-      dataIndex: 'userType',
-      key: 'userType',
-      width: 120,
-      render: (userType: UserType) => {
-        const typeInfo = USER_TYPES.find(t => t.value === userType);
-        return (
-          <Tag color="purple" style={{ fontSize: '10px', margin: 0 }}>
-            {typeInfo?.label || userType}
-          </Tag>
-        );
+      field: 'userType',
+      headerName: 'User Type',
+      width: 130,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => {
+        const typeInfo = USER_TYPES.find(t => t.value === params.row.userType);
+        return <Chip label={typeInfo?.label || params.row.userType} color="secondary" size="small" />;
       },
     },
     {
-      title: <span style={{ fontSize: '11px' }}>상태</span>,
-      dataIndex: 'status',
-      key: 'status',
-      width: 80,
+      field: 'status',
+      headerName: '상태',
+      width: 90,
       align: 'center',
-      render: (status: string) => {
-        const statusOption = USER_STATUS_OPTIONS.find(s => s.value === status);
-        return (
-          <Tag color={statusOption?.color || 'default'} style={{ fontSize: '10px', margin: 0 }}>
-            {statusOption?.label || status}
-          </Tag>
-        );
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => {
+        const statusOption = USER_STATUS_OPTIONS.find(s => s.value === params.row.status);
+        const getColor = () => {
+          if (statusOption?.value === 'active') return 'success';
+          if (statusOption?.value === 'inactive') return 'default';
+          if (statusOption?.value === 'suspended') return 'error';
+          return 'default';
+        };
+        return <Chip label={statusOption?.label || params.row.status} color={getColor()} size="small" />;
       },
     },
     {
-      title: <span style={{ fontSize: '11px' }}>부서/직책</span>,
-      key: 'position',
-      width: 150,
-      render: (_, record) => (
-        <div>
-          {record.department && (
-            <div>
-              <span style={{ fontSize: '11px' }}>{record.department}</span>
-            </div>
+      field: 'position',
+      headerName: '부서/직책',
+      width: 160,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Box>
+          {params.row.department && (
+            <Typography variant="body2">{params.row.department}</Typography>
           )}
-          {record.position && (
-            <div>
-              <span style={{ fontSize: '10px', color: '#999' }}>
-                {record.position}
-              </span>
-            </div>
+          {params.row.position && (
+            <Typography variant="caption" color="textSecondary">
+              {params.row.position}
+            </Typography>
           )}
-          {!record.department && !record.position && <span style={{ fontSize: '11px', color: '#999' }}>-</span>}
-        </div>
+          {!params.row.department && !params.row.position && (
+            <Typography variant="body2" color="textSecondary">-</Typography>
+          )}
+        </Box>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>플랫폼 역할</span>,
-      dataIndex: 'platformRoles',
-      key: 'platformRoles',
-      width: 130,
-      render: (roles: string[]) => (
-        <Tooltip title={roles.join(', ')}>
-          <Space size={[0, 4]} wrap>
-            {roles.slice(0, 2).map(role => (
-              <Tag key={role} color="blue" style={{ fontSize: '10px', margin: 0 }}>
-                {role}
-              </Tag>
-            ))}
-            {roles.length > 2 && (
-              <Tag color="blue" style={{ fontSize: '10px', margin: 0 }}>
-                +{roles.length - 2}
-              </Tag>
-            )}
-          </Space>
-        </Tooltip>
-      ),
-    },
-    {
-      title: <span style={{ fontSize: '11px' }}>서비스 가입</span>,
-      dataIndex: 'serviceSubscriptions',
-      key: 'serviceSubscriptions',
-      width: 100,
-      align: 'center',
-      render: (subscriptions: any[]) => (
-        <Badge count={subscriptions.length} showZero color="cyan" style={{ fontSize: '10px' }} />
-      ),
-    },
-    {
-      title: <span style={{ fontSize: '11px' }}>연락처</span>,
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
-      width: 130,
-      render: (phone: string) => <span style={{ fontSize: '11px', color: '#666' }}>{phone || '-'}</span>,
-    },
-    {
-      title: <span style={{ fontSize: '11px' }}>최근 로그인</span>,
-      dataIndex: 'lastLoginAt',
-      key: 'lastLoginAt',
+      field: 'platformRoles',
+      headerName: '플랫폼 역할',
       width: 140,
-      render: (date: string) => (
-        <span style={{ fontSize: '10px', color: '#999' }}>
-          {date ? new Date(date).toLocaleString('ko-KR') : '-'}
-        </span>
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => {
+        const roles = params.row.platformRoles;
+        return (
+          <Tooltip title={roles.join(', ')}>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {roles.slice(0, 2).map(role => (
+                <Chip key={role} label={role} color="primary" size="small" />
+              ))}
+              {roles.length > 2 && (
+                <Chip label={`+${roles.length - 2}`} size="small" />
+              )}
+            </Box>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      field: 'serviceSubscriptions',
+      headerName: '서비스 가입',
+      width: 110,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Badge badgeContent={params.row.serviceSubscriptions.length} color="info" />
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>작업</span>,
-      key: 'actions',
+      field: 'phoneNumber',
+      headerName: '연락처',
+      width: 140,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="body2" color="textSecondary">
+          {params.row.phoneNumber || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'lastLoginAt',
+      headerName: '최근 로그인',
+      width: 150,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.lastLoginAt ? new Date(params.row.lastLoginAt).toLocaleString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'actions',
+      headerName: '작업',
       width: 120,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            icon={<SearchOutlined />}
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Box>
+          <IconButton
             size="small"
-            type="text"
             onClick={() => {
-              setSelectedUser(record);
+              setSelectedUser(params.row);
               setModalOpen(true);
             }}
-          />
-          <Button
-            icon={<EditOutlined />}
-            size="small"
-            type="text"
-            onClick={() => {
-              setSelectedUser(record);
-              setModalOpen(true);
-            }}
-          />
-          <Popconfirm
-            title="사용자 삭제"
-            description={`"${record.name}" 사용자를 삭제하시겠습니까?`}
-            onConfirm={() => handleDelete(record.id)}
-            okText="삭제"
-            cancelText="취소"
-            okButtonProps={{ danger: true }}
           >
-            <Button icon={<DeleteOutlined />} size="small" type="text" danger />
-          </Popconfirm>
-        </Space>
+            <SearchIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => {
+              setSelectedUser(params.row);
+              setModalOpen(true);
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => confirmDelete(params.row.id)}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
       ),
     },
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h6" fontWeight={600}>
             플랫폼 사용자 ({filteredUsers.length}명)
-          </span>
-          <span style={{ marginLeft: 8, color: '#999' }}>
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
             플랫폼에 등록된 모든 사용자 관리
-          </span>
-        </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchUsers} loading={loading}>
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchUsers} disabled={loading}>
             새로고침
           </Button>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => {
               setSelectedUser(null);
               setModalOpen(true);
@@ -297,57 +313,80 @@ export default function PlatformUsers() {
           >
             사용자 추가
           </Button>
-        </Space>
-      </div>
+        </Box>
+      </Box>
 
       {/* 검색 및 필터 */}
-      <Space size="middle" wrap>
-        <Select
-          style={{ width: 200 }}
-          value={filterUserType}
-          onChange={setFilterUserType}
-          options={[
-            { label: '전체 User Type', value: 'ALL' },
-            ...USER_TYPES.map(type => ({
-              label: type.label,
-              value: type.value,
-            })),
-          ]}
-        />
-        <Select
-          style={{ width: 150 }}
-          value={filterStatus}
-          onChange={setFilterStatus}
-          options={[
-            { label: '전체 상태', value: 'ALL' },
-            ...USER_STATUS_OPTIONS.map(status => ({
-              label: status.label,
-              value: status.value,
-            })),
-          ]}
-        />
-        <Search
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <FormControl sx={{ minWidth: 200 }} size="small">
+          <InputLabel>User Type</InputLabel>
+          <Select
+            value={filterUserType}
+            onChange={(e) => setFilterUserType(e.target.value as UserType | 'ALL')}
+            label="User Type"
+          >
+            <MenuItem value="ALL">전체 User Type</MenuItem>
+            {USER_TYPES.map(type => (
+              <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl sx={{ minWidth: 150 }} size="small">
+          <InputLabel>상태</InputLabel>
+          <Select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as 'ALL' | 'active' | 'inactive' | 'suspended')}
+            label="상태"
+          >
+            <MenuItem value="ALL">전체 상태</MenuItem>
+            {USER_STATUS_OPTIONS.map(status => (
+              <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TextField
           placeholder="이름, 이메일, 연락처, 부서로 검색"
-          allowClear
           value={searchKeyword}
-          onChange={e => setSearchKeyword(e.target.value)}
-          style={{ width: 400 }}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          size="small"
+          sx={{ flex: 1, maxWidth: 400 }}
+          slotProps={{
+            input: {
+              endAdornment: searchKeyword && (
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+            },
+          }}
         />
-      </Space>
+      </Box>
 
       {/* 테이블 */}
-      <Table
-        columns={columns}
-        dataSource={filteredUsers}
-        rowKey="id"
-        loading={loading}
-        scroll={{ x: 1400 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: total => `총 ${total}명`,
-        }}
-      />
+      <Box sx={{ height: 700, width: '100%' }}>
+        <DataGrid
+          rows={filteredUsers}
+          columns={columns}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+          }}
+          getRowHeight={() => 'auto'}
+          disableRowSelectionOnClick
+          sx={{
+            '& .MuiDataGrid-cell': {
+              py: 1,
+            },
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
+      </Box>
 
       {/* 사용자 상세/추가/수정 모달 */}
       <UserDetailModal
@@ -363,6 +402,20 @@ export default function PlatformUsers() {
         }}
         user={selectedUser}
       />
-    </Space>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>사용자 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>정말로 이 사용자를 삭제하시겠습니까?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>취소</Button>
+          <Button color="error" variant="contained" onClick={handleDelete}>
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }
