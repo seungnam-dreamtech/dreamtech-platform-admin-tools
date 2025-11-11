@@ -1,8 +1,22 @@
 // Predicate 선택 및 관리 컴포넌트
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import { Select, Button, Space, Card, Tag, Empty } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import type { SelectChangeEvent } from '@mui/material';
+import {
+  Button,
+  Stack,
+  Card,
+  CardContent,
+  Chip,
+  Box,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton
+} from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { FormSection } from '../common/FormSection';
 import { PREDICATE_CONFIGS } from './predicateConfigs';
 import { PathPredicateForm } from './predicates/PathPredicateForm';
@@ -103,10 +117,12 @@ export const PredicateSelector: React.FC<PredicateSelectorProps> = ({
         break;
       default:
         return (
-          <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-            <Tag color="orange">미구현</Tag>
-            <span style={{ marginLeft: '8px' }}>{config.label} 폼은 아직 구현 중입니다</span>
-          </div>
+          <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Chip label="미구현" color="warning" size="small" />
+            <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+              {config.label} 폼은 아직 구현 중입니다
+            </Typography>
+          </Box>
         );
     }
 
@@ -118,47 +134,50 @@ export const PredicateSelector: React.FC<PredicateSelectorProps> = ({
     );
   };
 
-  const predicateOptions = Object.values(PREDICATE_CONFIGS).map(config => ({
-    label: (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span>{config.icon}</span>
-        <span>{config.label}</span>
-        <Tag color="blue" style={{ fontSize: '10px', marginLeft: 'auto' }}>
-          {config.category}
-        </Tag>
-      </div>
-    ),
-    value: config.name
-  }));
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    setSelectedType(event.target.value);
+  };
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Stack spacing={3}>
       {/* 추가 영역 */}
       <FormSection
         title="조건 추가하기"
         description="라우트 매칭 조건을 선택하고 추가합니다"
       >
-        <Space style={{ width: '100%' }}>
-          <Select
-            value={selectedType}
-            onChange={setSelectedType}
-            placeholder="Predicate 타입 선택"
-            style={{ width: '400px' }}
-            options={predicateOptions}
-            showSearch
-            filterOption={(input, option) =>
-              (option?.value as string).toLowerCase().includes(input.toLowerCase())
-            }
-          />
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+          <FormControl sx={{ minWidth: 400 }} size="small">
+            <InputLabel>Predicate 타입 선택</InputLabel>
+            <Select
+              value={selectedType}
+              onChange={handleSelectChange}
+              label="Predicate 타입 선택"
+            >
+              {Object.values(PREDICATE_CONFIGS).map(config => (
+                <MenuItem key={config.name} value={config.name}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                    <span>{config.icon}</span>
+                    <span>{config.label}</span>
+                    <Chip
+                      label={config.category}
+                      size="small"
+                      color="primary"
+                      sx={{ ml: 'auto', fontSize: '10px', height: '18px' }}
+                    />
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={handleAddPredicate}
             disabled={!selectedType}
           >
             추가
           </Button>
-        </Space>
+        </Box>
       </FormSection>
 
       {/* 추가된 Predicate 목록 */}
@@ -167,43 +186,41 @@ export const PredicateSelector: React.FC<PredicateSelectorProps> = ({
         description="라우트에 적용될 매칭 조건들"
       >
         {value.length === 0 ? (
-          <Empty
-            description="추가된 조건이 없습니다"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" color="text.secondary">
+              추가된 조건이 없습니다
+            </Typography>
+          </Box>
         ) : (
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <Stack spacing={2}>
             {value.map((predicate, index) => {
               const config = PREDICATE_CONFIGS[predicate.name];
               return (
-                <Card
-                  key={index}
-                  size="small"
-                  title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>{config?.icon || '🔹'}</span>
-                      <span>{config?.label || predicate.name}</span>
-                    </div>
-                  }
-                  extra={
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleRemovePredicate(index)}
-                    >
-                      삭제
-                    </Button>
-                  }
-                  style={{ border: '1px solid #d9d9d9' }}
-                >
-                  {renderPredicateForm(predicate, index)}
+                <Card key={index} variant="outlined">
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span>{config?.icon || '🔹'}</span>
+                        <Typography variant="h6" component="span">
+                          {config?.label || predicate.name}
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        color="error"
+                        size="small"
+                        onClick={() => handleRemovePredicate(index)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                    {renderPredicateForm(predicate, index)}
+                  </CardContent>
                 </Card>
               );
             })}
-          </Space>
+          </Stack>
         )}
       </FormSection>
-    </Space>
+    </Stack>
   );
 };

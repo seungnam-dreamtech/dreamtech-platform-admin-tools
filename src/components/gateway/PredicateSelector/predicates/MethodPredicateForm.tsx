@@ -1,6 +1,6 @@
 // Method Predicate 폼 컴포넌트
 import React from 'react';
-import { Checkbox, Space, Tag } from 'antd';
+import { FormControlLabel, Checkbox, Stack, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorMethodPredicateArgs } from '../../../../types/gateway';
 
 interface MethodPredicateFormProps {
@@ -9,13 +9,13 @@ interface MethodPredicateFormProps {
 }
 
 const HTTP_METHODS = [
-  { value: 'GET', color: 'green' },
-  { value: 'POST', color: 'blue' },
-  { value: 'PUT', color: 'orange' },
-  { value: 'DELETE', color: 'red' },
-  { value: 'PATCH', color: 'purple' },
-  { value: 'OPTIONS', color: 'cyan' },
-  { value: 'HEAD', color: 'geekblue' }
+  { value: 'GET', color: 'success' as const },
+  { value: 'POST', color: 'primary' as const },
+  { value: 'PUT', color: 'warning' as const },
+  { value: 'DELETE', color: 'error' as const },
+  { value: 'PATCH', color: 'secondary' as const },
+  { value: 'OPTIONS', color: 'info' as const },
+  { value: 'HEAD', color: 'default' as const }
 ];
 
 export const MethodPredicateForm: React.FC<MethodPredicateFormProps> = ({
@@ -41,47 +41,64 @@ export const MethodPredicateForm: React.FC<MethodPredicateFormProps> = ({
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
           HTTP 메서드 선택
-          <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-        </span>
-      </div>
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
 
-      <Space wrap size="middle">
-        {HTTP_METHODS.map(({ value: methodValue, color }) => (
-          <Checkbox
-            key={methodValue}
-            checked={methods.includes(methodValue)}
-            onChange={() => handleMethodToggle(methodValue)}
-          >
-            <Tag color={color} style={{ margin: 0, fontWeight: 'bold' }}>
-              {methodValue}
-            </Tag>
-          </Checkbox>
-        ))}
-      </Space>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          {HTTP_METHODS.map(({ value: methodValue, color }) => (
+            <FormControlLabel
+              key={methodValue}
+              control={
+                <Checkbox
+                  checked={methods.includes(methodValue)}
+                  onChange={() => handleMethodToggle(methodValue)}
+                  size="small"
+                />
+              }
+              label={
+                <Chip
+                  label={methodValue}
+                  color={color}
+                  size="small"
+                  sx={{ fontWeight: 'bold' }}
+                />
+              }
+            />
+          ))}
+        </Box>
+      </Box>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px' }}>
-        💡 선택한 HTTP 메서드만 이 라우트로 전달됩니다
-        <div style={{ marginTop: '4px' }}>
+      <Box>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          💡 선택한 HTTP 메서드만 이 라우트로 전달됩니다
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
           선택된 메서드: {methods.length > 0 ? (
-            <Space wrap style={{ marginTop: '4px' }}>
+            <Box component="span" sx={{ display: 'inline-flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
               {methods.map(m => {
                 const methodConfig = HTTP_METHODS.find(hm => hm.value === m);
                 return (
-                  <Tag key={m} color={methodConfig?.color} style={{ fontSize: '11px' }}>
-                    {m}
-                  </Tag>
+                  <Chip
+                    key={m}
+                    label={m}
+                    color={methodConfig?.color}
+                    size="small"
+                    sx={{ fontSize: '11px', height: '18px' }}
+                  />
                 );
               })}
-            </Space>
+            </Box>
           ) : (
-            <span style={{ color: '#ff4d4f' }}>없음 (최소 1개 선택 필요)</span>
+            <Typography component="span" color="error" sx={{ ml: 0.5 }}>
+              없음 (최소 1개 선택 필요)
+            </Typography>
           )}
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Stack>
   );
 };

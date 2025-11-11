@@ -1,7 +1,7 @@
 // Path Predicate 폼 컴포넌트
 import React from 'react';
-import { Space, Input, Button, Tag } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { TextField, Button, Stack, Box, Typography, Chip, IconButton } from '@mui/material';
+import { Add as AddIcon, RemoveCircle as RemoveCircleIcon } from '@mui/icons-material';
 import type { ActuatorPathPredicateArgs } from '../../../../types/gateway';
 
 interface PathPredicateFormProps {
@@ -44,57 +44,63 @@ export const PathPredicateForm: React.FC<PathPredicateFormProps> = ({
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
           경로 패턴
-          <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-        </span>
-      </div>
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
 
-      <Space direction="vertical" style={{ width: '100%' }} size="small">
-        {patterns.map((pattern, index) => (
-          <Space key={index} style={{ width: '100%' }}>
-            <Input
-              value={pattern}
-              onChange={(e) => handlePatternChange(index, e.target.value)}
-              placeholder="/api/users/**"
-              style={{ width: '400px' }}
-            />
-            {patterns.length > 1 && (
-              <Button
-                type="text"
-                danger
-                icon={<MinusCircleOutlined />}
-                onClick={() => handleRemovePattern(index)}
+        <Stack spacing={1}>
+          {patterns.map((pattern, index) => (
+            <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <TextField
+                value={pattern}
+                onChange={(e) => handlePatternChange(index, e.target.value)}
+                placeholder="/api/users/**"
+                fullWidth
+                size="small"
               />
-            )}
-          </Space>
-        ))}
+              {patterns.length > 1 && (
+                <IconButton
+                  color="error"
+                  size="small"
+                  onClick={() => handleRemovePattern(index)}
+                >
+                  <RemoveCircleIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
+          ))}
 
-        <Button
-          type="dashed"
-          icon={<PlusOutlined />}
-          onClick={handleAddPattern}
-          style={{ width: '100%' }}
-        >
-          경로 패턴 추가
-        </Button>
-      </Space>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={handleAddPattern}
+            fullWidth
+          >
+            경로 패턴 추가
+          </Button>
+        </Stack>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '8px' }}>
-        💡 경로 패턴 예시:
-        <div style={{ marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-          <Tag color="blue" style={{ fontSize: '11px' }}>/api/users/**</Tag>
-          <Tag color="blue" style={{ fontSize: '11px' }}>/api/*/profile</Tag>
-          <Tag color="blue" style={{ fontSize: '11px' }}>/docs/**</Tag>
-        </div>
-        <div style={{ marginTop: '4px' }}>
-          • <code>**</code>: 여러 경로 세그먼트 매칭
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+          💡 경로 패턴 예시:
+        </Typography>
+        <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          <Chip label="/api/users/**" size="small" color="primary" />
+          <Chip label="/api/*/profile" size="small" color="primary" />
+          <Chip label="/docs/**" size="small" color="primary" />
+        </Box>
+        <Box sx={{ mt: 0.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            • <code>**</code>: 여러 경로 세그먼트 매칭
+          </Typography>
           <br />
-          • <code>*</code>: 단일 경로 세그먼트 매칭
-        </div>
-      </div>
-    </div>
+          <Typography variant="caption" color="text.secondary">
+            • <code>*</code>: 단일 경로 세그먼트 매칭
+          </Typography>
+        </Box>
+      </Box>
+    </Stack>
   );
 };

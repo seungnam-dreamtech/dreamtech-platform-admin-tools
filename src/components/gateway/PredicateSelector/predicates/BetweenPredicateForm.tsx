@@ -1,10 +1,7 @@
 // Between Predicate 폼 컴포넌트
 import React from 'react';
-import { DatePicker, Space, Tag } from 'antd';
-import dayjs from 'dayjs';
+import { TextField, Stack, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorBetweenPredicateArgs } from '../../../../types/gateway';
-
-const { RangePicker } = DatePicker;
 
 interface BetweenPredicateFormProps {
   value: ActuatorBetweenPredicateArgs;
@@ -15,93 +12,118 @@ export const BetweenPredicateForm: React.FC<BetweenPredicateFormProps> = ({
   value,
   onChange
 }) => {
-  const datetimeStart = value.datetime1 ? dayjs(value.datetime1) : null;
-  const datetimeEnd = value.datetime2 ? dayjs(value.datetime2) : null;
+  // ISO 8601 문자열을 datetime-local 형식으로 변환
+  const formatDatetimeLocal = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
-  const handleRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => {
-    if (dates && dates[0] && dates[1]) {
-      onChange({
-        ...value,
-        datetime1: dates[0].toISOString(),
-        datetime2: dates[1].toISOString()
-      });
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const localDateTime = e.target.value;
+    if (localDateTime) {
+      const isoString = new Date(localDateTime).toISOString();
+      onChange({ ...value, datetime1: isoString });
     } else {
-      onChange({
-        ...value,
-        datetime1: '',
-        datetime2: ''
-      });
+      onChange({ ...value, datetime1: '' });
+    }
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const localDateTime = e.target.value;
+    if (localDateTime) {
+      const isoString = new Date(localDateTime).toISOString();
+      onChange({ ...value, datetime2: isoString });
+    } else {
+      onChange({ ...value, datetime2: '' });
     }
   };
 
   return (
-    <div>
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              기간 설정 (시작 ~ 종료)
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <RangePicker
-            showTime
-            value={datetimeStart && datetimeEnd ? [datetimeStart, datetimeEnd] : null}
-            onChange={handleRangeChange}
-            format="YYYY-MM-DD HH:mm:ss"
-            style={{ width: '100%' }}
-            placeholder={['시작 시각', '종료 시각']}
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          기간 설정 (시작 ~ 종료)
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            type="datetime-local"
+            label="시작 시각"
+            value={formatDatetimeLocal(value.datetime1)}
+            onChange={handleStartDateChange}
+            fullWidth
+            size="small"
+            InputLabelProps={{ shrink: true }}
           />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 설정한 기간 내의 요청만 이 라우트로 전달됩니다
-          </div>
-        </div>
+          <TextField
+            type="datetime-local"
+            label="종료 시각"
+            value={formatDatetimeLocal(value.datetime2)}
+            onChange={handleEndDateChange}
+            fullWidth
+            size="small"
+            InputLabelProps={{ shrink: true }}
+          />
+        </Box>
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 설정한 기간 내의 요청만 이 라우트로 전달됩니다
+        </Typography>
+      </Box>
 
-        {value.datetime1 && value.datetime2 && (
-          <div style={{ padding: '8px', background: '#e6f7ff', borderRadius: '4px', border: '1px solid #91d5ff' }}>
-            <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
-              ISO 8601 형식:
-            </div>
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <div>
-                <Tag color="green" style={{ fontSize: '10px' }}>시작</Tag>
-                <code style={{ fontSize: '11px' }}>{value.datetime1}</code>
-              </div>
-              <div>
-                <Tag color="red" style={{ fontSize: '10px' }}>종료</Tag>
-                <code style={{ fontSize: '11px' }}>{value.datetime2}</code>
-              </div>
-            </Space>
-          </div>
-        )}
-      </Space>
+      {value.datetime1 && value.datetime2 && (
+        <Box sx={{ p: 1, bgcolor: 'info.lighter', borderRadius: 1, border: 1, borderColor: 'info.light' }}>
+          <Typography variant="caption" fontWeight="bold" sx={{ display: 'block', mb: 0.5 }}>
+            ISO 8601 형식:
+          </Typography>
+          <Stack spacing={0.5}>
+            <Box>
+              <Chip label="시작" size="small" color="success" sx={{ fontSize: '10px', height: '16px' }} />
+              <Typography variant="caption" component="code" sx={{ fontFamily: 'monospace', ml: 1, fontSize: '11px' }}>
+                {value.datetime1}
+              </Typography>
+            </Box>
+            <Box>
+              <Chip label="종료" size="small" color="error" sx={{ fontSize: '10px', height: '16px' }} />
+              <Typography variant="caption" component="code" sx={{ fontFamily: 'monospace', ml: 1, fontSize: '11px' }}>
+                {value.datetime2}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+      )}
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>Between Predicate 사용 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="blue" style={{ fontSize: '11px' }}>기간 한정 이벤트</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">Between Predicate 사용 예시:</Typography>
+        <Box sx={{ mt: 1 }}>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="기간 한정 이벤트" size="small" color="primary" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               2025-01-01 00:00 ~ 2025-01-31 23:59
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
               → 1월 한 달간만 이벤트 페이지로 라우팅
-            </div>
-          </div>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="green" style={{ fontSize: '11px' }}>점검 시간 우회</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="점검 시간 우회" size="small" color="success" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               점검 시간대에만 점검 페이지로 라우팅
-            </div>
-          </div>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="orange" style={{ fontSize: '11px' }}>베타 테스트</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="베타 테스트" size="small" color="warning" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               베타 기간 동안만 신규 기능 활성화
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Stack>
   );
 };
