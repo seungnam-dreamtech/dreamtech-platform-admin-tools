@@ -1,7 +1,7 @@
 // Remove Header/Parameter Filter 폼 컴포넌트 (공통)
 import React from 'react';
-import { Input, Button, Space, Tag } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { TextField, Button, Stack, Box, Typography, Chip, IconButton } from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import type {
   ActuatorRemoveRequestHeaderFilterArgs,
   ActuatorRemoveResponseHeaderFilterArgs,
@@ -60,90 +60,106 @@ export const RemoveHeaderFilterForm: React.FC<RemoveHeaderFilterFormProps> = ({
   const supportsMultiple = 'names' in value;
 
   return (
-    <div>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
           제거할 {label} 이름
-          <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-        </span>
-      </div>
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
 
-      <Space direction="vertical" style={{ width: '100%' }} size="small">
-        {names.map((name: string, index: number) => (
-          <Space key={index} style={{ width: '100%' }}>
-            <Input
-              value={name}
-              onChange={(e) => handleNameChange(index, e.target.value)}
-              placeholder={placeholder}
-              style={{ width: '400px' }}
-            />
-            {supportsMultiple && names.length > 1 && (
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleRemoveName(index)}
+        <Stack spacing={1}>
+          {names.map((name: string, index: number) => (
+            <Stack key={index} direction="row" spacing={1} alignItems="center">
+              <TextField
+                value={name}
+                onChange={(e) => handleNameChange(index, e.target.value)}
+                placeholder={placeholder}
+                fullWidth
+                size="small"
               />
-            )}
-          </Space>
-        ))}
+              {supportsMultiple && names.length > 1 && (
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoveName(index)}
+                  size="small"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )}
+            </Stack>
+          ))}
 
-        {supportsMultiple && (
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={handleAddName}
-            style={{ width: '100%' }}
-          >
-            {label} 추가
-          </Button>
-        )}
-      </Space>
+          {supportsMultiple && (
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={handleAddName}
+              fullWidth
+            >
+              {label} 추가
+            </Button>
+          )}
+        </Stack>
+      </Box>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>Remove {type === 'request-header' ? 'Request Header' : type === 'response-header' ? 'Response Header' : 'Request Parameter'} 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">
+          Remove {type === 'request-header' ? 'Request Header' : type === 'response-header' ? 'Response Header' : 'Request Parameter'} 예시:
+        </Typography>
+        <Box sx={{ mt: 1 }}>
           {type === 'request-header' && (
             <>
-              <div style={{ marginBottom: '4px' }}>
-                <Tag color="blue" style={{ fontSize: '11px' }}>보안 헤더 제거</Tag>
-                <code>X-Internal-Token</code>
-              </div>
-              <div style={{ marginBottom: '4px' }}>
-                <Tag color="green" style={{ fontSize: '11px' }}>디버그 헤더</Tag>
-                <code>X-Debug-Mode</code>
-              </div>
+              <Box sx={{ mb: 0.5 }}>
+                <Chip label="보안 헤더 제거" size="small" color="primary" />
+                <Typography component="span" sx={{ ml: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  X-Internal-Token
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 0.5 }}>
+                <Chip label="디버그 헤더" size="small" color="success" />
+                <Typography component="span" sx={{ ml: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  X-Debug-Mode
+                </Typography>
+              </Box>
             </>
           )}
           {type === 'response-header' && (
             <>
-              <div style={{ marginBottom: '4px' }}>
-                <Tag color="blue" style={{ fontSize: '11px' }}>서버 정보 숨김</Tag>
-                <code>Server</code>
-              </div>
-              <div style={{ marginBottom: '4px' }}>
-                <Tag color="orange" style={{ fontSize: '11px' }}>내부 헤더 제거</Tag>
-                <code>X-Application-Context</code>
-              </div>
+              <Box sx={{ mb: 0.5 }}>
+                <Chip label="서버 정보 숨김" size="small" color="primary" />
+                <Typography component="span" sx={{ ml: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  Server
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 0.5 }}>
+                <Chip label="내부 헤더 제거" size="small" color="warning" />
+                <Typography component="span" sx={{ ml: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  X-Application-Context
+                </Typography>
+              </Box>
             </>
           )}
           {type === 'request-parameter' && (
             <>
-              <div style={{ marginBottom: '4px' }}>
-                <Tag color="blue" style={{ fontSize: '11px' }}>내부 파라미터</Tag>
-                <code>_internal</code>
-              </div>
-              <div style={{ marginBottom: '4px' }}>
-                <Tag color="green" style={{ fontSize: '11px' }}>디버그 모드</Tag>
-                <code>debug</code>
-              </div>
+              <Box sx={{ mb: 0.5 }}>
+                <Chip label="내부 파라미터" size="small" color="primary" />
+                <Typography component="span" sx={{ ml: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  _internal
+                </Typography>
+              </Box>
+              <Box sx={{ mb: 0.5 }}>
+                <Chip label="디버그 모드" size="small" color="success" />
+                <Typography component="span" sx={{ ml: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                  debug
+                </Typography>
+              </Box>
             </>
           )}
-        </div>
-        <div style={{ marginTop: '8px', color: '#fa8c16' }}>
+        </Box>
+        <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
           💡 {isResponseHeader ? '응답' : '요청'}에서 지정한 {label}를 제거합니다
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Stack>
   );
 };

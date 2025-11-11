@@ -1,6 +1,6 @@
 // SetPath Filter 폼 컴포넌트
 import React from 'react';
-import { Input, Tag } from 'antd';
+import { TextField, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorSetPathFilterArgs } from '../../../../types/gateway';
 
 interface SetPathFilterFormProps {
@@ -13,69 +13,68 @@ export const SetPathFilterForm: React.FC<SetPathFilterFormProps> = ({
   onChange
 }) => {
   return (
-    <div>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
-          새로운 경로 템플릿
-          <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-        </span>
-      </div>
+    <Box>
+      <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+        새로운 경로 템플릿
+        <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+      </Typography>
 
-      <Input
-        value={value.template}
+      <TextField
+        value={value.template || ''}
         onChange={(e) => onChange({ ...value, template: e.target.value })}
         placeholder="예: /api/{segment}"
-        style={{ width: '100%' }}
+        fullWidth
+        size="small"
       />
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
         💡 경로 변수를 사용할 수 있습니다 (Spring URI Template 문법)
-      </div>
+      </Typography>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>SetPath 동작 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="blue" style={{ fontSize: '11px' }}>경로 고정</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+      <Box sx={{ mt: 1.5, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">SetPath 동작 예시:</Typography>
+        <Box sx={{ mt: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Chip label="경로 고정" size="small" color="primary" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               template = <code>/api/fixed</code>
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
               • 모든 요청 → <code style={{ color: '#52c41a' }}>/api/fixed</code>
-            </div>
-          </div>
+            </Typography>
+          </Box>
 
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="green" style={{ fontSize: '11px' }}>경로 변수 활용</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
-              Path Predicate = <code>/users/{'{'}id{'}'}</code>
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
-              template = <code>/api/v2/users/{'{'}id{'}'}</code>
-            </div>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#52c41a' }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Chip label="경로 변수 활용" size="small" color="success" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
+              Path Predicate = <code>{'/users/{id}'}</code>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
+              template = <code>{'/api/v2/users/{id}'}</code>
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1, display: 'block', color: '#52c41a', mt: 0.5 }}>
               → <code>/users/123</code> ⇒ <code>/api/v2/users/123</code>
-            </div>
-          </div>
+            </Typography>
+          </Box>
 
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="orange" style={{ fontSize: '11px' }}>다중 변수</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
-              Path = <code>/{'{'}service{'}'}/{'{'}id{'}'}</code>
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
-              template = <code>/backend/{'{'}service{'}'}/get/{'{'}id{'}'}</code>
-            </div>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#52c41a' }}>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="다중 변수" size="small" color="warning" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
+              Path = <code>{'/{service}/{id}'}</code>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
+              template = <code>{'/backend/{service}/get/{id}'}</code>
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1, display: 'block', color: '#52c41a', mt: 0.5 }}>
               → <code>/users/123</code> ⇒ <code>/backend/users/get/123</code>
-            </div>
-          </div>
-        </div>
+            </Typography>
+          </Box>
+        </Box>
 
-        <div style={{ marginTop: '8px', color: '#fa8c16' }}>
+        <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
           💡 요청 경로를 템플릿 기반으로 완전히 재작성합니다
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Box>
   );
 };
