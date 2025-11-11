@@ -27,7 +27,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { AuthorityTemplate, UserTypeDefinition } from '../../types/user-management';
-import TemplateFormModal from '../../components/settings/TemplateFormModal';
+import { AuthorityTemplateFormModal } from '../../components/settings/AuthorityTemplateFormModal';
 import { userManagementService } from '../../services/userManagementService';
 
 const { Search } = Input;
@@ -88,7 +88,7 @@ export default function AuthorityTemplates() {
         template =>
           template.name.toLowerCase().includes(keyword) ||
           (template.description?.toLowerCase().includes(keyword) ?? false) ||
-          template.user_type.toLowerCase().includes(keyword)
+          (template.user_type?.toLowerCase().includes(keyword) ?? false)
       );
     }
 
@@ -115,8 +115,10 @@ export default function AuthorityTemplates() {
   };
 
   // 템플릿 삭제
-  const handleDelete = async () => {
+  const handleDelete = async (_id: number) => {
     try {
+      // TODO: API 호출
+      // await userManagementService.deletePermissionTemplate(id);
       message.success('권한 템플릿이 삭제되었습니다');
       fetchTemplates();
     } catch (error) {
@@ -426,7 +428,7 @@ export default function AuthorityTemplates() {
       </Card>
 
       {/* 템플릿 추가/수정 모달 */}
-      <TemplateFormModal
+      <AuthorityTemplateFormModal
         open={modalOpen}
         onCancel={() => {
           setModalOpen(false);
@@ -434,7 +436,6 @@ export default function AuthorityTemplates() {
         }}
         onSave={handleSave}
         template={selectedTemplate}
-        userTypes={userTypes}
       />
     </div>
   );

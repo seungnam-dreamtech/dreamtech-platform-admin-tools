@@ -23,8 +23,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 90,
-    created_at: '2025-08-05T07:28:01.078772Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -34,8 +34,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 80,
-    created_at: '2025-08-05T07:28:01.183225Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -45,8 +45,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 70,
-    created_at: '2025-08-05T07:28:01.117937Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -56,8 +56,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 60,
-    created_at: '2025-08-05T07:28:01.150286Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -67,8 +67,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 40,
-    created_at: '2025-08-05T07:28:01.315650Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -78,8 +78,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 30,
-    created_at: '2025-08-05T07:28:01.283081Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -89,8 +89,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 20,
-    created_at: '2025-08-05T07:28:01.249603Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -100,8 +100,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 10,
-    created_at: '2025-08-05T07:28:01.216173Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
   {
@@ -111,8 +111,8 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
     is_active: true,
     is_system_type: true,
     display_order: 50,
-    created_at: '2025-08-05T07:28:01.348012Z',
     created_by: 'SYSTEM_MIGRATION',
+    created_at: "2025-08-05T07:28:01Z",
     default_template_names: [],
   },
 ];
@@ -707,12 +707,11 @@ export const MOCK_OAUTH_CLIENTS: OAuthClient[] = [
     ],
     scopes: ['openid', 'profile', 'email', 'address', 'phone'],
     authorization_grant_types: ['authorization_code', 'refresh_token'],
-    accessTokenValidity: 3600,
-    refreshTokenValidity: 86400,
-    idTokenValidity: 3600,
-    enabled: true,
-    created_at: '2023-11-01T09:00:00Z',
-    updatedAt: '2025-01-05T14:00:00Z',
+    client_authentication_methods: ['CLIENT_SECRET_BASIC'],
+    reuse_refresh_tokens: true,
+    use_public_client: false,
+    client_id_issued_at: '2024-01-05T09:00:00Z',
+    updated_at: '2025-01-05T14:00:00Z',
   },
   {
     id: 'client-002',
@@ -734,12 +733,11 @@ export const MOCK_OAUTH_CLIENTS: OAuthClient[] = [
     ],
     scopes: ['openid', 'profile', 'email', 'healthcare', 'patient:read', 'patient:write'],
     authorization_grant_types: ['authorization_code', 'refresh_token'],
-    accessTokenValidity: 7200,
-    refreshTokenValidity: 604800,
-    idTokenValidity: 7200,
-    enabled: true,
-    created_at: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-12-20T11:30:00Z',
+    client_authentication_methods: ['CLIENT_SECRET_BASIC'],
+    reuse_refresh_tokens: true,
+    use_public_client: false,
+    client_id_issued_at: '2024-08-10T10:00:00Z',
+    updated_at: '2024-12-20T11:30:00Z',
   },
   {
     id: 'client-003',
@@ -751,10 +749,11 @@ export const MOCK_OAUTH_CLIENTS: OAuthClient[] = [
     redirect_uris: [],
     scopes: ['notification:send', 'notification:manage'],
     authorization_grant_types: ['client_credentials'],
-    accessTokenValidity: 3600,
-    enabled: true,
-    created_at: '2024-03-20T11:00:00Z',
-    updatedAt: '2024-12-15T09:20:00Z',
+    client_authentication_methods: ['CLIENT_SECRET_BASIC'],
+    reuse_refresh_tokens: false,
+    use_public_client: false,
+    client_id_issued_at: '2024-06-15T08:00:00Z',
+    updated_at: '2024-12-15T09:20:00Z',
   },
   {
     id: 'client-004',
@@ -770,13 +769,11 @@ export const MOCK_OAUTH_CLIENTS: OAuthClient[] = [
     post_logout_redirect_uris: ['dreamtech://logout'],
     scopes: ['openid', 'profile', 'email', 'offline_access'],
     authorization_grant_types: ['authorization_code', 'refresh_token'],
-    requireAuthTime: true,
-    accessTokenValidity: 1800,
-    refreshTokenValidity: 2592000,
-    idTokenValidity: 1800,
-    enabled: true,
-    created_at: '2024-05-10T10:00:00Z',
-    updatedAt: '2025-01-02T15:45:00Z',
+    client_authentication_methods: ['CLIENT_SECRET_POST'],
+    reuse_refresh_tokens: true,
+    use_public_client: true,
+    client_id_issued_at: '2024-09-01T11:00:00Z',
+    updated_at: '2025-01-02T15:45:00Z',
   },
   {
     id: 'client-005',
@@ -788,10 +785,11 @@ export const MOCK_OAUTH_CLIENTS: OAuthClient[] = [
     redirect_uris: [],
     scopes: ['schedule:execute', 'schedule:manage'],
     authorization_grant_types: ['client_credentials'],
-    accessTokenValidity: 7200,
-    enabled: true,
-    created_at: '2024-04-10T09:00:00Z',
-    updatedAt: '2024-11-20T10:15:00Z',
+    client_authentication_methods: ['CLIENT_SECRET_BASIC'],
+    reuse_refresh_tokens: false,
+    use_public_client: false,
+    client_id_issued_at: '2024-05-20T09:00:00Z',
+    updated_at: '2024-11-20T10:15:00Z',
   },
   {
     id: 'client-006',
@@ -805,9 +803,11 @@ export const MOCK_OAUTH_CLIENTS: OAuthClient[] = [
     redirect_uris: ['http://localhost:8080/callback'],
     scopes: ['openid'],
     authorization_grant_types: ['authorization_code'],
-    enabled: false,
-    created_at: '2024-08-15T10:00:00Z',
-    updatedAt: '2024-10-01T16:00:00Z',
+    client_authentication_methods: ['CLIENT_SECRET_BASIC'],
+    reuse_refresh_tokens: true,
+    use_public_client: false,
+    client_id_issued_at: '2024-03-01T14:00:00Z',
+    updated_at: '2024-10-01T16:00:00Z',
   },
 ];
 
@@ -876,12 +876,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['patient:read', 'diagnosis:write', 'prescription:create'],
     serviceScopeIds: ['auth', 'healthcare', 'schedule'],
     // priority 제거됨
-    created_at: '2024-01-15T09:00:00Z',
     updated_at: '2025-01-05T10:30:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -894,12 +894,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['patient:*', 'diagnosis:*', 'prescription:*', 'schedule:manage'],
     serviceScopeIds: ['auth', 'healthcare', 'notification', 'schedule'],
     // priority 제거됨
-    created_at: '2024-02-01T10:00:00Z',
     updated_at: '2025-01-08T14:20:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -912,12 +912,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['patient:read', 'diagnosis:read'],
     serviceScopeIds: ['auth', 'healthcare'],
     // priority 제거됨
-    created_at: '2024-03-10T11:00:00Z',
     updated_at: '2024-12-20T09:15:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -930,12 +930,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['profile:read', 'profile:update', 'patient:read:self', 'notification:receive'],
     serviceScopeIds: ['auth', 'healthcare', 'notification'],
     // priority 제거됨
-    created_at: '2024-01-20T09:00:00Z',
     updated_at: '2025-01-06T11:00:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -948,12 +948,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['user:manage', 'service:manage', 'platform:read', 'platform:monitor'],
     serviceScopeIds: ['auth', 'healthcare', 'notification', 'schedule'],
     // priority 제거됨
-    created_at: '2024-01-10T09:00:00Z',
     updated_at: '2025-01-09T15:30:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -966,12 +966,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['platform:read', 'platform:monitor', 'service:read', 'notification:send'],
     serviceScopeIds: ['auth', 'notification', 'schedule'],
     // priority 제거됨
-    created_at: '2024-02-15T10:00:00Z',
     updated_at: '2024-12-28T13:45:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -984,12 +984,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['*:*'],
     serviceScopeIds: ['auth', 'healthcare', 'notification', 'schedule'],
     // priority 제거됨
-    created_at: '2023-11-01T09:00:00Z',
     updated_at: '2025-01-10T08:00:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
   {
@@ -1002,12 +1002,12 @@ export const MOCK_AUTHORITY_TEMPLATES: AuthorityTemplate[] = [
     permissions: ['patient:read', 'diagnosis:read', 'schedule:read'],
     serviceScopeIds: ['auth', 'healthcare', 'schedule'],
     // priority 제거됨
-    created_at: '2024-04-01T09:00:00Z',
     updated_at: '2024-11-15T10:20:00Z',
     is_active: true,
     global_roles: [],
     service_roles: [],
     created_by: "SYSTEM",
+    created_at: "2024-01-15T09:00:00Z",
     // appliedUserCount 제거됨
   },
 ];

@@ -362,7 +362,7 @@ export default function OAuthClients() {
       align: 'center',
       render: (uris?: string[]) => (
         <Tooltip title={uris?.join('\n') || ''}>
-          <Badge count={uris.length} showZero color="purple" style={{ fontSize: '10px' }} />
+          <Badge count={uris?.length || 0} showZero color="purple" style={{ fontSize: '10px' }} />
         </Tooltip>
       ),
     },
@@ -410,7 +410,7 @@ export default function OAuthClients() {
               icon={<CopyOutlined />}
               size="small"
               type="text"
-              onClick={() => handleCopySecret(record.clientId)}
+              onClick={() => handleCopySecret(record.client_id)}
             />
           </Tooltip>
           <Button

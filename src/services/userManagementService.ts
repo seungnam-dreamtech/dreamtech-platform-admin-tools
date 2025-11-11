@@ -207,11 +207,11 @@ class UserManagementService {
       throw new Error(`User not found: ${userId}`);
     }
 
-    const updatedUser = {
+    const updatedUser: PlatformUser = {
       ...MOCK_USERS[userIndex],
       ...userData,
       updatedAt: new Date().toISOString(),
-    };
+    } as PlatformUser;
 
     MOCK_USERS[userIndex] = updatedUser;
     return updatedUser;

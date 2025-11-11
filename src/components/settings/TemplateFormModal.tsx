@@ -326,6 +326,7 @@ export default function TemplateFormModal({
               key: `${role.service_id}:${role.role_name}`,
             }))}
             optionRender={(option) => {
+              if (!option.value || typeof option.value !== 'string') return null;
               const [serviceId, roleName] = option.value.split(':');
               const role = serviceRoles.find(
                 (r) => r.service_id === serviceId && r.role_name === roleName
