@@ -1,10 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { ConfigProvider, App as AntdApp } from 'antd';
-import koKR from 'antd/locale/ko_KR';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { THEME } from './constants';
 import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import AppContent from './AppContent';
@@ -20,22 +17,11 @@ const App: React.FC = () => {
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
         <SnackbarProvider>
-          <ConfigProvider
-            locale={koKR}
-            theme={{
-              token: {
-                colorPrimary: THEME.PRIMARY_COLOR,
-              },
-            }}
-          >
-            <AntdApp>
-              <AuthProvider>
-                <Router>
-                  <AppContent />
-                </Router>
-              </AuthProvider>
-            </AntdApp>
-          </ConfigProvider>
+          <AuthProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </AuthProvider>
         </SnackbarProvider>
       </ThemeProvider>
     </ErrorBoundary>

@@ -1,7 +1,7 @@
 // RemoteAddr Predicate 폼 컴포넌트
 import React from 'react';
-import { Input, Button, Space, Tag } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { TextField, Button, Stack, Box, Typography, Chip, IconButton } from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import type { ActuatorRemoteAddrPredicateArgs } from '../../../../types/gateway';
 
 interface RemoteAddrPredicateFormProps {
@@ -36,68 +36,87 @@ export const RemoteAddrPredicateForm: React.FC<RemoteAddrPredicateFormProps> = (
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
           허용할 IP 주소/CIDR
-          <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-        </span>
-      </div>
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
 
-      <Space direction="vertical" style={{ width: '100%' }} size="small">
-        {sources.map((source, index) => (
-          <Space key={index} style={{ width: '100%' }}>
-            <Input
-              value={source}
-              onChange={(e) => handleSourceChange(index, e.target.value)}
-              placeholder="예: 192.168.1.1/24"
-              style={{ width: '400px' }}
-            />
-            {sources.length > 1 && (
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleRemoveSource(index)}
+        <Stack spacing={1}>
+          {sources.map((source, index) => (
+            <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <TextField
+                value={source}
+                onChange={(e) => handleSourceChange(index, e.target.value)}
+                placeholder="예: 192.168.1.1/24"
+                fullWidth
+                size="small"
               />
-            )}
-          </Space>
-        ))}
+              {sources.length > 1 && (
+                <IconButton
+                  color="error"
+                  size="small"
+                  onClick={() => handleRemoveSource(index)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
+          ))}
 
-        <Button
-          type="dashed"
-          icon={<PlusOutlined />}
-          onClick={handleAddSource}
-          style={{ width: '100%' }}
-        >
-          IP/CIDR 추가
-        </Button>
-      </Space>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={handleAddSource}
+            fullWidth
+          >
+            IP/CIDR 추가
+          </Button>
+        </Stack>
+      </Box>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>IP 주소 형식 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ marginBottom: '4px' }}>
-            <Tag color="blue" style={{ fontSize: '11px' }}>단일 IP</Tag>
-            <code>192.168.1.100</code>
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <Tag color="green" style={{ fontSize: '11px' }}>CIDR 블록</Tag>
-            <code>192.168.1.0/24</code> (192.168.1.0 ~ 192.168.1.255)
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <Tag color="orange" style={{ fontSize: '11px' }}>IPv6</Tag>
-            <code>2001:db8::/32</code>
-          </div>
-          <div style={{ marginBottom: '4px' }}>
-            <Tag color="purple" style={{ fontSize: '11px' }}>로컬호스트</Tag>
-            <code>127.0.0.1</code> 또는 <code>::1</code>
-          </div>
-        </div>
-        <div style={{ marginTop: '8px', color: '#fa8c16' }}>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">IP 주소 형식 예시:</Typography>
+        <Box sx={{ mt: 1 }}>
+          <Box sx={{ mb: 0.5 }}>
+            <Chip label="단일 IP" size="small" color="primary" />
+            <Typography variant="caption" component="code" sx={{ ml: 1, fontFamily: 'monospace' }}>
+              192.168.1.100
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 0.5 }}>
+            <Chip label="CIDR 블록" size="small" color="success" />
+            <Typography variant="caption" component="code" sx={{ ml: 1, fontFamily: 'monospace' }}>
+              192.168.1.0/24
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+              (192.168.1.0 ~ 192.168.1.255)
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 0.5 }}>
+            <Chip label="IPv6" size="small" color="warning" />
+            <Typography variant="caption" component="code" sx={{ ml: 1, fontFamily: 'monospace' }}>
+              2001:db8::/32
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 0.5 }}>
+            <Chip label="로컬호스트" size="small" color="secondary" />
+            <Typography variant="caption" component="code" sx={{ ml: 1, fontFamily: 'monospace' }}>
+              127.0.0.1
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mx: 0.5 }}>
+              또는
+            </Typography>
+            <Typography variant="caption" component="code" sx={{ fontFamily: 'monospace' }}>
+              ::1
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
           💡 여러 IP/CIDR를 추가하면 OR 조건으로 동작합니다
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Stack>
   );
 };

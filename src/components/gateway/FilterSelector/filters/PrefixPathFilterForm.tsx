@@ -1,6 +1,6 @@
 // PrefixPath Filter 폼 컴포넌트
 import React from 'react';
-import { Input, Tag } from 'antd';
+import { TextField, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorPrefixPathFilterArgs } from '../../../../types/gateway';
 
 interface PrefixPathFilterFormProps {
@@ -13,51 +13,50 @@ export const PrefixPathFilterForm: React.FC<PrefixPathFilterFormProps> = ({
   onChange
 }) => {
   return (
-    <div>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
-          경로 앞에 추가할 접두사
-          <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-        </span>
-      </div>
+    <Box>
+      <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+        경로 앞에 추가할 접두사
+        <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+      </Typography>
 
-      <Input
-        value={value.prefix}
+      <TextField
+        value={value.prefix || ''}
         onChange={(e) => onChange({ ...value, prefix: e.target.value })}
         placeholder="예: /api"
-        style={{ width: '100%' }}
+        fullWidth
+        size="small"
       />
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>PrefixPath 동작 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="blue" style={{ fontSize: '11px' }}>prefix = /api</Tag>
-          </div>
-          <div style={{ marginLeft: '8px', color: '#666' }}>
+      <Box sx={{ mt: 1.5, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">PrefixPath 동작 예시:</Typography>
+        <Box sx={{ mt: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Chip label="prefix = /api" size="small" color="primary" />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
             • <code>/users/123</code> → <code style={{ color: '#52c41a' }}>/api/users/123</code>
-          </div>
-          <div style={{ marginLeft: '8px', color: '#666' }}>
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
             • <code>/products</code> → <code style={{ color: '#52c41a' }}>/api/products</code>
-          </div>
-        </div>
+          </Typography>
+        </Box>
 
-        <div style={{ marginTop: '12px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="green" style={{ fontSize: '11px' }}>prefix = /v2</Tag>
-          </div>
-          <div style={{ marginLeft: '8px', color: '#666' }}>
+        <Box sx={{ mt: 1.5 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Chip label="prefix = /v2" size="small" color="success" />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
             • <code>/users</code> → <code style={{ color: '#52c41a' }}>/v2/users</code>
-          </div>
-          <div style={{ marginLeft: '8px', color: '#666' }}>
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
             • <code>/orders/list</code> → <code style={{ color: '#52c41a' }}>/v2/orders/list</code>
-          </div>
-        </div>
+          </Typography>
+        </Box>
 
-        <div style={{ marginTop: '8px', color: '#fa8c16' }}>
+        <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
           💡 요청 경로 앞에 접두사를 추가합니다 (백엔드 서비스의 버전 관리나 네임스페이스 지정에 유용)
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Box>
   );
 };

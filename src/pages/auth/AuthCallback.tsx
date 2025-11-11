@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Spin, Alert, Card } from 'antd';
+import { Box, Card, CircularProgress, Alert, Typography } from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../constants';
 
@@ -93,42 +93,49 @@ const AuthCallback: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        }}
+      >
+        <Card sx={{ width: 400, textAlign: 'center', p: 3 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" fontWeight={600}>
+              로그인 실패
+            </Typography>
+            <Typography variant="body2">{error}</Typography>
+          </Alert>
+          <Typography variant="body2" color="textSecondary">
+            잠시 후 로그인 페이지로 이동합니다...
+          </Typography>
+        </Card>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      }}>
-        <Card style={{ width: 400, textAlign: 'center' }}>
-          <Alert
-            message="로그인 실패"
-            description={error}
-            type="error"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-          <p>잠시 후 로그인 페이지로 이동합니다...</p>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    }}>
-      <Card style={{ width: 400, textAlign: 'center' }}>
-        <Spin size="large" />
-        <p style={{ marginTop: 16 }}>
+      }}
+    >
+      <Card sx={{ width: 400, textAlign: 'center', p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <CircularProgress size={48} />
+        </Box>
+        <Typography variant="body2" color="textSecondary">
           {isProcessing ? '로그인 처리 중...' : '인증 완료, 대시보드로 이동 중...'}
-        </p>
+        </Typography>
       </Card>
-    </div>
+    </Box>
   );
 };
 

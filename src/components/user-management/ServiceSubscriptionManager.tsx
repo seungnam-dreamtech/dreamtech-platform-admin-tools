@@ -1,12 +1,28 @@
 // 서비스 가입 관리 컴포넌트 (Transfer 스타일)
 
 import { useState, useEffect } from 'react';
-import { Transfer, Tag, Space, Typography } from 'antd';
-import type { TransferProps } from 'antd';
+import {
+  Box,
+  Paper,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Checkbox,
+  Button,
+  Stack,
+  TextField,
+  Chip,
+  InputAdornment
+} from '@mui/material';
+import {
+  ChevronRight as ChevronRightIcon,
+  ChevronLeft as ChevronLeftIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
 import { MOCK_SERVICES } from '../../constants/user-management';
 import type { ServiceSubscription } from '../../types/user-management';
-
-const { Text } = Typography;
 
 interface ServiceSubscriptionManagerProps {
   value?: ServiceSubscription[];
@@ -14,13 +30,12 @@ interface ServiceSubscriptionManagerProps {
   preSelectedServiceId?: string; // 특정 서비스에서 사용자 추가 시 자동 선택
 }
 
-interface TransferItem {
-  key: string;
-  title: string;
+interface ServiceItem {
+  id: string;
+  displayName: string;
   description: string;
   icon: string;
   defaultRole: string;
-  disabled?: boolean;
 }
 
 export function ServiceSubscriptionManager({
@@ -28,109 +43,257 @@ export function ServiceSubscriptionManager({
   onChange,
   preSelectedServiceId,
 }: ServiceSubscriptionManagerProps) {
-  const [targetKeys, setTargetKeys] = useState<string[]>([]);
+  const [leftSelected, setLeftSelected] = useState<string[]>([]);
+  const [rightSelected, setRightSelected] = useState<string[]>([]);
+  const [leftSearch, setLeftSearch] = useState('');
+  const [rightSearch, setRightSearch] = useState('');
 
-  // value prop이 변경되면 targetKeys 업데이트
-  useEffect(() => {
-    const keys = value.map(sub => sub.serviceId);
-    setTargetKeys(keys);
-  }, [value]);
+  const subscribedIds = value.map(sub => sub.serviceId);
 
   // preSelectedServiceId가 있으면 자동 선택
   useEffect(() => {
-    if (preSelectedServiceId && !targetKeys.includes(preSelectedServiceId) && handleChange) {
-      handleChange([...targetKeys, preSelectedServiceId], 'right', [preSelectedServiceId]);
+    if (preSelectedServiceId && !subscribedIds.includes(preSelectedServiceId)) {
+      handleAddService(preSelectedServiceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preSelectedServiceId]);
 
-  // Transfer 데이터 소스 생성
-  const dataSource: TransferItem[] = MOCK_SERVICES.map(service => ({
-    key: service.id,
-    title: service.displayName,
-    description: service.description,
-    icon: service.icon || '',
-    defaultRole: service.defaultRole,
-  }));
+  const handleAddService = (serviceId: string) => {
+    const service = MOCK_SERVICES.find(s => s.id === serviceId);
+    if (!service) return;
 
-  const handleChange: TransferProps['onChange'] = (newTargetKeys) => {
-    setTargetKeys(newTargetKeys as string[]);
-
-    // onChange 콜백 호출
-    if (onChange) {
-      const newSubscriptions: ServiceSubscription[] = (newTargetKeys as string[]).map(serviceId => {
-        // 기존 구독 정보가 있으면 유지
-        const existing = value.find(sub => sub.serviceId === serviceId);
-        if (existing) {
-          return existing;
-        }
-
-        // 새로 추가된 서비스는 기본 역할로 초기화
-        const service = MOCK_SERVICES.find(s => s.id === serviceId);
-        return {
-          serviceId: serviceId,
-          serviceName: service?.displayName || serviceId,
-          subscribedAt: new Date().toISOString(),
-          status: 'active' as const,
-          roles: service ? [service.defaultRole] : [],
-        };
-      });
-
-      onChange(newSubscriptions);
-    }
-  };
-
-  // Transfer 아이템 렌더링
-  const renderItem: TransferProps['render'] = item => {
-    const service = MOCK_SERVICES.find(s => s.id === item.key);
-    const isSubscribed = targetKeys.includes(item.key);
-
-    return {
-      label: (
-        <Space direction="vertical" size={0} style={{ width: '100%' }}>
-          <Space>
-            <span style={{ fontSize: '18px' }}>{item.icon}</span>
-            <Text strong>{item.title}</Text>
-            {isSubscribed && <Tag color="green">가입됨</Tag>}
-          </Space>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
-            {item.description}
-          </Text>
-          {service && (
-            <Text type="secondary" style={{ fontSize: '11px' }}>
-              기본 역할: <Tag color="blue" style={{ fontSize: '10px' }}>{service.defaultRole}</Tag>
-            </Text>
-          )}
-        </Space>
-      ),
-      value: item.title,
+    const newSubscription: ServiceSubscription = {
+      serviceId: service.id,
+      serviceName: service.displayName,
+      subscribedAt: new Date().toISOString(),
+      status: 'active' as const,
+      roles: [service.defaultRole],
     };
+
+    onChange?.([...value, newSubscription]);
   };
+
+  const handleMoveToRight = () => {
+    leftSelected.forEach(serviceId => {
+      if (!subscribedIds.includes(serviceId)) {
+        handleAddService(serviceId);
+      }
+    });
+    setLeftSelected([]);
+  };
+
+  const handleMoveToLeft = () => {
+    const newSubscriptions = value.filter(sub => !rightSelected.includes(sub.serviceId));
+    onChange?.(newSubscriptions);
+    setRightSelected([]);
+  };
+
+  const handleToggleLeft = (serviceId: string) => {
+    const currentIndex = leftSelected.indexOf(serviceId);
+    const newSelected = [...leftSelected];
+
+    if (currentIndex === -1) {
+      newSelected.push(serviceId);
+    } else {
+      newSelected.splice(currentIndex, 1);
+    }
+
+    setLeftSelected(newSelected);
+  };
+
+  const handleToggleRight = (serviceId: string) => {
+    const currentIndex = rightSelected.indexOf(serviceId);
+    const newSelected = [...rightSelected];
+
+    if (currentIndex === -1) {
+      newSelected.push(serviceId);
+    } else {
+      newSelected.splice(currentIndex, 1);
+    }
+
+    setRightSelected(newSelected);
+  };
+
+  const availableServices = MOCK_SERVICES.filter(
+    service => !subscribedIds.includes(service.id)
+  );
+
+  const filteredAvailable = availableServices.filter(
+    service =>
+      service.displayName.toLowerCase().includes(leftSearch.toLowerCase()) ||
+      service.description.toLowerCase().includes(leftSearch.toLowerCase())
+  );
+
+  const filteredSubscribed = value.filter(
+    sub =>
+      sub.serviceName.toLowerCase().includes(rightSearch.toLowerCase())
+  );
+
+  const renderServiceList = (
+    services: ServiceItem[],
+    selected: string[],
+    onToggle: (id: string) => void,
+    isSubscribed: boolean
+  ) => (
+    <List dense sx={{ maxHeight: 350, overflow: 'auto' }}>
+      {services.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+          서비스 없음
+        </Typography>
+      ) : (
+        services.map(service => {
+          const labelId = `transfer-list-item-${service.id}-label`;
+          const isSelected = selected.indexOf(service.id) !== -1;
+
+          return (
+            <ListItem key={service.id} disablePadding>
+              <ListItemButton onClick={() => onToggle(service.id)} dense>
+                <Checkbox
+                  checked={isSelected}
+                  tabIndex={-1}
+                  disableRipple
+                  inputProps={{ 'aria-labelledby': labelId }}
+                />
+                <ListItemText
+                  id={labelId}
+                  primary={
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <span style={{ fontSize: '18px' }}>{service.icon}</span>
+                      <Typography variant="body2">{service.displayName}</Typography>
+                      {isSubscribed && <Chip label="가입됨" color="success" size="small" />}
+                    </Stack>
+                  }
+                  secondary={
+                    <Stack spacing={0.5}>
+                      <Typography variant="caption" color="text.secondary">
+                        {service.description}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        기본 역할: <Chip label={service.defaultRole} size="small" sx={{ height: 16, fontSize: '10px' }} />
+                      </Typography>
+                    </Stack>
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })
+      )}
+    </List>
+  );
 
   return (
-    <div>
-      <Transfer
-        dataSource={dataSource}
-        targetKeys={targetKeys}
-        onChange={handleChange}
-        render={renderItem}
-        titles={['가입 가능한 서비스', '가입된 서비스']}
-        listStyle={{
-          width: 350,
-          height: 400,
-        }}
-        showSearch
-        filterOption={(inputValue, item) =>
-          item.title.toLowerCase().includes(inputValue.toLowerCase()) ||
-          item.description.toLowerCase().includes(inputValue.toLowerCase())
-        }
-        locale={{
-          itemUnit: '개',
-          itemsUnit: '개',
-          searchPlaceholder: '서비스 검색',
-          notFoundContent: '서비스 없음',
-        }}
-      />
-    </div>
+    <Stack direction="row" spacing={2} alignItems="center">
+      {/* 가입 가능한 서비스 */}
+      <Box sx={{ flex: '0 0 45%' }}>
+        <Paper variant="outlined">
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="subtitle2" gutterBottom>
+              가입 가능한 서비스
+            </Typography>
+            <TextField
+              size="small"
+              placeholder="서비스 검색"
+              value={leftSearch}
+              onChange={(e) => setLeftSearch(e.target.value)}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+          {renderServiceList(
+            filteredAvailable.map(s => ({
+              id: s.id,
+              displayName: s.displayName,
+              description: s.description,
+              icon: s.icon || '',
+              defaultRole: s.defaultRole
+            })),
+            leftSelected,
+            handleToggleLeft,
+            false
+          )}
+          <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">
+              {leftSelected.length}/{availableServices.length}개 선택
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* 이동 버튼 */}
+      <Box sx={{ flex: '0 0 10%', display: 'flex', justifyContent: 'center' }}>
+        <Stack spacing={1} alignItems="center">
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleMoveToRight}
+            disabled={leftSelected.length === 0}
+            sx={{ minWidth: 40 }}
+          >
+            <ChevronRightIcon />
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleMoveToLeft}
+            disabled={rightSelected.length === 0}
+            sx={{ minWidth: 40 }}
+          >
+            <ChevronLeftIcon />
+          </Button>
+        </Stack>
+      </Box>
+
+      {/* 가입된 서비스 */}
+      <Box sx={{ flex: '0 0 45%' }}>
+        <Paper variant="outlined">
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="subtitle2" gutterBottom>
+              가입된 서비스
+            </Typography>
+            <TextField
+              size="small"
+              placeholder="서비스 검색"
+              value={rightSearch}
+              onChange={(e) => setRightSearch(e.target.value)}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+          {renderServiceList(
+            filteredSubscribed.map(sub => {
+              const service = MOCK_SERVICES.find(s => s.id === sub.serviceId);
+              return {
+                id: sub.serviceId,
+                displayName: sub.serviceName,
+                description: service?.description || '',
+                icon: service?.icon || '',
+                defaultRole: service?.defaultRole || '',
+              };
+            }),
+            rightSelected,
+            handleToggleRight,
+            true
+          )}
+          <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary">
+              {rightSelected.length}/{value.length}개 선택
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
+    </Stack>
   );
 }

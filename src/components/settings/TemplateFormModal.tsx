@@ -2,17 +2,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import {
-  Modal,
-  Form,
-  Input,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
   Select,
-  Space,
-  Tag,
+  MenuItem,
+  FormControl,
+  InputLabel,
   Alert,
-  message,
+  Box,
+  Chip,
+  OutlinedInput,
   Tooltip,
-} from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
+} from '@mui/material';
+import { Info as InfoIcon } from '@mui/icons-material';
 import type {
   PermissionTemplate,
   TemplateCreateRequest,
@@ -21,6 +27,7 @@ import type {
   ServiceRoleDefinition,
 } from '../../types/user-management';
 import { userManagementService } from '../../services/userManagementService';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 interface TemplateFormModalProps {
   open: boolean;
@@ -29,13 +36,32 @@ interface TemplateFormModalProps {
   template?: PermissionTemplate | null;
 }
 
+interface FormData {
+  name: string;
+  description: string;
+  category: string;
+  global_role_ids: string[];
+  service_role_ids: string[];
+}
+
+interface FormErrors {
+  name?: string;
+}
+
 export default function TemplateFormModal({
   open,
   onCancel,
   onSave,
   template,
 }: TemplateFormModalProps) {
-  const [form] = Form.useForm();
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    description: '',
+    category: '',
+    global_role_ids: [],
+    service_role_ids: [],
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [activationChanged, setActivationChanged] = useState(false);
@@ -45,6 +71,7 @@ export default function TemplateFormModal({
   const [globalRoles, setGlobalRoles] = useState<GlobalRole[]>([]);
   const [serviceRoles, setServiceRoles] = useState<ServiceRoleDefinition[]>([]);
 
+  const snackbar = useSnackbar();
   const isEditing = !!template;
 
   // 데이터 로드
@@ -53,6 +80,7 @@ export default function TemplateFormModal({
       loadGlobalRoles();
       loadServiceRoles();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // 폼 초기화
@@ -61,6 +89,7 @@ export default function TemplateFormModal({
       setHasChanges(false);
       setActivationChanged(false);
       setNewActivationState(undefined);
+      setErrors({});
 
       if (template) {
         // 수정 모드: 기존 템플릿 데이터 로드
@@ -70,25 +99,25 @@ export default function TemplateFormModal({
           (r) => `${r.service_id}:${r.role_name}`
         );
 
-        form.setFieldsValue({
+        setFormData({
           name: template.name,
-          description: template.description,
-          category: template.category,
+          description: template.description || '',
+          category: template.category || '',
           global_role_ids: globalRoleIds,
           service_role_ids: serviceRoleIds,
-          is_active: template.is_active,
         });
       } else {
         // 생성 모드: 폼 초기화
-        form.resetFields();
-        form.setFieldsValue({
+        setFormData({
+          name: '',
+          description: '',
+          category: '',
           global_role_ids: [],
           service_role_ids: [],
-          is_active: true,
         });
       }
     }
-  }, [open, template, form]);
+  }, [open, template]);
 
   const loadGlobalRoles = async () => {
     try {
@@ -96,7 +125,7 @@ export default function TemplateFormModal({
       setGlobalRoles(data.filter((r) => r.is_active));
     } catch (error) {
       console.error('Failed to load global roles:', error);
-      message.error('글로벌 역할 목록을 불러오는데 실패했습니다');
+      snackbar.error('글로벌 역할 목록을 불러오는데 실패했습니다');
     }
   };
 
@@ -106,88 +135,91 @@ export default function TemplateFormModal({
       setServiceRoles(data.filter((r) => r.is_active));
     } catch (error) {
       console.error('Failed to load service roles:', error);
-      message.error('서비스 역할 목록을 불러오는데 실패했습니다');
+      snackbar.error('서비스 역할 목록을 불러오는데 실패했습니다');
     }
   };
 
-  const handleFormChange = () => {
-    if (!isEditing) {
+  const handleFieldChange = (field: keyof FormData, value: string | string[]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+
+    // is_active 제외한 필드만 체크
+    if (!isEditing || field !== 'name') {
       setHasChanges(true);
+    }
+  };
+
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = '템플릿 이름을 입력하세요';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) {
       return;
     }
 
-    // 수정 모드: is_active 제외한 필드만 체크
-    const fieldsToCheck = ['name', 'description', 'category', 'global_role_ids', 'service_role_ids'];
-    const touched = form.isFieldsTouched(fieldsToCheck);
-    setHasChanges(touched);
-  };
+    setLoading(true);
 
-
-  const handleSave = async () => {
     try {
-      const values = await form.validateFields();
-      setLoading(true);
-
       if (isEditing && template) {
         // 수정 모드: 활성 상태와 일반 필드를 별도로 처리
-        try {
-          // 1. 활성 상태가 변경되었으면 별도 API 호출
-          if (activationChanged && newActivationState !== undefined) {
-            await userManagementService.togglePermissionTemplateActivation(
-              template.id,
-              newActivationState
-            );
-            message.success(`템플릿이 ${newActivationState ? '활성화' : '비활성화'}되었습니다`);
-          }
-
-          // 2. 다른 필드가 변경되었으면 PUT API 호출 (is_active 제외)
-          if (hasChanges) {
-            const updateData: TemplateUpdateRequest = {
-              name: values.name,
-              description: values.description,
-              category: values.category,
-              global_role_ids: values.global_role_ids || [],
-              service_role_ids: values.service_role_ids || [],
-            };
-
-            await userManagementService.updatePermissionTemplate(template.id, updateData);
-            message.success('템플릿이 수정되었습니다');
-          }
-
-          // 목록 새로고침을 위해 onSave 콜백 호출
-          onSave(values);
-        } catch (error: any) {
-          message.error(error?.message || '템플릿 수정에 실패했습니다');
-          console.error('Failed to update permission template:', error);
-          setLoading(false);
-          return;
+        // 1. 활성 상태가 변경되었으면 별도 API 호출
+        if (activationChanged && newActivationState !== undefined) {
+          await userManagementService.togglePermissionTemplateActivation(
+            template.id,
+            newActivationState
+          );
+          snackbar.success(`템플릿이 ${newActivationState ? '활성화' : '비활성화'}되었습니다`);
         }
+
+        // 2. 다른 필드가 변경되었으면 PUT API 호출 (is_active 제외)
+        if (hasChanges) {
+          const updateData: TemplateUpdateRequest = {
+            name: formData.name,
+            description: formData.description,
+            category: formData.category,
+            global_role_ids: formData.global_role_ids,
+            service_role_ids: formData.service_role_ids,
+          };
+
+          await userManagementService.updatePermissionTemplate(template.id, updateData);
+          snackbar.success('템플릿이 수정되었습니다');
+        }
+
+        // 목록 새로고침을 위해 onSave 콜백 호출
+        onSave(formData);
       } else {
         // 생성 모드: 새로운 템플릿 생성
         const createData: TemplateCreateRequest = {
-          name: values.name,
-          description: values.description,
-          category: values.category,
-          global_role_ids: values.global_role_ids || [],
-          service_role_ids: values.service_role_ids || [],
+          name: formData.name,
+          description: formData.description,
+          category: formData.category,
+          global_role_ids: formData.global_role_ids,
+          service_role_ids: formData.service_role_ids,
         };
 
         onSave(createData);
       }
 
-      form.resetFields();
       setHasChanges(false);
       setActivationChanged(false);
       setNewActivationState(undefined);
     } catch (error) {
       console.error('Form validation failed:', error);
+      snackbar.error('템플릿 저장에 실패했습니다');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    form.resetFields();
     setHasChanges(false);
     setActivationChanged(false);
     setNewActivationState(undefined);
@@ -198,195 +230,181 @@ export default function TemplateFormModal({
   const isSaveButtonDisabled = isEditing && !hasChanges && !activationChanged;
 
   return (
-    <Modal
-      title={isEditing ? 'Permission Template 수정' : '새 Permission Template 추가'}
-      open={open}
-      onOk={handleSave}
-      onCancel={handleCancel}
-      confirmLoading={loading}
-      okText={isEditing ? '수정' : '추가'}
-      cancelText="취소"
-      width={800}
-      okButtonProps={{ disabled: isSaveButtonDisabled }}
-      destroyOnClose
-    >
-      <Alert
-        message="Permission Template"
-        description="권한 템플릿은 글로벌 역할과 서비스 역할의 조합으로 구성됩니다. 카테고리별로 그룹화하여 관리할 수 있습니다."
-        type="info"
-        showIcon
-        style={{ marginBottom: 16 }}
-      />
+    <Dialog open={open} onClose={handleCancel} maxWidth="md" fullWidth>
+      <DialogTitle>
+        {isEditing ? 'Permission Template 수정' : '새 Permission Template 추가'}
+      </DialogTitle>
+      <DialogContent>
+        <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
+          권한 템플릿은 글로벌 역할과 서비스 역할의 조합으로 구성됩니다. 카테고리별로 그룹화하여
+          관리할 수 있습니다.
+        </Alert>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onValuesChange={handleFormChange}
-        preserve={false}
-      >
-        {/* 기본 정보 */}
-        <Form.Item
-          label="템플릿 이름"
-          name="name"
-          rules={[{ required: true, message: '템플릿 이름을 입력하세요' }]}
-        >
-          <Input placeholder="예: 의사 기본 권한 세트" maxLength={100} />
-        </Form.Item>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* 기본 정보 */}
+          <TextField
+            label="템플릿 이름"
+            value={formData.name}
+            onChange={(e) => handleFieldChange('name', e.target.value)}
+            error={!!errors.name}
+            helperText={errors.name}
+            placeholder="예: 의사 기본 권한 세트"
+            fullWidth
+            required
+            inputProps={{ maxLength: 100 }}
+          />
 
-        <Form.Item
-          label="설명"
-          name="description"
-        >
-          <Input.TextArea
-            rows={2}
+          <TextField
+            label="설명"
+            value={formData.description}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
             placeholder="템플릿에 대한 설명을 입력하세요 (선택사항)"
-            maxLength={500}
-            showCount
+            multiline
+            rows={2}
+            fullWidth
+            inputProps={{ maxLength: 500 }}
           />
-        </Form.Item>
 
-        <Form.Item
-          label={
-            <Space>
-              카테고리
-              <Tooltip title="템플릿을 그룹화할 카테고리를 입력하세요 (예: 의료진, 관리자, 기술지원)">
-                <InfoCircleOutlined style={{ color: '#1890ff' }} />
-              </Tooltip>
-            </Space>
-          }
-          name="category"
-        >
-          <Input placeholder="예: 의료진" maxLength={50} />
-        </Form.Item>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <TextField
+              label="카테고리"
+              value={formData.category}
+              onChange={(e) => handleFieldChange('category', e.target.value)}
+              placeholder="예: 의료진"
+              fullWidth
+              inputProps={{ maxLength: 50 }}
+            />
+            <Tooltip title="템플릿을 그룹화할 카테고리를 입력하세요 (예: 의료진, 관리자, 기술지원)">
+              <InfoIcon sx={{ fontSize: 20, color: 'primary.main' }} />
+            </Tooltip>
+          </Box>
 
-        {/* 글로벌 역할 선택 */}
-        <Form.Item
-          label={
-            <Space>
-              글로벌 역할 (Global Roles)
+          {/* 글로벌 역할 선택 */}
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <Box sx={{ fontSize: '14px', fontWeight: 500 }}>글로벌 역할 (Global Roles)</Box>
               <Tooltip title="플랫폼 전체에 적용되는 역할을 선택하세요">
-                <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                <InfoIcon sx={{ fontSize: 16, color: 'primary.main' }} />
               </Tooltip>
-            </Space>
-          }
-          name="global_role_ids"
-        >
-          <Select
-            mode="multiple"
-            placeholder="글로벌 역할 선택 (선택사항)"
-            showSearch
-            optionFilterProp="children"
-            style={{ width: '100%' }}
-            allowClear
-          >
-            {globalRoles.map((role) => (
-              <Select.Option key={role.role_id} value={role.role_id}>
-                <Space>
-                  <Tag color="purple">{role.role_id}</Tag>
-                  <span>{role.display_name}</span>
-                  {role.is_system_role && (
-                    <Tag color="red" style={{ fontSize: '9px' }}>
-                      SYSTEM
-                    </Tag>
-                  )}
-                  <span style={{ fontSize: '11px', color: '#999' }}>
-                    (Level {role.authority_level})
-                  </span>
-                </Space>
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
+            </Box>
+            <FormControl fullWidth>
+              <InputLabel>글로벌 역할 선택 (선택사항)</InputLabel>
+              <Select
+                multiple
+                value={formData.global_role_ids}
+                onChange={(e) => handleFieldChange('global_role_ids', e.target.value as string[])}
+                input={<OutlinedInput label="글로벌 역할 선택 (선택사항)" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((roleId) => {
+                      const role = globalRoles.find((r) => r.role_id === roleId);
+                      return (
+                        <Chip
+                          key={roleId}
+                          label={role ? `${role.role_id} - ${role.display_name}` : roleId}
+                          size="small"
+                          color="secondary"
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {globalRoles.map((role) => (
+                  <MenuItem key={role.role_id} value={role.role_id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label={role.role_id} size="small" color="secondary" />
+                      <span>{role.display_name}</span>
+                      {role.is_system_role && (
+                        <Chip label="SYSTEM" size="small" color="error" />
+                      )}
+                      <span style={{ fontSize: '11px', color: '#999' }}>
+                        (Level {role.authority_level})
+                      </span>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
-        {/* 서비스 역할 선택 */}
-        <Form.Item
-          label={
-            <Space>
-              서비스 역할 (Service Roles)
+          {/* 서비스 역할 선택 */}
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <Box sx={{ fontSize: '14px', fontWeight: 500 }}>서비스 역할 (Service Roles)</Box>
               <Tooltip title="특정 서비스에 적용되는 역할을 선택하세요">
-                <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                <InfoIcon sx={{ fontSize: 16, color: 'primary.main' }} />
               </Tooltip>
-            </Space>
-          }
-          name="service_role_ids"
-        >
-          <Select
-            mode="multiple"
-            placeholder="서비스 역할 선택 (선택사항)"
-            showSearch
-            optionFilterProp="children"
-            style={{ width: '100%' }}
-            allowClear
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-            options={serviceRoles.map((role) => ({
-              label: `${role.service_id} - ${role.display_name}`,
-              value: `${role.service_id}:${role.role_name}`,
-              key: `${role.service_id}:${role.role_name}`,
-            }))}
-            optionRender={(option) => {
-              if (!option.value || typeof option.value !== 'string') return null;
-              const [serviceId, roleName] = option.value.split(':');
-              const role = serviceRoles.find(
-                (r) => r.service_id === serviceId && r.role_name === roleName
-              );
+            </Box>
+            <FormControl fullWidth>
+              <InputLabel>서비스 역할 선택 (선택사항)</InputLabel>
+              <Select
+                multiple
+                value={formData.service_role_ids}
+                onChange={(e) =>
+                  handleFieldChange('service_role_ids', e.target.value as string[])
+                }
+                input={<OutlinedInput label="서비스 역할 선택 (선택사항)" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((roleId) => {
+                      const [serviceId, roleName] = roleId.split(':');
+                      return (
+                        <Chip key={roleId} label={`${serviceId}:${roleName}`} size="small" color="primary" />
+                      );
+                    })}
+                  </Box>
+                )}
+              >
+                {serviceRoles.map((role) => {
+                  const roleValue = `${role.service_id}:${role.role_name}`;
+                  return (
+                    <MenuItem key={roleValue} value={roleValue}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip label={role.service_id} size="small" color="info" />
+                        <Chip label={role.role_name} size="small" color="primary" />
+                        <span style={{ fontSize: '12px' }}>{role.display_name}</span>
+                        {role.is_system_role && (
+                          <Chip label="SYSTEM" size="small" color="error" />
+                        )}
+                      </Box>
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          </Box>
 
-              if (!role) return null;
-
-              return (
-                <Space>
-                  <Tag color="cyan" style={{ fontSize: '10px' }}>
-                    {serviceId}
-                  </Tag>
-                  <Tag color="blue" style={{ fontSize: '10px' }}>
-                    {roleName}
-                  </Tag>
-                  <span style={{ fontSize: '12px' }}>{role.display_name}</span>
-                  {role.is_system_role && (
-                    <Tag color="red" style={{ fontSize: '9px' }}>
-                      SYSTEM
-                    </Tag>
-                  )}
-                </Space>
-              );
-            }}
-          />
-        </Form.Item>
-
-        {/* 안내 메시지 */}
-        {isEditing && (
-          <Alert
-            message="참고사항"
-            description={
-              <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
+          {/* 안내 메시지 */}
+          {isEditing ? (
+            <Alert severity="warning">
+              <Box component="ul" sx={{ m: 0, pl: 2 }}>
                 <li>활성 상태는 목록에서 토글할 수 있습니다</li>
                 <li>템플릿은 언제든지 수정 가능합니다</li>
-              </ul>
-            }
-            type="warning"
-            showIcon
-            style={{ marginTop: 16 }}
-          />
-        )}
-
-        {!isEditing && (
-          <Alert
-            message="역할 선택 안내"
-            description={
-              <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
+              </Box>
+            </Alert>
+          ) : (
+            <Alert severity="info">
+              <Box component="ul" sx={{ m: 0, pl: 2 }}>
                 <li>글로벌 역할: 플랫폼 전체에 적용되는 권한</li>
                 <li>서비스 역할: 특정 서비스에만 적용되는 권한</li>
                 <li>최소 하나 이상의 역할을 선택하는 것을 권장합니다</li>
                 <li>서비스 역할 형식: "서비스ID:역할명" (예: ecg-analysis:DOCTOR)</li>
-              </ul>
-            }
-            type="info"
-            showIcon
-            style={{ marginTop: 16 }}
-          />
-        )}
-      </Form>
-    </Modal>
+              </Box>
+            </Alert>
+          )}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCancel}>취소</Button>
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={isSaveButtonDisabled || loading}
+        >
+          {isEditing ? '수정' : '추가'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

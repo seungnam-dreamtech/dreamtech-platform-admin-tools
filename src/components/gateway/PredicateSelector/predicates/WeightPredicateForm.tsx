@@ -1,6 +1,6 @@
 // Weight Predicate 폼 컴포넌트
 import React from 'react';
-import { Input, InputNumber, Space, Tag, Slider } from 'antd';
+import { TextField, Stack, Box, Typography, Chip, Slider } from '@mui/material';
 import type { ActuatorWeightPredicateArgs } from '../../../../types/gateway';
 
 interface WeightPredicateFormProps {
@@ -12,94 +12,100 @@ export const WeightPredicateForm: React.FC<WeightPredicateFormProps> = ({
   value,
   onChange
 }) => {
-  const weightValue = typeof value.weight === 'string' ? parseInt(value.weight) : value.weight;
+  const weightValue = typeof value.weight === 'string' ? parseInt(value.weight) : (value.weight ?? 1);
+
+  const handleWeightChange = (_: Event, newValue: number | number[]) => {
+    const val = Array.isArray(newValue) ? newValue[0] : newValue;
+    onChange({ ...value, weight: String(val) });
+  };
+
+  const handleWeightInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value) || 1;
+    onChange({ ...value, weight: String(Math.max(1, Math.min(100, val))) });
+  };
 
   return (
-    <div>
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        {/* 그룹 이름 */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              가중치 그룹 이름
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Input
-            value={value.group}
-            onChange={(e) => onChange({ ...value, group: e.target.value })}
-            placeholder="예: service-a"
-            style={{ width: '100%' }}
+    <Stack spacing={2}>
+      {/* 그룹 이름 */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          가중치 그룹 이름
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <TextField
+          value={value.group || ''}
+          onChange={(e) => onChange({ ...value, group: e.target.value })}
+          placeholder="예: service-a"
+          fullWidth
+          size="small"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 같은 그룹명을 가진 라우트들 간에 가중치가 적용됩니다
+        </Typography>
+      </Box>
+
+      {/* 가중치 */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          가중치 (1-100)
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <Box sx={{ px: 1 }}>
+          <Slider
+            value={weightValue}
+            onChange={handleWeightChange}
+            min={1}
+            max={100}
+            marks={[
+              { value: 1, label: '1' },
+              { value: 25, label: '25' },
+              { value: 50, label: '50' },
+              { value: 75, label: '75' },
+              { value: 100, label: '100' }
+            ]}
+            valueLabelDisplay="auto"
           />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 같은 그룹명을 가진 라우트들 간에 가중치가 적용됩니다
-          </div>
-        </div>
+        </Box>
+        <TextField
+          type="number"
+          value={weightValue}
+          onChange={handleWeightInputChange}
+          inputProps={{ min: 1, max: 100 }}
+          sx={{ width: '120px', mt: 1 }}
+          size="small"
+        />
+      </Box>
 
-        {/* 가중치 */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              가중치 (1-100)
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Slider
-              value={weightValue}
-              onChange={(val) => onChange({ ...value, weight: String(val) })}
-              min={1}
-              max={100}
-              marks={{
-                1: '1',
-                25: '25',
-                50: '50',
-                75: '75',
-                100: '100'
-              }}
-              style={{ width: '100%' }}
-            />
-            <InputNumber
-              value={weightValue}
-              onChange={(val) => onChange({ ...value, weight: String(val || 1) })}
-              min={1}
-              max={100}
-              style={{ width: '120px' }}
-            />
-          </Space>
-        </div>
-      </Space>
-
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>Weight Predicate 사용 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="blue" style={{ fontSize: '11px' }}>A/B 테스팅</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">Weight Predicate 사용 예시:</Typography>
+        <Box sx={{ mt: 1 }}>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="A/B 테스팅" size="small" color="primary" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               • Route A: group=<code>test-group</code>, weight=<code>90</code> (기존 버전)
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
               • Route B: group=<code>test-group</code>, weight=<code>10</code> (신규 버전)
-            </div>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#52c41a' }}>
+            </Typography>
+            <Typography variant="caption" color="success.main" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               → 90%는 Route A로, 10%는 Route B로 분산됩니다
-            </div>
-          </div>
+            </Typography>
+          </Box>
 
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="green" style={{ fontSize: '11px' }}>카나리 배포</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="카나리 배포" size="small" color="success" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               • Stable: group=<code>prod</code>, weight=<code>95</code>
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
               • Canary: group=<code>prod</code>, weight=<code>5</code>
-            </div>
-          </div>
-        </div>
-        <div style={{ marginTop: '8px', color: '#fa8c16' }}>
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
           💡 가중치 합계가 100일 필요는 없으며, 비율로 동작합니다
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Stack>
   );
 };

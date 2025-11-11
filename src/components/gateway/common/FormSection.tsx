@@ -1,6 +1,6 @@
 // 폼 섹션 공통 컴포넌트
 import React from 'react';
-import { Card } from 'antd';
+import { Card, CardContent, Box, Typography, Stack } from '@mui/material';
 
 interface FormSectionProps {
   title: string;
@@ -19,24 +19,28 @@ export const FormSection: React.FC<FormSectionProps> = ({
 }) => {
   return (
     <Card
-      size="small"
-      title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {icon}
-          <div>
-            <div style={{ fontWeight: 'bold' }}>{title}</div>
-            {description && (
-              <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#8c8c8c', marginTop: '4px' }}>
-                {description}
-              </div>
-            )}
-          </div>
-        </div>
-      }
-      extra={extra}
-      style={{ marginBottom: '16px' }}
+      variant="outlined"
+      sx={{ marginBottom: 2 }}
     >
-      {children}
+      <CardContent>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {icon}
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {title}
+              </Typography>
+              {description && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {description}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+          {extra && <Box>{extra}</Box>}
+        </Stack>
+        {children}
+      </CardContent>
     </Card>
   );
 };

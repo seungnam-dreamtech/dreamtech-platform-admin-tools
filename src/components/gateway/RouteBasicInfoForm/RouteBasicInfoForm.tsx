@@ -1,9 +1,17 @@
 // 라우트 기본 정보 입력 폼
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { Input, InputNumber, Checkbox, Space, Tag } from 'antd';
+import {
+  TextField,
+  FormControlLabel,
+  Checkbox,
+  Stack,
+  Box,
+  Typography,
+  Chip
+} from '@mui/material';
 import { FormSection } from '../common/FormSection';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoOutlined as InfoIcon } from '@mui/icons-material';
 
 export interface RouteBasicInfo {
   id: string;
@@ -32,109 +40,125 @@ export const RouteBasicInfoForm: React.FC<RouteBasicInfoFormProps> = ({
   };
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Stack spacing={3}>
       <FormSection
         title="기본 정보"
         description="라우트의 기본 식별 정보를 입력합니다"
-        icon={<InfoCircleOutlined style={{ color: '#1890ff' }} />}
+        icon={<InfoIcon color="primary" />}
       >
         {/* Route ID */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
+        <Box sx={{ mb: 2 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+            <Typography variant="body2" fontWeight="bold">
               Route ID
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-              {readOnly && (
-                <Tag color="orange" style={{ fontSize: '10px', marginLeft: '8px' }}>
-                  수정 불가
-                </Tag>
-              )}
-            </span>
-          </div>
-          <Input
+              <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+            </Typography>
+            {readOnly && (
+              <Chip label="수정 불가" size="small" color="warning" />
+            )}
+          </Stack>
+          <TextField
             value={value.id}
             onChange={(e) => handleFieldChange('id', e.target.value)}
             placeholder="예: user-service-route"
             disabled={readOnly}
-            style={readOnly ? { backgroundColor: '#f5f5f5', cursor: 'not-allowed' } : undefined}
+            fullWidth
+            size="small"
           />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             {readOnly
               ? '💡 Route ID는 수정할 수 없습니다 (삭제 후 재생성 필요)'
               : '💡 라우트를 식별하는 고유 ID (영문, 숫자, 하이픈만 사용)'}
-          </div>
-        </div>
+          </Typography>
+        </Box>
 
         {/* Display Name */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>Display Name</span>
-          </div>
-          <Input
-            value={value.displayName}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+            Display Name
+          </Typography>
+          <TextField
+            value={value.displayName || ''}
             onChange={(e) => handleFieldChange('displayName', e.target.value)}
             placeholder="예: User Service"
+            fullWidth
+            size="small"
           />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             💡 관리 화면에 표시될 이름 (선택사항)
-          </div>
-        </div>
+          </Typography>
+        </Box>
 
         {/* URI */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              URI (목적지)
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Input
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+            URI (목적지)
+            <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+          </Typography>
+          <TextField
             value={value.uri}
             onChange={(e) => handleFieldChange('uri', e.target.value)}
             placeholder="예: lb://user-service 또는 http://localhost:8080"
+            fullWidth
+            size="small"
           />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 라우팅할 대상 서비스 URI
-            <div style={{ marginTop: '4px' }}>
-              <Tag color="blue" style={{ fontSize: '11px' }}>lb://service-name</Tag>
-              <span style={{ marginLeft: '4px' }}>로드밸런서 사용</span>
-            </div>
-            <div style={{ marginTop: '2px' }}>
-              <Tag color="green" style={{ fontSize: '11px' }}>http://host:port</Tag>
-              <span style={{ marginLeft: '4px' }}>직접 URL 지정</span>
-            </div>
-          </div>
-        </div>
+          <Box sx={{ mt: 0.5 }}>
+            <Typography variant="caption" color="text.secondary">
+              💡 라우팅할 대상 서비스 URI
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+              <Chip label="lb://service-name" size="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">
+                로드밸런서 사용
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+              <Chip label="http://host:port" size="small" color="success" />
+              <Typography variant="caption" color="text.secondary">
+                직접 URL 지정
+              </Typography>
+            </Stack>
+          </Box>
+        </Box>
 
         {/* Order */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>Order (우선순위)</span>
-          </div>
-          <InputNumber
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+            Order (우선순위)
+          </Typography>
+          <TextField
+            type="number"
             value={value.order}
-            onChange={(val) => handleFieldChange('order', val || 0)}
+            onChange={(e) => handleFieldChange('order', parseInt(e.target.value) || 0)}
             placeholder="0"
-            style={{ width: '200px' }}
+            sx={{ width: 200 }}
+            size="small"
           />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
             💡 숫자가 낮을수록 먼저 실행됩니다 (기본값: 0)
-          </div>
-        </div>
+          </Typography>
+        </Box>
 
         {/* Enabled */}
-        <div>
-          <Checkbox
-            checked={value.enabled}
-            onChange={(e) => handleFieldChange('enabled', e.target.checked)}
-          >
-            <span style={{ fontWeight: 'bold' }}>라우트 활성화</span>
-          </Checkbox>
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginLeft: '24px', marginTop: '4px' }}>
+        <Box>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={value.enabled}
+                onChange={(e) => handleFieldChange('enabled', e.target.checked)}
+              />
+            }
+            label={
+              <Typography variant="body2" fontWeight="bold">
+                라우트 활성화
+              </Typography>
+            }
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
             💡 비활성화하면 이 라우트는 무시됩니다
-          </div>
-        </div>
+          </Typography>
+        </Box>
       </FormSection>
-    </Space>
+    </Stack>
   );
 };
