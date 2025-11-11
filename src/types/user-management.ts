@@ -458,7 +458,7 @@ export interface PageResponse<T> {
 
 // ===== DEPRECATED: 기존 Authority Template 타입 (하위 호환성) =====
 /** @deprecated Use PermissionTemplate instead */
-export interface AuthorityTemplate extends PermissionTemplate {}
+export type AuthorityTemplate = PermissionTemplate;
 /** @deprecated Use TemplateStatistics instead */
 export interface TemplateStatistics {
   applied_user_count?: number;

@@ -1,6 +1,6 @@
 // RequestRateLimiter Filter 폼 컴포넌트
 import React from 'react';
-import { Input, InputNumber, Space, Tag, Select } from 'antd';
+import { Input, InputNumber, Space, Tag } from 'antd';
 import type { ActuatorRequestRateLimiterFilterArgs } from '../../../../types/gateway';
 
 interface RequestRateLimiterFilterFormProps {

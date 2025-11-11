@@ -1,4 +1,5 @@
 // Permission Template 관리 페이지
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import {
@@ -84,6 +85,7 @@ export default function PermissionTemplates() {
 
   useEffect(() => {
     fetchTemplates(pagination.current, pagination.pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterCategory, filterActive]);
 
   // 테이블 페이지 변경 핸들러

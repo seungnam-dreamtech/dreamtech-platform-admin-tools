@@ -1,4 +1,5 @@
 // 역할 계층 구조 그래프 시각화 컴포넌트 (Neo4J 스타일)
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useCallback, useMemo } from 'react';
 import ReactFlow, {
@@ -6,7 +7,6 @@ import ReactFlow, {
   Background,
   MarkerType,
   Position,
-  ConnectionLineType,
   useNodesState,
   useEdgesState,
   Panel,
@@ -271,8 +271,8 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
     return layouted;
   }, [allRoles, currentRoleId, ancestors, descendants]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedElements.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedElements.edges);
+  const [nodes, , onNodesChange] = useNodesState(layoutedElements.nodes);
+  const [edges, , onEdgesChange] = useEdgesState(layoutedElements.edges);
 
   console.log('⚛️ React State - 노드 개수:', nodes.length, '엣지 개수:', edges.length);
   console.log('⚛️ React State - 노드:', nodes);

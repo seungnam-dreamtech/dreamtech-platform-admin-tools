@@ -1,4 +1,5 @@
 // Predicate 선택 및 관리 컴포넌트
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { Select, Button, Space, Card, Tag, Empty } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';

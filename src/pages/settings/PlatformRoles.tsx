@@ -57,7 +57,7 @@ export default function PlatformRoles() {
   }, [searchKeyword, roles]);
 
   // 역할 추가/수정
-  const handleSave = async (roleData: Partial<PlatformRole>) => {
+  const handleSave = async () => {
     try {
       if (selectedRole) {
         // 수정
@@ -76,7 +76,7 @@ export default function PlatformRoles() {
   };
 
   // 역할 삭제
-  const handleDelete = async (roleId: string) => {
+  const handleDelete = async () => {
     try {
       message.success('역할이 삭제되었습니다');
       fetchRoles();

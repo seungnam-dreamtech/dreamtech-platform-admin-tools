@@ -88,6 +88,7 @@ export interface ActuatorBetweenPredicateArgs {
   datetime2: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ActuatorCloudFoundryRouteServicePredicateArgs {
   // CloudFoundryRouteService는 args가 없음
 }

@@ -1,21 +1,19 @@
 // 사용자 관리 서비스 (AuthX API 연동)
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type {
   PlatformUser,
   PlatformService,
   OAuthClient,
   UserFormData,
-  ClientFormData,
   ServiceSubscriptionChange,
   UserSearchFilter,
-  ClientSearchFilter,
   ServiceSearchFilter,
 } from '../types/user-management';
 
 import {
   MOCK_USERS,
   MOCK_SERVICES,
-  MOCK_OAUTH_CLIENTS,
   calculateServiceBitmask,
 } from '../constants/user-management';
 

@@ -1,4 +1,5 @@
 // Gateway routes 엔드포인트에서 반환하는 문자열 형식의 predicates와 filters를 파싱
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface ParsedPredicate {
   type: string;
@@ -327,7 +328,7 @@ function parseFilterByType(
 
   switch (filterName) {
     // DedupeResponseHeader: "Vary Access-Control-Allow-Credentials = RETAIN_LAST"
-    case 'DedupeResponseHeader':
+    case 'DedupeResponseHeader': {
       const dedupeMatch = filterArgs.match(/(.+?)\s*=\s*(.+)/);
       if (dedupeMatch) {
         const headers = dedupeMatch[1].trim().split(/\s+/);
@@ -336,10 +337,11 @@ function parseFilterByType(
         description = `응답 헤더 중복 제거 (${headers.length}개)`;
       }
       break;
+    }
 
     // AddRequestHeader / AddResponseHeader: "X-Request-Foo Bar"
     case 'AddRequestHeader':
-    case 'AddResponseHeader':
+    case 'AddResponseHeader': {
       const addMatch = filterArgs.match(/([^\s]+)\s+(.+)/);
       if (addMatch) {
         args.name = addMatch[1];
@@ -347,6 +349,7 @@ function parseFilterByType(
         description = filterName === 'AddRequestHeader' ? '요청 헤더 추가' : '응답 헤더 추가';
       }
       break;
+    }
 
     // RemoveRequestHeader / RemoveResponseHeader: "X-Request-Foo"
     case 'RemoveRequestHeader':
@@ -356,7 +359,7 @@ function parseFilterByType(
       break;
 
     // RewritePath: "/foo/(?<segment>.*) /$\{segment}"
-    case 'RewritePath':
+    case 'RewritePath': {
       const rewriteMatch = filterArgs.match(/([^\s]+)\s+(.+)/);
       if (rewriteMatch) {
         args.regexp = rewriteMatch[1];
@@ -364,6 +367,7 @@ function parseFilterByType(
         description = '경로 재작성';
       }
       break;
+    }
 
     // StripPrefix: "2"
     case 'StripPrefix':
@@ -391,7 +395,7 @@ function parseFilterByType(
 
     // SetRequestHeader / SetResponseHeader: "X-Request-Foo Bar"
     case 'SetRequestHeader':
-    case 'SetResponseHeader':
+    case 'SetResponseHeader': {
       const setMatch = filterArgs.match(/([^\s]+)\s+(.+)/);
       if (setMatch) {
         args.name = setMatch[1];
@@ -399,9 +403,10 @@ function parseFilterByType(
         description = filterName === 'SetRequestHeader' ? '요청 헤더 설정' : '응답 헤더 설정';
       }
       break;
+    }
 
     // RedirectTo: "302 https://example.com"
-    case 'RedirectTo':
+    case 'RedirectTo': {
       const redirectMatch = filterArgs.match(/(\d+)\s+(.+)/);
       if (redirectMatch) {
         args.status = parseInt(redirectMatch[1], 10);
@@ -409,9 +414,10 @@ function parseFilterByType(
         description = '리다이렉트';
       }
       break;
+    }
 
     // RequestRateLimiter: "replenishRate=10 burstCapacity=20"
-    case 'RequestRateLimiter':
+    case 'RequestRateLimiter': {
       const rateParts = filterArgs.split(/\s+/);
       for (const part of rateParts) {
         const [key, value] = part.split('=');
@@ -421,9 +427,10 @@ function parseFilterByType(
       }
       description = '요청 속도 제한';
       break;
+    }
 
     // CircuitBreaker: "name=myCircuitBreaker fallbackUri=forward:/fallback"
-    case 'CircuitBreaker':
+    case 'CircuitBreaker': {
       const cbParts = filterArgs.split(/\s+/);
       for (const part of cbParts) {
         const [key, value] = part.split('=');
@@ -433,9 +440,10 @@ function parseFilterByType(
       }
       description = '서킷 브레이커';
       break;
+    }
 
     // Retry: "retries=3 statuses=BAD_GATEWAY methods=GET,POST"
-    case 'Retry':
+    case 'Retry': {
       const retryParts = filterArgs.split(/\s+/);
       for (const part of retryParts) {
         const [key, value] = part.split('=');
@@ -449,6 +457,7 @@ function parseFilterByType(
       }
       description = '재시도';
       break;
+    }
 
     // RequestSize: "5000000" (5MB)
     case 'RequestSize':

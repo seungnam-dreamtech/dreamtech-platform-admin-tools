@@ -1,7 +1,7 @@
 // 글로벌 역할 추가/수정 모달
 
 import { useEffect, useState } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Alert, message, Tag, Space, Tooltip, Tabs } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, message, Tag, Space, Tooltip, Tabs } from 'antd';
 import { PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import type { GlobalRole } from '../../types/user-management';
 import { userManagementService } from '../../services/userManagementService';
@@ -79,16 +79,6 @@ export function GlobalRoleFormModal({
     setHasChanges(touched);
   };
 
-  // 활성 상태 변경 처리
-  const handleActivationChange = (checked: boolean) => {
-    if (isEditing && role && checked !== role.is_active) {
-      setActivationChanged(true);
-      setNewActivationState(checked);
-    } else {
-      setActivationChanged(false);
-      setNewActivationState(undefined);
-    }
-  };
 
   // 권한 추가
   const handleAddPermission = () => {

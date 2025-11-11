@@ -1,4 +1,5 @@
 // 라우트 추가/수정 모달 컴포넌트 (4단계 Wizard)
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Button, Space, message, Descriptions, Tag, Alert } from 'antd';
 import { CheckCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';

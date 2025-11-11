@@ -1,4 +1,5 @@
 // 플랫폼 사용자 관리 페이지
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import {

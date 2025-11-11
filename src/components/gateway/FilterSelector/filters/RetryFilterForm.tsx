@@ -1,4 +1,5 @@
 // Retry Filter 폼 컴포넌트
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { Input, InputNumber, Space, Tag, Select, Checkbox } from 'antd';
 import type { ActuatorRetryFilterArgs } from '../../../../types/gateway';
