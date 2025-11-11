@@ -110,6 +110,11 @@ export interface ActuatorRemoveHeaderFilterArgs {
   names?: string[]; // 여러 헤더를 제거할 때 사용
 }
 
+// 타입 alias (UI에서 구분을 위해 사용)
+export type ActuatorRemoveRequestHeaderFilterArgs = ActuatorRemoveHeaderFilterArgs;
+export type ActuatorRemoveResponseHeaderFilterArgs = ActuatorRemoveHeaderFilterArgs;
+export type ActuatorRemoveRequestParameterFilterArgs = ActuatorRemoveHeaderFilterArgs;
+
 export interface ActuatorRewritePathFilterArgs {
   regexp: string;
   replacement: string;
@@ -131,11 +136,17 @@ export interface ActuatorRequestRateLimiterFilterArgs {
   'replenish-rate': string; // Actuator는 문자열로 반환, UI는 숫자로 변환
   'burst-capacity': string; // Actuator는 문자열로 반환, UI는 숫자로 변환
   'key-resolver'?: string;
+  // UI용 camelCase 필드 (optional)
+  replenishRate?: string;
+  burstCapacity?: string;
+  requestedTokens?: string;
+  keyResolver?: string;
 }
 
 export interface ActuatorCircuitBreakerFilterArgs {
   name: string;
   fallbackUri?: string;
+  statusCodes?: string; // UI용 필드
 }
 
 export interface ActuatorRetryBackoffArgs {
@@ -147,7 +158,8 @@ export interface ActuatorRetryBackoffArgs {
 export interface ActuatorRetryFilterArgs {
   retries?: string; // Actuator는 문자열로 반환, UI는 숫자로 변환
   statuses?: string; // 콤마로 구분된 문자열
-  methods?: string; // 콤마로 구분된 문자열
+  methods?: string | string[]; // 콤마로 구분된 문자열 또는 배열
+  exceptions?: string | string[]; // UI에서 사용하는 필드
   backoff?: ActuatorRetryBackoffArgs;
 }
 
@@ -158,7 +170,12 @@ export interface ActuatorRequestSizeFilterArgs {
 export interface ActuatorModifyBodyFilterArgs {
   contentType: string;
   rewriteFunction: string;
+  description?: string; // UI에서 사용하는 설명 필드
 }
+
+// 타입 alias (UI에서 구분을 위해 사용)
+export type ActuatorModifyRequestBodyFilterArgs = ActuatorModifyBodyFilterArgs;
+export type ActuatorModifyResponseBodyFilterArgs = ActuatorModifyBodyFilterArgs;
 
 // ===========================================================================
 // Actuator Predicate 및 Filter 타입 (판별된 유니온)

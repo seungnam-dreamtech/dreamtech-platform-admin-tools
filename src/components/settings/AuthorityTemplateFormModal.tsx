@@ -39,8 +39,8 @@ export function AuthorityTemplateFormModal({
         form.setFieldsValue({
           name: template.name,
           description: template.description,
-          userType: template.userType,
-          isDefault: template.isDefault,
+          userType: template.user_type,
+          isDefault: template.is_default,
           roles: template.roles,
           permissions: template.permissions,
           serviceScopeIds: template.serviceScopeIds,

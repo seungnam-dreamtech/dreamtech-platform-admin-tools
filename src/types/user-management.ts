@@ -28,6 +28,11 @@ export interface UserTypeDefinition {
   created_by: string;
   updated_at?: string;
   updated_by?: string;
+  // UI에서 사용하는 camelCase 별칭 (optional)
+  typeId?: string;
+  displayName?: string;
+  displayOrder?: number;
+  isActive?: boolean;
 }
 
 /**
@@ -69,6 +74,7 @@ export interface PlatformUser {
 export interface ServiceScope {
   id: number;                           // Primary Key
   service_id: string;                   // 서비스 ID (unique)
+  service_name?: string;                // 서비스 이름 (UI에서 사용)
   description: string;                  // 서비스 설명
   bit_position: number;                 // 비트 위치 (unique)
   is_active: boolean;                   // 활성 여부
@@ -180,6 +186,9 @@ export type ClientType = 'application' | 'management' | 'mobile' | 'web' | 'serv
 export interface ClientAuthorityType {
   user_type: string;          // User Type ID (예: DOCTOR, PATIENT)
   is_default: boolean;        // 회원가입 시 기본 User Type 여부
+  // UI에서 사용하는 camelCase 별칭 (optional)
+  userType?: string;
+  isDefault?: boolean;
 }
 
 /**
@@ -223,6 +232,10 @@ export interface OAuthClient {
   // UI 전용 필드 (백엔드에 없음, 선택적)
   client_type?: ClientType;                        // 클라이언트 타입 (UI 분류용)
   authority_types?: ClientAuthorityType[];         // 허용된 User Type (별도 API로 조회)
+
+  // UI에서 사용하는 camelCase 별칭 (optional)
+  clientId?: string;
+  clientName?: string;
 }
 
 /**
@@ -398,6 +411,16 @@ export interface PermissionTemplate {
   updated_at?: string;
   created_by: string;
   updated_by?: string;
+  // AuthorityTemplates에서 사용하는 필드 (optional)
+  user_type?: string;
+  is_default?: boolean;
+  statistics?: {
+    applied_user_count?: number;
+  };
+  // UI에서 사용하는 추가 필드
+  roles?: string[];
+  permissions?: string[];
+  serviceScopeIds?: string[];
 }
 
 /**

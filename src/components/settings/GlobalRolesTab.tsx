@@ -95,10 +95,10 @@ export default function GlobalRolesTab() {
         await userManagementService.createGlobalRole({
           role_id: roleData.role_id,
           display_name: roleData.display_name,
-          description: roleData.description,
+          description: roleData.description || '',
           authority_level: roleData.authority_level,
           permissions: roleData.permissions,
-          parent_role_id: roleData.parent_role_id,
+          parent_role_id: roleData.parent_role_id || undefined,
         });
         message.success('새 글로벌 역할이 추가되었습니다');
         fetchRoles();
