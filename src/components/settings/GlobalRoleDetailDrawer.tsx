@@ -2,30 +2,30 @@
 
 import { useMemo } from 'react';
 import {
-  Modal,
-  Descriptions,
-  Tag,
-  Tree,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Chip,
   Typography,
-  Space,
+  Stack,
   Card,
-  Row,
-  Col,
+  CardContent,
+  Box,
   Tooltip,
-} from 'antd';
+  IconButton,
+} from '@mui/material';
 import {
-  SafetyOutlined,
-  ApartmentOutlined,
-  KeyOutlined,
-  CodeOutlined,
-  InfoCircleOutlined,
-  QuestionCircleOutlined,
-} from '@ant-design/icons';
+  Security as SecurityIcon,
+  AccountTree as AccountTreeIcon,
+  Code as CodeIcon,
+  Info as InfoIcon,
+  HelpOutline as HelpOutlineIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
+import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
+import type { TreeViewBaseItem } from '@mui/x-tree-view/models';
 import type { GlobalRole } from '../../types/user-management';
-import type { DataNode } from 'antd/es/tree';
 import { RoleHierarchyGraph } from './RoleHierarchyGraph';
-
-const { Text } = Typography;
 
 interface GlobalRoleDetailDrawerProps {
   open: boolean;
@@ -102,34 +102,13 @@ export function GlobalRoleDetailDrawer({
   }, [allInheritedPermissions]);
 
   // Tree 데이터 생성
-  const treeData: DataNode[] = useMemo(() => {
+  const treeItems: TreeViewBaseItem[] = useMemo(() => {
     return Array.from(groupedPermissions.entries()).map(([resource, perms]) => ({
-      key: resource,
-      title: (
-        <Space>
-          <SafetyOutlined style={{ color: '#1890ff' }} />
-          <Text strong style={{ fontSize: '13px' }}>
-            {resource}
-          </Text>
-          <Tag color="blue" style={{ fontSize: '10px' }}>
-            {perms.length}
-          </Tag>
-        </Space>
-      ),
+      id: resource,
+      label: `${resource} (${perms.length})`,
       children: perms.map((item, idx) => ({
-        key: `${resource}-${idx}`,
-        title: (
-          <Space>
-            <Text style={{ fontSize: '12px' }}>{item.permission}</Text>
-            {item.from !== role?.role_id && (
-              <Tag color="orange" style={{ fontSize: '10px' }}>
-                from {item.from}
-              </Tag>
-            )}
-          </Space>
-        ),
-        icon: <KeyOutlined style={{ fontSize: '12px', color: '#52c41a' }} />,
-        isLeaf: true,
+        id: `${resource}-${idx}`,
+        label: `${item.permission}${item.from !== role?.role_id ? ` [from ${item.from}]` : ''}`,
       })),
     }));
   }, [groupedPermissions, role]);
@@ -162,203 +141,252 @@ export function GlobalRoleDetailDrawer({
   if (!role) return null;
 
   return (
-    <Modal
-      title={
-        <Space>
-          <ApartmentOutlined />
-          <span>역할 상세 정보: {role.role_id}</span>
-        </Space>
-      }
+    <Dialog
       open={open}
-      onCancel={onClose}
-      footer={null}
-      width={1100}
-      destroyOnClose
-      centered
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      PaperProps={{
+        sx: { minHeight: '80vh' },
+      }}
     >
-      <div style={{ width: '100%' }}>
-        {/* 상단: 역할 정보 */}
-        <Card
-          size="small"
-          title={
-            <Space>
-              <InfoCircleOutlined />
-              <span style={{ fontSize: '13px' }}>역할 정보</span>
-            </Space>
-          }
-          style={{ marginBottom: 16 }}
-          bodyStyle={{ padding: '12px 16px' }}
-        >
-          <Row gutter={[24, 0]}>
-            <Col span={12}>
-              <Descriptions size="small" column={1} colon={false} labelStyle={{ width: '70px' }}>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>Role ID</Text>}>
-                  <Text strong style={{ fontSize: '12px' }}>
-                    {role.role_id}
-                  </Text>
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>표시명</Text>}>
-                  <Text style={{ fontSize: '12px' }}>{role.display_name}</Text>
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>권한 레벨</Text>}>
-                  <Space size={4}>
-                    <Tag
-                      color={
-                        role.authority_level <= 10
-                          ? 'red'
-                          : role.authority_level <= 50
-                          ? 'orange'
-                          : 'green'
-                      }
-                      style={{ fontSize: '10px' }}
-                    >
-                      Level {role.authority_level}
-                    </Tag>
-                    <Text type="secondary" style={{ fontSize: '10px' }}>
-                      (낮을수록 높은 권한)
-                    </Text>
-                  </Space>
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>생성일시</Text>}>
-                  <Text style={{ fontSize: '11px' }}>
-                    {new Date(role.created_at).toLocaleString('ko-KR')}
-                  </Text>
-                </Descriptions.Item>
-              </Descriptions>
-            </Col>
+      <DialogTitle>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <AccountTreeIcon />
+            <Typography variant="h6">역할 상세 정보: {role.role_id}</Typography>
+          </Stack>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Stack>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Stack spacing={2}>
+          {/* 상단: 역할 정보 */}
+          <Card variant="outlined">
+            <CardContent>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                <InfoIcon fontSize="small" />
+                <Typography variant="subtitle2">역할 정보</Typography>
+              </Stack>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+                <Box>
+                  <Stack spacing={1.5}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Role ID
+                      </Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        {role.role_id}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        표시명
+                      </Typography>
+                      <Typography variant="body2">{role.display_name}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        권한 레벨
+                      </Typography>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Chip
+                          label={`Level ${role.authority_level}`}
+                          size="small"
+                          color={
+                            role.authority_level <= 10
+                              ? 'error'
+                              : role.authority_level <= 50
+                              ? 'warning'
+                              : 'success'
+                          }
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          (낮을수록 높은 권한)
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        생성일시
+                      </Typography>
+                      <Typography variant="body2" fontSize="11px">
+                        {new Date(role.created_at).toLocaleString('ko-KR')}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
 
-            <Col span={12}>
-              <Descriptions size="small" column={1} colon={false} labelStyle={{ width: '70px' }}>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>타입</Text>}>
-                  {role.is_system_role ? (
-                    <Tag color="red" style={{ fontSize: '10px' }}>
-                      SYSTEM
-                    </Tag>
-                  ) : (
-                    <Tag color="green" style={{ fontSize: '10px' }}>
-                      사용자 정의
-                    </Tag>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>상태</Text>}>
-                  {role.is_active ? (
-                    <Tag color="success" style={{ fontSize: '10px' }}>
-                      활성
-                    </Tag>
-                  ) : (
-                    <Tag color="default" style={{ fontSize: '10px' }}>
-                      비활성
-                    </Tag>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>생성자</Text>}>
-                  <Text style={{ fontSize: '11px' }}>{role.created_by || '-'}</Text>
-                </Descriptions.Item>
-                <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>수정자</Text>}>
-                  <Text style={{ fontSize: '11px' }}>{role.updated_by || '-'}</Text>
-                </Descriptions.Item>
-              </Descriptions>
-            </Col>
-          </Row>
+                <Box>
+                  <Stack spacing={1.5}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        타입
+                      </Typography>
+                      <Box>
+                        {role.is_system_role ? (
+                          <Chip label="SYSTEM" size="small" color="error" />
+                        ) : (
+                          <Chip label="사용자 정의" size="small" color="success" />
+                        )}
+                      </Box>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        상태
+                      </Typography>
+                      <Box>
+                        {role.is_active ? (
+                          <Chip label="활성" size="small" color="success" />
+                        ) : (
+                          <Chip label="비활성" size="small" color="default" />
+                        )}
+                      </Box>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        생성자
+                      </Typography>
+                      <Typography variant="body2" fontSize="11px">
+                        {role.created_by || '-'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        수정자
+                      </Typography>
+                      <Typography variant="body2" fontSize="11px">
+                        {role.updated_by || '-'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
 
-          {/* 설명은 전체 너비로 */}
-          <Descriptions size="small" column={1} colon={false} labelStyle={{ width: '70px' }} style={{ marginTop: 8 }}>
-            <Descriptions.Item label={<Text style={{ fontSize: '11px' }}>설명</Text>}>
-              <Text type="secondary" style={{ fontSize: '11px' }}>
-                {role.description || '-'}
-              </Text>
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      설명
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" fontSize="11px">
+                      {role.description || '-'}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
 
-        {/* 하단: 역할 계층 그래프 & 권한/JWT 정보 */}
-        <Row gutter={16}>
-          <Col span={12}>
-            <Card
-              size="small"
-              title={
-                <Space>
-                  <ApartmentOutlined />
-                  <span style={{ fontSize: '13px' }}>역할 계층 구조</span>
-                  {roleHierarchy.length > 1 && (
-                    <Tooltip title="하위 역할은 상위 역할의 모든 권한을 자동으로 상속받습니다. 드래그, 줌, 팬 가능">
-                      <QuestionCircleOutlined style={{ fontSize: '12px', color: '#1890ff' }} />
-                    </Tooltip>
-                  )}
-                </Space>
-              }
-              style={{ height: '496px' }}
-              bodyStyle={{ height: 'calc(100% - 38px)', padding: 0, overflow: 'hidden' }}
-            >
-              <RoleHierarchyGraph allRoles={allRoles} currentRoleId={role.role_id} />
-            </Card>
-          </Col>
-
-          <Col span={12}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <Card
-                size="small"
-                title={
-                  <Space>
-                    <SafetyOutlined />
-                    <span style={{ fontSize: '13px' }}>권한 목록</span>
-                    <Tag color="purple" style={{ fontSize: '10px' }}>
-                      총 {allInheritedPermissions.length}개
-                    </Tag>
+          {/* 하단: 역할 계층 그래프 & 권한/JWT 정보 */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+            <Box>
+              <Card variant="outlined" sx={{ height: 496 }}>
+                <CardContent sx={{ height: '100%', p: 0, '&:last-child': { pb: 0 } }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    sx={{ px: 2, py: 1, borderBottom: 1, borderColor: 'divider' }}
+                  >
+                    <AccountTreeIcon fontSize="small" />
+                    <Typography variant="subtitle2">역할 계층 구조</Typography>
                     {roleHierarchy.length > 1 && (
-                      <Tooltip
-                        title={`직접 권한 ${role.permissions.length}개 + 상속 권한 ${
-                          allInheritedPermissions.length - role.permissions.length
-                        }개`}
-                      >
-                        <QuestionCircleOutlined style={{ fontSize: '12px', color: '#52c41a' }} />
+                      <Tooltip title="하위 역할은 상위 역할의 모든 권한을 자동으로 상속받습니다. 드래그, 줌, 팬 가능">
+                        <HelpOutlineIcon fontSize="small" color="primary" />
                       </Tooltip>
                     )}
-                  </Space>
-                }
-                style={{ height: '240px' }}
-                bodyStyle={{ height: 'calc(100% - 38px)', overflowY: 'auto' }}
-              >
-                <Tree
-                  showIcon
-                  defaultExpandAll
-                  treeData={treeData}
-                  style={{ fontSize: '12px' }}
-                />
+                  </Stack>
+                  <Box sx={{ height: 'calc(100% - 41px)' }}>
+                    <RoleHierarchyGraph allRoles={allRoles} currentRoleId={role.role_id} />
+                  </Box>
+                </CardContent>
               </Card>
+            </Box>
 
-              <Card
-                size="small"
-                title={
-                  <Space>
-                    <CodeOutlined />
-                    <span style={{ fontSize: '13px' }}>JWT 페이로드 미리보기</span>
-                    <Tooltip title="사용자에게 이 역할이 할당되면 JWT 토큰에 다음과 같은 형태로 포함됩니다">
-                      <QuestionCircleOutlined style={{ fontSize: '12px', color: '#faad14' }} />
-                    </Tooltip>
-                  </Space>
-                }
-                style={{ height: '240px' }}
-                bodyStyle={{ height: 'calc(100% - 38px)', overflowY: 'auto' }}
-              >
-                <pre
-                  style={{
-                    background: '#f5f5f5',
-                    padding: '12px',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {JSON.stringify(jwtPayloadPreview, null, 2)}
-                </pre>
-              </Card>
-            </div>
-          </Col>
-        </Row>
-      </div>
-    </Modal>
+            <Box>
+              <Stack spacing={2}>
+                <Card variant="outlined" sx={{ height: 240 }}>
+                  <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ mb: 1 }}
+                    >
+                      <SecurityIcon fontSize="small" />
+                      <Typography variant="subtitle2">권한 목록</Typography>
+                      <Chip
+                        label={`총 ${allInheritedPermissions.length}개`}
+                        size="small"
+                        color="secondary"
+                      />
+                      {roleHierarchy.length > 1 && (
+                        <Tooltip
+                          title={`직접 권한 ${role.permissions.length}개 + 상속 권한 ${
+                            allInheritedPermissions.length - role.permissions.length
+                          }개`}
+                        >
+                          <HelpOutlineIcon fontSize="small" color="success" />
+                        </Tooltip>
+                      )}
+                    </Stack>
+                    <Box sx={{ flex: 1, overflow: 'auto' }}>
+                      {treeItems.length > 0 ? (
+                        <RichTreeView
+                          items={treeItems}
+                          defaultExpandedItems={treeItems.map((item) => item.id)}
+                        />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          권한이 없습니다
+                        </Typography>
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+
+                <Card variant="outlined" sx={{ height: 240 }}>
+                  <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ mb: 1 }}
+                    >
+                      <CodeIcon fontSize="small" />
+                      <Typography variant="subtitle2">JWT 페이로드 미리보기</Typography>
+                      <Tooltip title="사용자에게 이 역할이 할당되면 JWT 토큰에 다음과 같은 형태로 포함됩니다">
+                        <HelpOutlineIcon fontSize="small" color="warning" />
+                      </Tooltip>
+                    </Stack>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        overflow: 'auto',
+                        bgcolor: 'grey.100',
+                        p: 1.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <pre
+                        style={{
+                          fontSize: '11px',
+                          margin: 0,
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {JSON.stringify(jwtPayloadPreview, null, 2)}
+                      </pre>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Stack>
+            </Box>
+          </Box>
+        </Stack>
+      </DialogContent>
+    </Dialog>
   );
 }

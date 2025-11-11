@@ -15,10 +15,8 @@ import ReactFlow, {
 import type { Node, Edge } from 'reactflow';
 import dagre from 'dagre';
 import 'reactflow/dist/style.css';
-import { Typography, Tooltip } from 'antd';
+import { Typography, Tooltip } from '@mui/material';
 import type { GlobalRole } from '../../types/user-management';
-
-const { Text } = Typography;
 
 interface RoleHierarchyGraphProps {
   allRoles: GlobalRole[];
@@ -121,7 +119,7 @@ function RoleNode({ data }: { data: any }) {
   );
 
   return (
-    <Tooltip title={tooltipContent} placement="top">
+    <Tooltip title={tooltipContent} placement="top" arrow>
       <>
         <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
         <div
@@ -146,16 +144,17 @@ function RoleNode({ data }: { data: any }) {
             e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
           }}
         >
-          <Text
-            strong
-            style={{
+          <Typography
+            variant="body2"
+            sx={{
               fontSize: '13px',
               color: textColor,
               userSelect: 'none',
+              fontWeight: 'bold',
             }}
           >
             {role.role_id}
-          </Text>
+          </Typography>
         </div>
         <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
       </>
