@@ -1,15 +1,35 @@
 // 글로벌 역할 관리 탭
 
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, message, Input, Switch, Popconfirm, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
+  Switch,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Visibility as VisibilityIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { GlobalRoleFormModal } from './GlobalRoleFormModal';
 import { GlobalRoleDetailDrawer } from './GlobalRoleDetailDrawer';
 import { userManagementService } from '../../services/userManagementService';
 import type { GlobalRole } from '../../types/user-management';
-
-const { Search } = Input;
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function GlobalRolesTab() {
   const [roles, setRoles] = useState<GlobalRole[]>([]);
@@ -18,10 +38,15 @@ export default function GlobalRolesTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<GlobalRole | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const snackbar = useSnackbar();
 
   // 상세 보기 Drawer 상태
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [detailRole, setDetailRole] = useState<GlobalRole | null>(null);
+
+  // 삭제 확인 다이얼로그
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<{ id: string; isSystem: boolean } | null>(null);
 
   // 역할 목록 조회
   const fetchRoles = async () => {
@@ -36,26 +61,29 @@ export default function GlobalRolesTab() {
 
       if (!Array.isArray(data)) {
         console.error('⚠️ API response is not an array:', data);
-        message.warning('API 응답 형식이 올바르지 않습니다. 빈 목록으로 표시합니다.');
+        snackbar.warning('API 응답 형식이 올바르지 않습니다. 빈 목록으로 표시합니다.');
       }
 
       // parent_role_id 필드 확인
       if (rolesList.length > 0) {
         console.log('🔍 First role sample:', rolesList[0]);
-        console.log('🔍 Roles with parent_role_id:', rolesList.filter(r => r.parent_role_id));
-        console.log('🔍 Roles with parent_role:', rolesList.filter(r => r.parent_role));
-        console.log('🔍 모든 역할의 부모 정보:', rolesList.map(r => ({
-          id: r.role_id,
-          parent_role_id: r.parent_role_id,
-          parent_role: r.parent_role,
-          has_parent: !!(r.parent_role_id || r.parent_role),
-        })));
+        console.log('🔍 Roles with parent_role_id:', rolesList.filter((r) => r.parent_role_id));
+        console.log('🔍 Roles with parent_role:', rolesList.filter((r) => r.parent_role));
+        console.log(
+          '🔍 모든 역할의 부모 정보:',
+          rolesList.map((r) => ({
+            id: r.role_id,
+            parent_role_id: r.parent_role_id,
+            parent_role: r.parent_role,
+            has_parent: !!(r.parent_role_id || r.parent_role),
+          }))
+        );
       }
 
       setRoles(rolesList);
       setFilteredRoles(rolesList);
     } catch (error) {
-      message.error('글로벌 역할 목록 조회에 실패했습니다');
+      snackbar.error('글로벌 역할 목록 조회에 실패했습니다');
       console.error('Failed to fetch global roles:', error);
       setRoles([]);
       setFilteredRoles([]);
@@ -73,7 +101,7 @@ export default function GlobalRolesTab() {
     if (searchKeyword) {
       const keyword = searchKeyword.toLowerCase();
       const filtered = roles.filter(
-        role =>
+        (role) =>
           role.role_id.toLowerCase().includes(keyword) ||
           role.display_name.toLowerCase().includes(keyword) ||
           (role.description?.toLowerCase().includes(keyword) ?? false)
@@ -100,13 +128,13 @@ export default function GlobalRolesTab() {
           permissions: roleData.permissions,
           parent_role_id: roleData.parent_role_id || undefined,
         });
-        message.success('새 글로벌 역할이 추가되었습니다');
+        snackbar.success('새 글로벌 역할이 추가되었습니다');
         fetchRoles();
       }
       setModalOpen(false);
       setSelectedRole(null);
     } catch (error) {
-      message.error('역할 저장에 실패했습니다');
+      snackbar.error('역할 저장에 실패했습니다');
       console.error('Failed to save global role:', error);
     }
   };
@@ -115,224 +143,226 @@ export default function GlobalRolesTab() {
   const handleToggleActive = async (roleId: string, isActive: boolean) => {
     try {
       await userManagementService.toggleGlobalRoleActivation(roleId, isActive);
-      message.success(`역할이 ${isActive ? '활성화' : '비활성화'}되었습니다`);
+      snackbar.success(`역할이 ${isActive ? '활성화' : '비활성화'}되었습니다`);
       fetchRoles();
     } catch (error) {
-      message.error('역할 상태 변경에 실패했습니다');
+      snackbar.error('역할 상태 변경에 실패했습니다');
       console.error('Failed to toggle global role:', error);
     }
   };
 
-  // 역할 삭제
-  const handleDelete = async (roleId: string, isSystemRole: boolean) => {
+  // 역할 삭제 확인
+  const confirmDelete = (roleId: string, isSystemRole: boolean) => {
     if (isSystemRole) {
-      message.warning('시스템 역할은 삭제할 수 없습니다');
+      snackbar.warning('시스템 역할은 삭제할 수 없습니다');
       return;
     }
+    setRoleToDelete({ id: roleId, isSystem: isSystemRole });
+    setDeleteConfirmOpen(true);
+  };
+
+  // 역할 삭제
+  const handleDelete = async () => {
+    if (!roleToDelete) return;
 
     try {
-      await userManagementService.deleteGlobalRole(roleId);
-      message.success('역할이 삭제되었습니다');
+      await userManagementService.deleteGlobalRole(roleToDelete.id);
+      snackbar.success('역할이 삭제되었습니다');
       fetchRoles();
     } catch (error) {
-      message.error('역할 삭제에 실패했습니다');
+      snackbar.error('역할 삭제에 실패했습니다');
       console.error('Failed to delete global role:', error);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setRoleToDelete(null);
     }
   };
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<GlobalRole> = [
+  // 권한 레벨 색상
+  const getLevelColor = (level: number): 'error' | 'warning' | 'success' => {
+    if (level <= 10) return 'error';
+    if (level <= 50) return 'warning';
+    return 'success';
+  };
+
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
     {
-      title: <span style={{ fontSize: '11px' }}>Role ID</span>,
-      dataIndex: 'role_id',
-      key: 'role_id',
+      field: 'role_id',
+      headerName: 'Role ID',
       width: 140,
-      sorter: (a, b) => a.role_id.localeCompare(b.role_id),
-      render: (roleId) => (
-        <span style={{ fontWeight: 500, fontSize: '12px' }}>{roleId}</span>
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.role_id}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>타입</span>,
-      dataIndex: 'is_system_role',
-      key: 'is_system_role',
-      width: 85,
+      field: 'is_system_role',
+      headerName: '타입',
+      width: 90,
       align: 'center',
-      filters: [
-        { text: '시스템', value: true },
-        { text: '사용자', value: false },
-      ],
-      onFilter: (value, record) => record.is_system_role === value,
-      render: (isSystemRole: boolean) =>
-        isSystemRole ? (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<GlobalRole>) =>
+        params.row.is_system_role ? (
           <Tooltip title="시스템 역할 (삭제/비활성화 불가)">
-            <Tag color="red" style={{ fontSize: '10px', margin: 0 }}>
-              SYSTEM
-            </Tag>
+            <Chip label="SYSTEM" color="error" size="small" />
           </Tooltip>
         ) : (
-          <Tag color="green" style={{ fontSize: '10px', margin: 0 }}>
-            사용자
-          </Tag>
+          <Chip label="사용자" color="success" size="small" />
         ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>표시명</span>,
-      dataIndex: 'display_name',
-      key: 'display_name',
+      field: 'display_name',
+      headerName: '표시명',
       width: 140,
-      ellipsis: true,
-      render: (text) => <span style={{ fontSize: '12px' }}>{text}</span>,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="body2">{params.row.display_name}</Typography>
+      ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>설명</span>,
-      dataIndex: 'description',
-      key: 'description',
+      field: 'description',
+      headerName: '설명',
       width: 200,
-      ellipsis: true,
-      render: (text) => <span style={{ fontSize: '11px', color: '#666' }}>{text || '-'}</span>,
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="body2" color="textSecondary" noWrap>
+          {params.row.description || '-'}
+        </Typography>
+      ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>레벨</span>,
-      dataIndex: 'authority_level',
-      key: 'authority_level',
-      width: 70,
+      field: 'authority_level',
+      headerName: '레벨',
+      width: 80,
       align: 'center',
-      sorter: (a, b) => a.authority_level - b.authority_level,
-      render: (level) => (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
         <Tooltip title="1-100 범위, 낮을수록 높은 권한">
-          <Tag color={level <= 10 ? 'red' : level <= 50 ? 'orange' : 'green'} style={{ fontSize: '10px', margin: 0 }}>
-            {level}
-          </Tag>
+          <Chip label={params.row.authority_level} color={getLevelColor(params.row.authority_level)} size="small" />
         </Tooltip>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>부모</span>,
-      dataIndex: 'parent_role',
-      key: 'parent_role',
+      field: 'parent_role',
+      headerName: '부모',
       width: 120,
-      ellipsis: true,
-      render: (parentRole) => {
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => {
+        const parentRole = params.row.parent_role;
         if (parentRole && parentRole.role_id) {
           return (
             <Tooltip title={`${parentRole.display_name} (Level ${parentRole.authority_level})`}>
-              <span style={{ fontSize: '11px', color: '#1890ff' }}>{parentRole.role_id}</span>
+              <Typography variant="body2" color="primary">
+                {parentRole.role_id}
+              </Typography>
             </Tooltip>
           );
         }
-        return <span style={{ color: '#ccc', fontSize: '11px' }}>-</span>;
+        return (
+          <Typography variant="body2" color="textSecondary">
+            -
+          </Typography>
+        );
       },
     },
     {
-      title: <span style={{ fontSize: '11px' }}>권한 수</span>,
-      dataIndex: 'permissions',
-      key: 'permissions',
-      width: 70,
+      field: 'permissions',
+      headerName: '권한 수',
+      width: 80,
       align: 'center',
-      render: (permissions: string[]) => (
-        <span style={{ fontSize: '11px', color: '#666' }}>{permissions?.length || 0}</span>
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="body2" color="textSecondary">
+          {params.row.permissions?.length || 0}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>상태</span>,
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 70,
+      field: 'is_active',
+      headerName: '상태',
+      width: 80,
       align: 'center',
-      filters: [
-        { text: '활성', value: true },
-        { text: '비활성', value: false },
-      ],
-      onFilter: (value, record) => record.is_active === value,
-      render: (isActive: boolean, record) => (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
         <Switch
           size="small"
-          checked={isActive}
-          onChange={(checked) => handleToggleActive(record.role_id, checked)}
-          disabled={record.is_system_role}
+          checked={params.row.is_active}
+          onChange={(e) => handleToggleActive(params.row.role_id, e.target.checked)}
+          disabled={params.row.is_system_role}
         />
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>생성일</span>,
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 100,
-      sorter: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      render: (date) => (
-        <span style={{ fontSize: '10px', color: '#999' }}>
-          {new Date(date).toLocaleDateString('ko-KR')}
-        </span>
+      field: 'created_at',
+      headerName: '생성일',
+      width: 110,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="body2" color="textSecondary">
+          {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>작업</span>,
-      key: 'actions',
-      width: 130,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size={4}>
+      field: 'actions',
+      headerName: '작업',
+      width: 140,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Box>
           <Tooltip title="상세 보기">
-            <Button
-              icon={<EyeOutlined />}
+            <IconButton
               size="small"
-              type="text"
               onClick={() => {
-                setDetailRole(record);
+                setDetailRole(params.row);
                 setDetailDrawerOpen(true);
               }}
-            />
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
           </Tooltip>
-          <Button
-            icon={<EditOutlined />}
+          <IconButton
             size="small"
-            type="text"
             onClick={() => {
-              setSelectedRole(record);
+              setSelectedRole(params.row);
               setModalOpen(true);
             }}
-          />
-          <Popconfirm
-            title="역할 삭제"
-            description="정말로 이 역할을 삭제하시겠습니까?"
-            onConfirm={() => handleDelete(record.role_id, record.is_system_role)}
-            okText="삭제"
-            cancelText="취소"
-            disabled={record.is_system_role}
           >
-            <Button
-              icon={<DeleteOutlined />}
-              size="small"
-              type="text"
-              danger
-              disabled={record.is_system_role}
-            />
-          </Popconfirm>
-        </Space>
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            color="error"
+            disabled={params.row.is_system_role}
+            onClick={() => confirmDelete(params.row.role_id, params.row.is_system_role)}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
       ),
     },
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h6" fontWeight={600}>
             글로벌 역할 ({filteredRoles.length}개)
-          </span>
-          <span style={{ marginLeft: 8, color: '#999' }}>
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
             플랫폼 전체에 적용되는 역할
-          </span>
-        </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchRoles} loading={loading}>
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchRoles} disabled={loading}>
             새로고침
           </Button>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => {
               setSelectedRole(null);
               setModalOpen(true);
@@ -340,31 +370,52 @@ export default function GlobalRolesTab() {
           >
             역할 추가
           </Button>
-        </Space>
-      </div>
+        </Box>
+      </Box>
 
       {/* 검색 */}
-      <Search
-        placeholder="Role ID, 표시명 또는 설명으로 검색"
-        allowClear
-        value={searchKeyword}
-        onChange={(e) => setSearchKeyword(e.target.value)}
-        style={{ width: 400 }}
-      />
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          placeholder="Role ID, 표시명 또는 설명으로 검색"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          size="small"
+          sx={{ width: 400 }}
+          slotProps={{
+            input: {
+              endAdornment: searchKeyword && (
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+            },
+          }}
+        />
+      </Box>
 
       {/* 테이블 */}
-      <Table
-        columns={columns}
-        dataSource={filteredRoles}
-        rowKey="role_id"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개`,
-        }}
-        scroll={{ x: 1600 }}
-      />
+      <Box sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredRoles}
+          columns={columns}
+          getRowId={(row) => row.role_id}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+            sorting: { sortModel: [{ field: 'role_id', sort: 'asc' }] },
+          }}
+          disableRowSelectionOnClick
+          sx={{
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
+      </Box>
 
       {/* 역할 추가/수정 모달 */}
       <GlobalRoleFormModal
@@ -388,6 +439,20 @@ export default function GlobalRolesTab() {
           setDetailRole(null);
         }}
       />
-    </Space>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>역할 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>정말로 이 역할을 삭제하시겠습니까?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>취소</Button>
+          <Button color="error" variant="contained" onClick={handleDelete}>
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }
