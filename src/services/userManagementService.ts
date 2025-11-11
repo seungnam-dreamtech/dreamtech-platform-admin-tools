@@ -358,39 +358,23 @@ class UserManagementService {
   /**
    * 전체 클라이언트 목록 조회
    * 실제 API: GET /v1/management/clients
+   * Query Parameters: includeDeleted (optional)
    */
-  async getClients(filter?: ClientSearchFilter): Promise<OAuthClient[]> {
-    console.log('🔍 Mock: Getting clients with filter:', filter);
+  async getClients(params?: { includeDeleted?: boolean }): Promise<OAuthClient[]> {
+    console.log('🔍 Getting OAuth clients', params);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<OAuthClient[]>('/v1/management/clients', {
-    //   method: 'GET',
-    //   body: JSON.stringify(filter),
-    // });
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.includeDeleted) {
+        queryParams.append('includeDeleted', 'true');
+      }
 
-    let filtered = [...MOCK_OAUTH_CLIENTS];
-
-    if (filter?.keyword) {
-      const keyword = filter.keyword.toLowerCase();
-      filtered = filtered.filter(client =>
-        client.clientName.toLowerCase().includes(keyword) ||
-        client.clientId.toLowerCase().includes(keyword)
-      );
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      return this.request<OAuthClient[]>(`/v1/management/clients${queryString}`);
+    } catch (error) {
+      console.error('Failed to fetch OAuth clients:', error);
+      throw error;
     }
-
-    if (filter?.clientType) {
-      filtered = filtered.filter(client => client.clientType === filter.clientType);
-    }
-
-    if (filter?.serviceId) {
-      filtered = filtered.filter(client => client.serviceId === filter.serviceId);
-    }
-
-    if (filter?.enabled !== undefined) {
-      filtered = filtered.filter(client => client.enabled === filter.enabled);
-    }
-
-    return filtered;
   }
 
   /**
@@ -398,98 +382,72 @@ class UserManagementService {
    * 실제 API: GET /v1/management/clients/{clientId}
    */
   async getClient(clientId: string): Promise<OAuthClient> {
-    console.log('🔍 Mock: Getting client:', clientId);
+    console.log('🔍 Getting OAuth client:', clientId);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<OAuthClient>(`/v1/management/clients/${clientId}`);
-
-    const client = MOCK_OAUTH_CLIENTS.find(c => c.clientId === clientId || c.id === clientId);
-    if (!client) {
-      throw new Error(`Client not found: ${clientId}`);
+    try {
+      return this.request<OAuthClient>(`/v1/management/clients/${clientId}`);
+    } catch (error) {
+      console.error('Failed to fetch OAuth client:', error);
+      throw error;
     }
-    return client;
   }
 
   /**
    * 클라이언트 생성
    * 실제 API: POST /v1/management/clients
    */
-  async createClient(clientData: ClientFormData): Promise<OAuthClient> {
-    console.log('➕ Mock: Creating client:', clientData);
+  async createClient(
+    data: import('../types/user-management').ClientCreateRequest
+  ): Promise<OAuthClient> {
+    console.log('➕ Creating OAuth client:', data);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<OAuthClient>('/v1/management/clients', {
-    //   method: 'POST',
-    //   body: JSON.stringify(clientData),
-    // });
-
-    const newClient: OAuthClient = {
-      id: `client-${Date.now()}`,
-      clientId: `${clientData.clientName.toLowerCase().replace(/\s+/g, '-')}-client`,
-      clientSecret: '••••••••••••',
-      clientName: clientData.clientName,
-      clientType: clientData.clientType,
-      serviceId: clientData.serviceId,
-      serviceName: clientData.serviceId
-        ? MOCK_SERVICES.find(s => s.id === clientData.serviceId)?.displayName
-        : undefined,
-      redirectUris: clientData.redirectUris,
-      postLogoutRedirectUris: clientData.postLogoutRedirectUris,
-      scopes: clientData.scopes,
-      grantTypes: clientData.grantTypes,
-      requirePkce: clientData.requirePkce,
-      enabled: clientData.enabled,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    MOCK_OAUTH_CLIENTS.push(newClient);
-    return newClient;
+    try {
+      return this.request<OAuthClient>('/v1/management/clients', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error('Failed to create OAuth client:', error);
+      throw error;
+    }
   }
 
   /**
    * 클라이언트 정보 수정
    * 실제 API: PUT /v1/management/clients/{clientId}
    */
-  async updateClient(clientId: string, clientData: Partial<ClientFormData>): Promise<OAuthClient> {
-    console.log('✏️ Mock: Updating client:', clientId, clientData);
+  async updateClient(
+    clientId: string,
+    data: import('../types/user-management').ClientUpdateRequest
+  ): Promise<OAuthClient> {
+    console.log('✏️ Updating OAuth client:', clientId, data);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<OAuthClient>(`/v1/management/clients/${clientId}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify(clientData),
-    // });
-
-    const clientIndex = MOCK_OAUTH_CLIENTS.findIndex(c => c.clientId === clientId || c.id === clientId);
-    if (clientIndex === -1) {
-      throw new Error(`Client not found: ${clientId}`);
+    try {
+      return this.request<OAuthClient>(`/v1/management/clients/${clientId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.error('Failed to update OAuth client:', error);
+      throw error;
     }
-
-    const updatedClient = {
-      ...MOCK_OAUTH_CLIENTS[clientIndex],
-      ...clientData,
-      updatedAt: new Date().toISOString(),
-    };
-
-    MOCK_OAUTH_CLIENTS[clientIndex] = updatedClient;
-    return updatedClient;
   }
 
   /**
-   * 클라이언트 삭제
+   * 클라이언트 삭제 (소프트 삭제)
    * 실제 API: DELETE /v1/management/clients/{clientId}
+   * deleted_at 필드가 설정됨
    */
   async deleteClient(clientId: string): Promise<void> {
-    console.log('🗑️ Mock: Deleting client:', clientId);
+    console.log('🗑️ Deleting OAuth client (soft delete):', clientId);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<void>(`/v1/management/clients/${clientId}`, {
-    //   method: 'DELETE',
-    // });
-
-    const clientIndex = MOCK_OAUTH_CLIENTS.findIndex(c => c.clientId === clientId || c.id === clientId);
-    if (clientIndex !== -1) {
-      MOCK_OAUTH_CLIENTS.splice(clientIndex, 1);
+    try {
+      return this.request<void>(`/v1/management/clients/${clientId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete OAuth client:', error);
+      throw error;
     }
   }
 
@@ -497,23 +455,77 @@ class UserManagementService {
    * 클라이언트 비밀키 재생성
    * 실제 API: POST /v1/management/clients/{clientId}/regenerate-secret
    */
-  async regenerateClientSecret(clientId: string): Promise<{ clientSecret: string }> {
-    console.log('🔑 Mock: Regenerating client secret:', clientId);
+  async regenerateClientSecret(clientId: string): Promise<{ client_secret: string }> {
+    console.log('🔑 Regenerating client secret:', clientId);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<{ clientSecret: string }>(
-    //   `/v1/management/clients/${clientId}/regenerate-secret`,
-    //   { method: 'POST' }
-    // );
+    try {
+      return this.request<{ client_secret: string }>(
+        `/v1/management/clients/${clientId}/regenerate-secret`,
+        { method: 'POST' }
+      );
+    } catch (error) {
+      console.error('Failed to regenerate client secret:', error);
+      throw error;
+    }
+  }
 
-    // Mock 비밀키 재생성 (실제로는 서버에서 생성)
-    const newSecret = `secret_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  /**
+   * 클라이언트의 허용된 User Type 목록 조회
+   * 실제 API: GET /v1/management/clients/{clientId}/allowed-user-types
+   */
+  async getAllowedUserTypes(clientId: string): Promise<import('../types/user-management').ClientAuthorityType[]> {
+    console.log('🔍 Getting allowed user types for client:', clientId);
 
-    const client = await this.getClient(clientId);
-    client.clientSecret = newSecret;
-    client.updatedAt = new Date().toISOString();
+    try {
+      return this.request<import('../types/user-management').ClientAuthorityType[]>(
+        `/v1/management/clients/${clientId}/allowed-user-types`
+      );
+    } catch (error) {
+      console.error('Failed to fetch allowed user types:', error);
+      throw error;
+    }
+  }
 
-    return { clientSecret: newSecret };
+  /**
+   * 클라이언트에 허용된 User Type 추가
+   * 실제 API: POST /v1/management/clients/{clientId}/allowed-user-types
+   */
+  async addAllowedUserType(
+    clientId: string,
+    data: import('../types/user-management').AllowedUserTypeRequest
+  ): Promise<import('../types/user-management').ClientAuthorityType> {
+    console.log('➕ Adding allowed user type:', clientId, data);
+
+    try {
+      return this.request<import('../types/user-management').ClientAuthorityType>(
+        `/v1/management/clients/${clientId}/allowed-user-types`,
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }
+      );
+    } catch (error) {
+      console.error('Failed to add allowed user type:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 클라이언트의 허용된 User Type 제거
+   * 실제 API: DELETE /v1/management/clients/{clientId}/allowed-user-types/{userType}
+   */
+  async removeAllowedUserType(clientId: string, userType: string): Promise<void> {
+    console.log('🗑️ Removing allowed user type:', clientId, userType);
+
+    try {
+      return this.request<void>(
+        `/v1/management/clients/${clientId}/allowed-user-types/${userType}`,
+        { method: 'DELETE' }
+      );
+    } catch (error) {
+      console.error('Failed to remove allowed user type:', error);
+      throw error;
+    }
   }
 
   // ==================== 유틸리티 메서드 ====================

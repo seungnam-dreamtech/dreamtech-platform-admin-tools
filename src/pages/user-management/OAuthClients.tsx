@@ -28,14 +28,13 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { OAuthClient, ClientType, ClientAuthorityType, UserTypeDefinition } from '../../types/user-management';
 import {
-  MOCK_OAUTH_CLIENTS,
-  MOCK_SERVICES,
-  MOCK_USER_TYPE_DEFINITIONS,
   CLIENT_TYPE_OPTIONS,
   GRANT_TYPE_OPTIONS,
   COMMON_SCOPES,
 } from '../../constants/user-management';
 import { ClientAuthorityTypesManager } from '../../components/oauth/ClientAuthorityTypesManager';
+import { userManagementService } from '../../services/userManagementService';
+import { formatTokenDuration } from '../../utils/tokenUtils';
 
 const { Search } = Input;
 
@@ -54,23 +53,20 @@ export default function OAuthClients() {
   // User Type Definitions 조회
   const fetchUserTypeDefinitions = async () => {
     try {
-      // TODO: 실제 API 연동
-      // const data = await userManagementService.getUserTypeDefinitions();
-      const data = MOCK_USER_TYPE_DEFINITIONS.filter(type => type.is_active);
-      setUserTypeDefinitions(data);
+      const data = await userManagementService.getUserTypeDefinitions();
+      const activeTypes = data.filter(type => type.is_active);
+      setUserTypeDefinitions(activeTypes);
     } catch (error) {
       message.error('User Type 정의 조회에 실패했습니다');
       console.error(error);
     }
   };
 
-  // 클라이언트 목록 조회
+  // 클라이언트 목록 조회 (비활성화된 것 포함)
   const fetchClients = async () => {
     setLoading(true);
     try {
-      // TODO: 실제 API 연동
-      // const data = await userManagementService.getOAuthClients();
-      const data: OAuthClient[] = [...MOCK_OAUTH_CLIENTS];
+      const data = await userManagementService.getClients({ includeDeleted: true });
       setClients(data);
       setFilteredClients(data);
     } catch (error) {
@@ -90,15 +86,15 @@ export default function OAuthClients() {
   useEffect(() => {
     let filtered = [...clients];
 
-    // Client Type 필터
+    // Client Type 필터 (optional 필드이므로 존재 여부 체크)
     if (filterClientType !== 'ALL') {
-      filtered = filtered.filter(client => client.clientType === filterClientType);
+      filtered = filtered.filter(client => client.client_type === filterClientType);
     }
 
-    // Enabled 필터
+    // Enabled 필터 (deleted_at 기반: null이면 활성, 값 있으면 비활성)
     if (filterEnabled !== 'ALL') {
       filtered = filtered.filter(client =>
-        filterEnabled === 'enabled' ? client.enabled : !client.enabled
+        filterEnabled === 'enabled' ? !client.deleted_at : !!client.deleted_at
       );
     }
 
@@ -107,8 +103,8 @@ export default function OAuthClients() {
       const keyword = searchKeyword.toLowerCase();
       filtered = filtered.filter(
         client =>
-          client.clientName.toLowerCase().includes(keyword) ||
-          client.clientId.toLowerCase().includes(keyword)
+          client.client_name.toLowerCase().includes(keyword) ||
+          client.client_id.toLowerCase().includes(keyword)
       );
     }
 
@@ -118,27 +114,59 @@ export default function OAuthClients() {
   // 클라이언트 추가/수정
   const handleSave = async () => {
     try {
-      await form.validateFields();
+      const values = await form.validateFields();
+
       if (selectedClient) {
-        // 수정
+        // 수정: PUT /v1/management/clients/{clientId}
+        const updateData: import('../../types/user-management').ClientUpdateRequest = {
+          client_name: values.clientName,
+          redirect_uris: values.redirectUris?.split('\n').filter((uri: string) => uri.trim()),
+          post_logout_redirect_uris: values.postLogoutRedirectUris?.split('\n').filter((uri: string) => uri.trim()),
+          scopes: values.scopes,
+          authorization_grant_types: values.grantTypes,
+          client_authentication_methods: values.authMethods || ['CLIENT_SECRET_BASIC'],
+          access_token_time_to_live: values.accessTokenTTL,
+          refresh_token_time_to_live: values.refreshTokenTTL,
+          use_public_client: values.requirePkce || false,
+          reuse_refresh_tokens: values.reuseRefreshTokens ?? false,
+        };
+
+        await userManagementService.updateClient(selectedClient.id, updateData);
         message.success('OAuth 클라이언트가 수정되었습니다');
       } else {
-        // 추가
+        // 추가: POST /v1/management/clients
+        const createData: import('../../types/user-management').ClientCreateRequest = {
+          client_id: values.clientId,
+          client_name: values.clientName,
+          redirect_uris: values.redirectUris?.split('\n').filter((uri: string) => uri.trim()),
+          post_logout_redirect_uris: values.postLogoutRedirectUris?.split('\n').filter((uri: string) => uri.trim()),
+          scopes: values.scopes,
+          authorization_grant_types: values.grantTypes,
+          client_authentication_methods: values.authMethods || ['CLIENT_SECRET_BASIC'],
+          access_token_time_to_live: values.accessTokenTTL || '1H',
+          refresh_token_time_to_live: values.refreshTokenTTL || '24H',
+          use_public_client: values.requirePkce || false,
+          reuse_refresh_tokens: values.reuseRefreshTokens ?? false,
+        };
+
+        await userManagementService.createClient(createData);
         message.success('새 OAuth 클라이언트가 추가되었습니다');
       }
+
       fetchClients();
       setModalOpen(false);
       setSelectedClient(null);
       form.resetFields();
     } catch (error) {
-      console.error('Form validation failed:', error);
+      message.error('OAuth 클라이언트 저장에 실패했습니다');
+      console.error('Form save failed:', error);
     }
   };
 
-  // 클라이언트 삭제
+  // 클라이언트 삭제 (소프트 삭제)
   const handleDelete = async (id: string) => {
     try {
-      console.log('Deleting client:', id);
+      await userManagementService.deleteClient(id);
       message.success('OAuth 클라이언트가 삭제되었습니다');
       fetchClients();
     } catch (error) {
@@ -147,12 +175,22 @@ export default function OAuthClients() {
     }
   };
 
-  // 클라이언트 활성화/비활성화
+  // 클라이언트 활성화/비활성화 (deleted_at 기반)
   const handleToggleEnabled = async (client: OAuthClient) => {
     try {
-      message.success(
-        client.enabled ? '클라이언트가 비활성화되었습니다' : '클라이언트가 활성화되었습니다'
-      );
+      const isCurrentlyActive = !client.deleted_at;
+
+      if (isCurrentlyActive) {
+        // 비활성화 = 삭제
+        await userManagementService.deleteClient(client.id);
+        message.success('클라이언트가 비활성화되었습니다');
+      } else {
+        // 활성화 = 복원 (백엔드 API 필요)
+        // TODO: 백엔드에 PATCH /v1/management/clients/{clientId}/restore API 추가 필요
+        message.warning('클라이언트 활성화 API가 아직 구현되지 않았습니다');
+        console.warn('Restore API not implemented yet');
+      }
+
       fetchClients();
     } catch (error) {
       message.error('클라이언트 상태 변경에 실패했습니다');
@@ -162,9 +200,11 @@ export default function OAuthClients() {
 
   // Client Secret 복사
   const handleCopySecret = (clientId: string) => {
-    // TODO: 실제로는 API를 통해 실제 secret을 가져와야 함
-    navigator.clipboard.writeText(`${clientId}-secret-placeholder`);
-    message.success('Client Secret이 클립보드에 복사되었습니다');
+    if (clientId) {
+      // 마스킹된 시크릿이므로 그대로 복사 (실제로는 regenerate API 호출 필요)
+      navigator.clipboard.writeText('********');
+      message.info('Client Secret은 보안상 마스킹되어 있습니다. 재생성 기능을 사용하세요.');
+    }
   };
 
 
@@ -173,15 +213,19 @@ export default function OAuthClients() {
     if (client) {
       setSelectedClient(client);
       form.setFieldsValue({
-        clientName: client.clientName,
-        clientType: client.clientType,
-        authorityTypes: client.authorityTypes || [],
-        redirectUris: client.redirectUris.join('\n'),
-        postLogoutRedirectUris: client.postLogoutRedirectUris?.join('\n') || '',
+        clientId: client.client_id,
+        clientName: client.client_name,
+        clientType: client.client_type,
+        authorityTypes: client.authority_types || [],
+        redirectUris: client.redirect_uris?.join('\n') || '',
+        postLogoutRedirectUris: client.post_logout_redirect_uris?.join('\n') || '',
         scopes: client.scopes,
-        grantTypes: client.grantTypes,
-        requirePkce: client.requirePkce,
-        enabled: client.enabled,
+        grantTypes: client.authorization_grant_types,
+        authMethods: client.client_authentication_methods,
+        accessTokenTTL: client.access_token_time_to_live,
+        refreshTokenTTL: client.refresh_token_time_to_live,
+        requirePkce: client.use_public_client,
+        reuseRefreshTokens: client.reuse_refresh_tokens,
       });
     } else {
       setSelectedClient(null);
@@ -201,52 +245,55 @@ export default function OAuthClients() {
         <Space direction="vertical" size={0}>
           <Space size="small">
             <ApiOutlined style={{ fontSize: '12px', color: '#1890ff' }} />
-            <span style={{ fontSize: '12px', fontWeight: 500 }}>{record.clientName}</span>
+            <span style={{ fontSize: '12px', fontWeight: 500 }}>{record.client_name}</span>
           </Space>
           <span style={{ fontSize: '10px', color: '#999' }}>
-            {record.clientId}
+            {record.client_id}
           </span>
         </Space>
       ),
     },
     {
       title: <span style={{ fontSize: '11px' }}>타입</span>,
-      dataIndex: 'clientType',
-      key: 'clientType',
+      dataIndex: 'client_type',
+      key: 'client_type',
       width: 120,
-      render: (type: ClientType) => {
+      render: (type?: ClientType) => {
+        if (!type) return <Tag style={{ fontSize: '10px', margin: 0 }}>-</Tag>;
         const typeOption = CLIENT_TYPE_OPTIONS.find(t => t.value === type);
         return <Tag color="blue" style={{ fontSize: '10px', margin: 0 }}>{typeOption?.label || type}</Tag>;
       },
     },
     {
       title: <span style={{ fontSize: '11px' }}>상태</span>,
-      dataIndex: 'enabled',
-      key: 'enabled',
+      key: 'status',
       width: 70,
       align: 'center',
-      render: (enabled: boolean, record) => (
-        <Switch
-          size="small"
-          checked={enabled}
-          onChange={() => handleToggleEnabled(record)}
-        />
-      ),
+      render: (_, record) => {
+        const isActive = !record.deleted_at;
+        return (
+          <Switch
+            size="small"
+            checked={isActive}
+            onChange={() => handleToggleEnabled(record)}
+          />
+        );
+      },
     },
     {
       title: <span style={{ fontSize: '11px' }}>Grant Types</span>,
-      dataIndex: 'grantTypes',
-      key: 'grantTypes',
+      dataIndex: 'authorization_grant_types',
+      key: 'authorization_grant_types',
       width: 150,
       render: (types: string[]) => (
-        <Tooltip title={types.join(', ')}>
+        <Tooltip title={types?.join(', ') || ''}>
           <Space size={[0, 4]} wrap>
-            {types.slice(0, 2).map(type => (
+            {types?.slice(0, 2).map(type => (
               <Tag key={type} style={{ fontSize: '10px', margin: 0 }}>
-                {type}
+                {type.replace('_', ' ')}
               </Tag>
             ))}
-            {types.length > 2 && (
+            {types && types.length > 2 && (
               <Tag style={{ fontSize: '10px', margin: 0 }}>+{types.length - 2}</Tag>
             )}
           </Space>
@@ -255,10 +302,10 @@ export default function OAuthClients() {
     },
     {
       title: <span style={{ fontSize: '11px' }}>생성 가능 User Type</span>,
-      dataIndex: 'authorityTypes',
-      key: 'authorityTypes',
+      dataIndex: 'authority_types',
+      key: 'authority_types',
       width: 150,
-      render: (authorityTypes: ClientAuthorityType[]) => {
+      render: (authorityTypes?: ClientAuthorityType[]) => {
         if (!authorityTypes || authorityTypes.length === 0) {
           return <span style={{ fontSize: '11px', color: '#999' }}>없음</span>;
         }
@@ -267,22 +314,22 @@ export default function OAuthClients() {
             title={authorityTypes
               .map(
                 at => {
-                  const userTypeDef = userTypeDefinitions.find(ut => ut.type_id === at.userType);
-                  return `${userTypeDef?.display_name || at.userType}${at.isDefault ? ' (기본)' : ''}`;
+                  const userTypeDef = userTypeDefinitions.find(ut => ut.type_id === at.user_type);
+                  return `${userTypeDef?.display_name || at.user_type}${at.is_default ? ' (기본)' : ''}`;
                 }
               )
               .join(', ')}
           >
             <Space size={[0, 4]} wrap>
               {authorityTypes.slice(0, 2).map(at => {
-                const userTypeDef = userTypeDefinitions.find(ut => ut.type_id === at.userType);
+                const userTypeDef = userTypeDefinitions.find(ut => ut.type_id === at.user_type);
                 return (
                   <Tag
-                    key={at.userType}
-                    color={at.isDefault ? 'gold' : 'purple'}
+                    key={at.user_type}
+                    color={at.is_default ? 'gold' : 'purple'}
                     style={{ fontSize: '10px', margin: 0 }}
                   >
-                    {userTypeDef?.display_name || at.userType}
+                    {userTypeDef?.display_name || at.user_type}
                   </Tag>
                 );
               })}
@@ -300,38 +347,38 @@ export default function OAuthClients() {
       key: 'scopes',
       width: 80,
       align: 'center',
-      render: (scopes: string[]) => (
-        <Tooltip title={scopes.join(', ')}>
-          <Badge count={scopes.length} showZero color="green" style={{ fontSize: '10px' }} />
+      render: (scopes?: string[]) => (
+        <Tooltip title={scopes?.join(', ') || ''}>
+          <Badge count={scopes?.length || 0} showZero color="green" style={{ fontSize: '10px' }} />
         </Tooltip>
       ),
     },
     {
       title: <span style={{ fontSize: '11px' }}>URIs</span>,
-      dataIndex: 'redirectUris',
-      key: 'redirectUris',
+      dataIndex: 'redirect_uris',
+      key: 'redirect_uris',
       width: 80,
       align: 'center',
-      render: (uris: string[]) => (
-        <Tooltip title={uris.join('\n')}>
+      render: (uris?: string[]) => (
+        <Tooltip title={uris?.join('\n') || ''}>
           <Badge count={uris.length} showZero color="purple" style={{ fontSize: '10px' }} />
         </Tooltip>
       ),
     },
     {
       title: <span style={{ fontSize: '11px' }}>PKCE</span>,
-      dataIndex: 'requirePkce',
-      key: 'requirePkce',
+      dataIndex: 'use_public_client',
+      key: 'use_public_client',
       width: 70,
       align: 'center',
-      render: (required: boolean) =>
-        required ? (
+      render: (usePublic: boolean) =>
+        usePublic ? (
           <Tag color="green" style={{ fontSize: '10px', margin: 0 }}>
-            필수
+            Public
           </Tag>
         ) : (
           <Tag color="default" style={{ fontSize: '10px', margin: 0 }}>
-            선택
+            Confidential
           </Tag>
         ),
     },
@@ -342,10 +389,10 @@ export default function OAuthClients() {
       render: (_, record) => (
         <Space direction="vertical" size={0}>
           <span style={{ fontSize: '10px', color: '#666' }}>
-            Access: {record.accessTokenValidity ? `${record.accessTokenValidity}s` : '-'}
+            Access: {formatTokenDuration(record.access_token_time_to_live)}
           </span>
           <span style={{ fontSize: '10px', color: '#666' }}>
-            Refresh: {record.refreshTokenValidity ? `${record.refreshTokenValidity}s` : '-'}
+            Refresh: {formatTokenDuration(record.refresh_token_time_to_live)}
           </span>
         </Space>
       ),

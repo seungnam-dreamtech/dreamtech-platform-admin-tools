@@ -169,53 +169,60 @@ export interface ServiceRoleDefinition {
 }
 
 /**
- * OAuth2/OIDC 클라이언트 타입
+ * OAuth2/OIDC 클라이언트 타입 (UI 분류용, 백엔드에는 없음)
  */
 export type ClientType = 'application' | 'management' | 'mobile' | 'web' | 'service';
 
 /**
  * 클라이언트 권한 유형 (클라이언트가 생성 가능한 User Type)
+ * API: GET /v1/management/clients/{clientId}/allowed-user-types
  */
 export interface ClientAuthorityType {
-  userType: UserType;
-  isDefault: boolean;  // 회원가입 시 기본 User Type 여부
+  user_type: string;          // User Type ID (예: DOCTOR, PATIENT)
+  is_default: boolean;        // 회원가입 시 기본 User Type 여부
 }
 
 /**
  * OAuth2/OIDC 클라이언트
+ * API Response: GET /v1/management/clients
  */
 export interface OAuthClient {
-  id: string;
-  clientId: string;
-  clientSecret?: string;  // 보안상 조회 시 마스킹될 수 있음
-  clientName: string;
-  clientType: ClientType;
+  id: string;                                      // Primary Key
+  client_id: string;                               // OAuth Client ID (unique)
+  client_name: string;                             // 클라이언트 이름
+  client_secret?: string;                          // 보안상 조회 시 마스킹 (********)
 
-  // 클라이언트 권한 유형 (이 클라이언트가 생성 가능한 User Type 목록)
-  authorityTypes: ClientAuthorityType[];
+  // OAuth2 Redirect URIs
+  redirect_uris: string[];                         // 리다이렉트 URI 목록
+  post_logout_redirect_uris?: string[];            // 로그아웃 후 리다이렉트 URI
 
-  // OAuth2 설정
-  redirectUris: string[];
-  postLogoutRedirectUris?: string[];
-  scopes: string[];
-  grantTypes: string[];
-  responseTypes?: string[];
+  // Scopes & Grant Types
+  scopes: string[];                                // 스코프 목록 (예: openid, profile, email)
+  authorization_grant_types: string[];             // Grant Type (예: AUTHORIZATION_CODE, REFRESH_TOKEN)
+  client_authentication_methods: string[];         // 인증 방식 (예: CLIENT_SECRET_BASIC, CLIENT_SECRET_POST)
 
-  // OIDC 설정
-  requirePkce?: boolean;
-  requireAuthTime?: boolean;
+  // 토큰 유효기간 (문자열 형식: "1H", "24H", "5M")
+  access_token_time_to_live?: string;              // Access Token 유효기간
+  refresh_token_time_to_live?: string;             // Refresh Token 유효기간
+  authorize_code_time_to_live?: string;            // Authorization Code 유효기간
+  device_code_time_to_live?: string;               // Device Code 유효기간
 
-  // 토큰 설정
-  accessTokenValidity?: number;  // 초 단위
-  refreshTokenValidity?: number;  // 초 단위
-  idTokenValidity?: number;  // 초 단위
+  // 클라이언트 설정
+  reuse_refresh_tokens: boolean;                   // Refresh Token 재사용 여부
+  use_public_client: boolean;                      // PKCE를 사용하는 Public Client 여부
+  use_authorization_consent?: boolean;             // 사용자 동의 화면 사용 여부
+  use_external_login?: boolean;                    // 외부 로그인 페이지 사용 여부
+  external_login_page_url?: string;                // 외부 로그인 페이지 URL
 
-  // 상태
-  enabled: boolean;
-  createdAt: string;
-  updatedAt: string;
+  // 시스템 정보
+  client_id_issued_at: string;                     // 클라이언트 생성일시
+  client_secret_expires_at?: string | null;        // 클라이언트 비밀키 만료일시
+  updated_at?: string | null;                      // 수정일시
+  deleted_at?: string | null;                      // 삭제일시 (소프트 삭제, null이면 활성)
 
-  metadata?: Record<string, unknown>;
+  // UI 전용 필드 (백엔드에 없음, 선택적)
+  client_type?: ClientType;                        // 클라이언트 타입 (UI 분류용)
+  authority_types?: ClientAuthorityType[];         // 허용된 User Type (별도 API로 조회)
 }
 
 /**
@@ -248,18 +255,74 @@ export interface UserFormData {
 }
 
 /**
- * 클라이언트 추가/수정 폼 데이터
+ * 클라이언트 생성 요청
+ * API Request: POST /v1/management/clients
+ */
+export interface ClientCreateRequest {
+  client_id: string;                               // Client ID (unique)
+  client_name: string;                             // 클라이언트 이름
+  client_secret?: string;                          // 클라이언트 비밀키 (선택적)
+  redirect_uris: string[];                         // 리다이렉트 URI
+  post_logout_redirect_uris?: string[];            // 로그아웃 후 리다이렉트 URI
+  scopes: string[];                                // 스코프 목록
+  authorization_grant_types: string[];             // Grant Type 목록
+  client_authentication_methods: string[];         // 인증 방식
+  access_token_time_to_live?: string;              // Access Token 유효기간 (예: "1H")
+  refresh_token_time_to_live?: string;             // Refresh Token 유효기간
+  authorize_code_time_to_live?: string;            // Authorization Code 유효기간
+  device_code_time_to_live?: string;               // Device Code 유효기간
+  reuse_refresh_tokens?: boolean;                  // Refresh Token 재사용 여부
+  use_public_client?: boolean;                     // Public Client 여부 (PKCE)
+  use_authorization_consent?: boolean;             // 사용자 동의 화면 사용 여부
+  use_external_login?: boolean;                    // 외부 로그인 사용 여부
+  external_login_page_url?: string;                // 외부 로그인 페이지 URL
+}
+
+/**
+ * 클라이언트 수정 요청
+ * API Request: PUT /v1/management/clients/{clientId}
+ */
+export interface ClientUpdateRequest {
+  client_name?: string;
+  redirect_uris?: string[];
+  post_logout_redirect_uris?: string[];
+  scopes?: string[];
+  authorization_grant_types?: string[];
+  client_authentication_methods?: string[];
+  access_token_time_to_live?: string;
+  refresh_token_time_to_live?: string;
+  authorize_code_time_to_live?: string;
+  device_code_time_to_live?: string;
+  reuse_refresh_tokens?: boolean;
+  use_public_client?: boolean;
+  use_authorization_consent?: boolean;
+  use_external_login?: boolean;
+  external_login_page_url?: string;
+}
+
+/**
+ * 허용된 User Type 추가 요청
+ * API Request: POST /v1/management/clients/{clientId}/allowed-user-types
+ */
+export interface AllowedUserTypeRequest {
+  user_type: string;        // User Type ID
+  is_default: boolean;      // 기본 User Type 여부
+}
+
+/**
+ * 클라이언트 폼 데이터 (UI 전용, 레거시)
+ * @deprecated ClientCreateRequest 사용 권장
  */
 export interface ClientFormData {
   clientName: string;
-  clientType: ClientType;
-  authorityTypes: ClientAuthorityType[];  // 생성 가능한 User Type 목록
+  clientType?: ClientType;                         // UI 분류용 (백엔드에 없음)
+  authorityTypes?: ClientAuthorityType[];          // 생성 가능한 User Type 목록
   redirectUris: string[];
   postLogoutRedirectUris?: string[];
   scopes: string[];
   grantTypes: string[];
   requirePkce?: boolean;
-  enabled: boolean;
+  enabled?: boolean;                               // deleted_at으로 판단
 }
 
 /**
