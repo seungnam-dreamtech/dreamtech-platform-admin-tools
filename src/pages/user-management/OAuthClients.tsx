@@ -688,19 +688,47 @@ export default function OAuthClients() {
         }}
       >
         <DialogTitle>
-          {selectedClient ? 'OAuth 클라이언트 수정' : '새 OAuth 클라이언트 추가'}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">
+              {selectedClient ? 'OAuth 클라이언트 수정' : '새 OAuth 클라이언트 추가'}
+            </Typography>
+            <Tooltip title="Public Client는 PKCE를 필수로 사용합니다 (예: 모바일 앱, SPA). Confidential Client는 Client Secret을 안전하게 보관할 수 있는 서버 애플리케이션입니다.">
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.requirePkce}
+                    onChange={(e) => setFormData({ ...formData, requirePkce: e.target.checked })}
+                    size="small"
+                  />
+                }
+                label={
+                  <Typography variant="body2" fontWeight={500}>
+                    {formData.requirePkce ? '🔓 Public' : '🔒 Confidential'}
+                  </Typography>
+                }
+                sx={{ m: 0 }}
+              />
+            </Tooltip>
+          </Box>
         </DialogTitle>
-        <DialogContent dividers>
-          <Alert severity="info" sx={{ mb: 3 }}>
+        <DialogContent
+          dividers
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            p: 0,
+          }}
+        >
+          <Alert severity="info" sx={{ m: 2, mb: 0 }}>
             OAuth2/OIDC 클라이언트 설정 - 애플리케이션이 인증 서버와 통신하기 위한 클라이언트 설정을 관리합니다.
           </Alert>
 
-          <Box component="form" noValidate>
-            {/* 기본 정보 (항상 표시) */}
+          {/* 기본 정보 (고정 영역) */}
+          <Box sx={{ px: 2, py: 2 }}>
             <Typography variant="h6" gutterBottom>
               기본 정보
             </Typography>
-            <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Client ID"
@@ -742,25 +770,11 @@ export default function OAuthClients() {
                   <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={formData.requirePkce}
-                        onChange={(e) => setFormData({ ...formData, requirePkce: e.target.checked })}
-                      />
-                    }
-                    label="Public Client (PKCE)"
-                  />
-                  <FormHelperText>
-                    Public Client는 PKCE를 필수로 사용합니다 (예: 모바일 앱, SPA)
-                  </FormHelperText>
-                </Box>
-              </Grid>
             </Grid>
+          </Box>
 
-            {/* Accordion 섹션들 */}
+          {/* Accordion 섹션들 (flex 영역 - 남은 공간 차지) */}
+          <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 2 }}>
             <Accordion
               expanded={expandedAccordion === 'oauth2'}
               onChange={() => setExpandedAccordion(expandedAccordion === 'oauth2' ? false : 'oauth2')}
@@ -768,7 +782,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>OAuth2 설정</Typography>
               </AccordionSummary>
-              <AccordionDetails sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <AccordionDetails>
                 <Stack spacing={3}>
                   {/* Redirect URIs */}
                   <Box>
@@ -931,7 +945,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>토큰 설정</Typography>
               </AccordionSummary>
-              <AccordionDetails sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <AccordionDetails>
                 <Stack spacing={2}>
                   <TextField
                     label="Access Token 유효기간"
@@ -973,7 +987,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>허용된 User Type 관리</Typography>
               </AccordionSummary>
-              <AccordionDetails sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <AccordionDetails>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                     이 클라이언트를 통해 회원가입 시 생성 가능한 사용자 유형을 설정합니다
