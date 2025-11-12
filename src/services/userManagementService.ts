@@ -3,6 +3,7 @@
 
 import type {
   PlatformUser,
+  PlatformUserResponse,
   PlatformService,
   OAuthClient,
   UserFormData,
@@ -18,6 +19,7 @@ import {
 } from '../constants/user-management';
 
 import { getAuthHeaders } from '../utils/authUtils';
+import { adaptUserResponseArrayToUsers, adaptUserFormToApiRequest } from '../utils/userAdapters';
 
 // API 기본 설정
 const AUTH_BASE_URL = import.meta.env.VITE_AUTH_AUTHORITY || 'https://api.cadiacinsight.com';
@@ -95,42 +97,45 @@ class UserManagementService {
    * 실제 API: GET /v1/management/users
    */
   async getUsers(filter?: UserSearchFilter): Promise<PlatformUser[]> {
-    console.log('🔍 Mock: Getting users with filter:', filter);
+    console.log('🔍 Getting users with filter:', filter);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<PlatformUser[]>('/v1/management/users', {
-    //   method: 'GET',
-    //   body: JSON.stringify(filter),
-    // });
+    try {
+      // 실제 API 연동
+      const responses = await this.request<PlatformUserResponse[]>('/v1/management/users');
 
-    // Mock 데이터 필터링
-    let filtered = [...MOCK_USERS];
+      // API 응답을 UI 타입으로 변환
+      let users = adaptUserResponseArrayToUsers(responses);
 
-    if (filter?.keyword) {
-      const keyword = filter.keyword.toLowerCase();
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(keyword) ||
-        user.email.toLowerCase().includes(keyword)
-      );
+      // 클라이언트 측 필터링 (서버 측 필터링으로 대체 권장)
+      if (filter?.keyword) {
+        const keyword = filter.keyword.toLowerCase();
+        users = users.filter(user =>
+          user.name.toLowerCase().includes(keyword) ||
+          user.email.toLowerCase().includes(keyword)
+        );
+      }
+
+      if (filter?.platformRoles && filter.platformRoles.length > 0) {
+        users = users.filter(user =>
+          user.platformRoles.some(role => filter.platformRoles?.includes(role))
+        );
+      }
+
+      if (filter?.serviceIds && filter.serviceIds.length > 0) {
+        users = users.filter(user =>
+          user.serviceSubscriptions.some(sub => filter.serviceIds?.includes(sub.serviceId))
+        );
+      }
+
+      if (filter?.status && filter.status.length > 0) {
+        users = users.filter(user => filter.status?.includes(user.status));
+      }
+
+      return users;
+    } catch (error) {
+      console.error('Failed to fetch users from API:', error);
+      throw error;
     }
-
-    if (filter?.platformRoles && filter.platformRoles.length > 0) {
-      filtered = filtered.filter(user =>
-        user.platformRoles.some(role => filter.platformRoles?.includes(role))
-      );
-    }
-
-    if (filter?.serviceIds && filter.serviceIds.length > 0) {
-      filtered = filtered.filter(user =>
-        user.serviceSubscriptions.some(sub => filter.serviceIds?.includes(sub.serviceId))
-      );
-    }
-
-    if (filter?.status && filter.status.length > 0) {
-      filtered = filtered.filter(user => filter.status?.includes(user.status));
-    }
-
-    return filtered;
   }
 
   /**
@@ -138,55 +143,37 @@ class UserManagementService {
    * 실제 API: GET /v1/management/users/{userId}
    */
   async getUser(userId: string): Promise<PlatformUser> {
-    console.log('🔍 Mock: Getting user:', userId);
+    console.log('🔍 Getting user:', userId);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<PlatformUser>(`/v1/management/users/${userId}`);
-
-    const user = MOCK_USERS.find(u => u.id === userId || u.email === userId);
-    if (!user) {
-      throw new Error(`User not found: ${userId}`);
+    try {
+      const response = await this.request<PlatformUserResponse>(`/v1/management/users/${userId}`);
+      const users = adaptUserResponseArrayToUsers([response]);
+      return users[0];
+    } catch (error) {
+      console.error('Failed to fetch user from API:', error);
+      throw error;
     }
-    return user;
   }
 
   /**
    * 사용자 생성
-   * 실제 API: POST /v1/users
+   * 실제 API: POST /v1/management/users
    */
   async createUser(userData: UserFormData): Promise<PlatformUser> {
-    console.log('➕ Mock: Creating user:', userData);
+    console.log('➕ Creating user:', userData);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<PlatformUser>('/v1/users', {
-    //   method: 'POST',
-    //   body: JSON.stringify(userData),
-    // });
-
-    // Mock 사용자 생성
-    const newUser: PlatformUser = {
-      id: `user-${Date.now()}`,
-      email: userData.email,
-      name: userData.name,
-      phoneNumber: userData.phoneNumber,
-      status: userData.status,
-      userType: 'PATIENT', // UserType은 회원가입 시 결정됨
-      platformRoles: userData.platformRoles,
-      department: userData.department,
-      position: userData.position,
-      serviceSubscriptions: userData.serviceSubscriptions.map(sub => ({
-        serviceId: sub.serviceId,
-        serviceName: MOCK_SERVICES.find(s => s.id === sub.serviceId)?.displayName || sub.serviceId,
-        subscribedAt: new Date().toISOString(),
-        status: 'active',
-        roles: sub.roles,
-      })),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    MOCK_USERS.push(newUser);
-    return newUser;
+    try {
+      const requestData = adaptUserFormToApiRequest(userData);
+      const response = await this.request<PlatformUserResponse>('/v1/management/users', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      });
+      const users = adaptUserResponseArrayToUsers([response]);
+      return users[0];
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      throw error;
+    }
   }
 
   /**
@@ -194,27 +181,29 @@ class UserManagementService {
    * 실제 API: PUT /v1/management/users/{userId}
    */
   async updateUser(userId: string, userData: Partial<UserFormData>): Promise<PlatformUser> {
-    console.log('✏️ Mock: Updating user:', userId, userData);
+    console.log('✏️ Updating user:', userId, userData);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<PlatformUser>(`/v1/management/users/${userId}`, {
-    //   method: 'PUT',
-    //   body: JSON.stringify(userData),
-    // });
+    try {
+      const requestData = adaptUserFormToApiRequest(userData as any);
 
-    const userIndex = MOCK_USERS.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-      throw new Error(`User not found: ${userId}`);
+      // 수정 시 비밀번호가 입력되지 않았으면 제거
+      if (!userData.password) {
+        delete requestData.password;
+      }
+
+      const response = await this.request<PlatformUserResponse>(
+        `/v1/management/users/${userId}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(requestData),
+        }
+      );
+      const users = adaptUserResponseArrayToUsers([response]);
+      return users[0];
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      throw error;
     }
-
-    const updatedUser: PlatformUser = {
-      ...MOCK_USERS[userIndex],
-      ...userData,
-      updatedAt: new Date().toISOString(),
-    } as PlatformUser;
-
-    MOCK_USERS[userIndex] = updatedUser;
-    return updatedUser;
   }
 
   /**
@@ -222,16 +211,15 @@ class UserManagementService {
    * 실제 API: DELETE /v1/management/users/{userId}
    */
   async deleteUser(userId: string): Promise<void> {
-    console.log('🗑️ Mock: Deleting user:', userId);
+    console.log('🗑️ Deleting user:', userId);
 
-    // TODO: 실제 API 연동 시
-    // return this.request<void>(`/v1/management/users/${userId}`, {
-    //   method: 'DELETE',
-    // });
-
-    const userIndex = MOCK_USERS.findIndex(u => u.id === userId);
-    if (userIndex !== -1) {
-      MOCK_USERS.splice(userIndex, 1);
+    try {
+      await this.request<void>(`/v1/management/users/${userId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      throw error;
     }
   }
 

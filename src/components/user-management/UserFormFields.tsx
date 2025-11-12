@@ -11,6 +11,7 @@ interface UserFormFieldsProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectChange: (e: SelectChangeEvent) => void;
   errors?: Record<string, string>;
+  userTypeOptions?: Array<{ label: string; value: string; description: string }>;
 }
 
 export function UserFormFields({
@@ -18,7 +19,8 @@ export function UserFormFields({
   formData,
   onChange,
   onSelectChange,
-  errors = {}
+  errors = {},
+  userTypeOptions = USER_TYPES,
 }: UserFormFieldsProps) {
   return (
     <Stack spacing={2}>
@@ -94,7 +96,7 @@ export function UserFormFields({
               </Tooltip>
             }
           >
-            {USER_TYPES.map(type => (
+            {userTypeOptions.map(type => (
               <MenuItem key={type.value} value={type.value}>
                 {type.label} ({type.description})
               </MenuItem>
