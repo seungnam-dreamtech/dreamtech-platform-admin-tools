@@ -20,6 +20,11 @@ import {
   InputLabel,
   Badge,
   Alert,
+  Grid,
+  Divider,
+  Autocomplete,
+  FormControlLabel,
+  FormHelperText,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,14 +37,13 @@ import {
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import type { OAuthClient, ClientType, UserTypeDefinition } from '../../types/user-management';
+import type { OAuthClient, ClientType, UserTypeDefinition, ClientAuthorityType } from '../../types/user-management';
 import {
   CLIENT_TYPE_OPTIONS,
-  // GRANT_TYPE_OPTIONS, // TODO: 폼 구현 시 사용
-  // COMMON_SCOPES, // TODO: 폼 구현 시 사용
-  // MOCK_SERVICES, // TODO: 폼 구현 시 사용
+  GRANT_TYPE_OPTIONS,
+  COMMON_SCOPES,
 } from '../../constants/user-management';
-// import { ClientAuthorityTypesManager } from '../../components/oauth/ClientAuthorityTypesManager'; // TODO: 폼 구현 시 사용
+import { ClientAuthorityTypesManager } from '../../components/oauth/ClientAuthorityTypesManager';
 import { userManagementService } from '../../services/userManagementService';
 import { formatTokenDuration } from '../../utils/tokenUtils';
 import { useSnackbar } from '../../contexts/SnackbarContext';
@@ -59,6 +63,26 @@ export default function OAuthClients() {
   // 삭제 확인 다이얼로그
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+
+  // 폼 상태
+  const [formData, setFormData] = useState({
+    clientId: '',
+    clientName: '',
+    clientType: '' as ClientType | '',
+    redirectUris: '',
+    postLogoutRedirectUris: '',
+    scopes: [] as string[],
+    grantTypes: [] as string[],
+    authMethods: ['CLIENT_SECRET_BASIC'] as string[],
+    accessTokenTTL: '1H',
+    refreshTokenTTL: '24H',
+    requirePkce: false,
+    reuseRefreshTokens: false,
+    authorityTypes: [] as ClientAuthorityType[],
+  });
+
+  // 폼 에러 상태
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // User Type Definitions 조회
   const fetchUserTypeDefinitions = async () => {
@@ -121,11 +145,92 @@ export default function OAuthClients() {
     setFilteredClients(filtered);
   }, [searchKeyword, filterClientType, filterEnabled, clients]);
 
-  // 클라이언트 추가/수정 (TODO: 모달 폼 구현 후 완성)
+  // 폼 검증
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!selectedClient && !formData.clientId) {
+      errors.clientId = 'Client ID를 입력하세요';
+    } else if (!selectedClient && !/^[a-zA-Z0-9-_]+$/.test(formData.clientId)) {
+      errors.clientId = '영문, 숫자, -, _ 만 사용 가능합니다';
+    }
+
+    if (!formData.clientName) {
+      errors.clientName = '클라이언트 이름을 입력하세요';
+    }
+
+    if (!formData.redirectUris.trim()) {
+      errors.redirectUris = 'Redirect URI를 입력하세요';
+    }
+
+    if (formData.scopes.length === 0) {
+      errors.scopes = '최소 하나 이상의 scope를 선택하세요';
+    }
+
+    if (formData.grantTypes.length === 0) {
+      errors.grantTypes = '최소 하나 이상의 grant type을 선택하세요';
+    }
+
+    if (formData.authMethods.length === 0) {
+      errors.authMethods = '인증 방식을 선택하세요';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // 클라이언트 추가/수정
   const handleSave = async () => {
+    if (!validateForm()) {
+      snackbar.error('입력값을 확인해주세요');
+      return;
+    }
+
     try {
-      // TODO: 모달 폼 validation 및 데이터 수집
-      snackbar.info('폼 구현 진행 중입니다');
+      if (selectedClient) {
+        // 수정: PUT /v1/management/clients/{clientId}
+        const updateData: import('../../types/user-management').ClientUpdateRequest = {
+          client_name: formData.clientName,
+          redirect_uris: formData.redirectUris.split('\n').filter(uri => uri.trim()),
+          post_logout_redirect_uris: formData.postLogoutRedirectUris
+            ? formData.postLogoutRedirectUris.split('\n').filter(uri => uri.trim())
+            : undefined,
+          scopes: formData.scopes,
+          authorization_grant_types: formData.grantTypes,
+          client_authentication_methods: formData.authMethods,
+          access_token_time_to_live: formData.accessTokenTTL,
+          refresh_token_time_to_live: formData.refreshTokenTTL,
+          use_public_client: formData.requirePkce,
+          reuse_refresh_tokens: formData.reuseRefreshTokens,
+        };
+
+        await userManagementService.updateClient(selectedClient.id, updateData);
+        snackbar.success('OAuth 클라이언트가 수정되었습니다');
+      } else {
+        // 추가: POST /v1/management/clients
+        const createData: import('../../types/user-management').ClientCreateRequest = {
+          client_id: formData.clientId,
+          client_name: formData.clientName,
+          redirect_uris: formData.redirectUris.split('\n').filter(uri => uri.trim()),
+          post_logout_redirect_uris: formData.postLogoutRedirectUris
+            ? formData.postLogoutRedirectUris.split('\n').filter(uri => uri.trim())
+            : undefined,
+          scopes: formData.scopes,
+          authorization_grant_types: formData.grantTypes,
+          client_authentication_methods: formData.authMethods,
+          access_token_time_to_live: formData.accessTokenTTL,
+          refresh_token_time_to_live: formData.refreshTokenTTL,
+          use_public_client: formData.requirePkce,
+          reuse_refresh_tokens: formData.reuseRefreshTokens,
+        };
+
+        await userManagementService.createClient(createData);
+        snackbar.success('새 OAuth 클라이언트가 추가되었습니다');
+      }
+
+      fetchClients();
+      setModalOpen(false);
+      setSelectedClient(null);
     } catch (error) {
       snackbar.error('OAuth 클라이언트 저장에 실패했습니다');
       console.error('Form save failed:', error);
@@ -192,11 +297,40 @@ export default function OAuthClients() {
   const handleOpenModal = (client?: OAuthClient) => {
     if (client) {
       setSelectedClient(client);
-      // TODO: 폼 state 설정
+      setFormData({
+        clientId: client.client_id,
+        clientName: client.client_name,
+        clientType: client.client_type || '',
+        redirectUris: client.redirect_uris?.join('\n') || '',
+        postLogoutRedirectUris: client.post_logout_redirect_uris?.join('\n') || '',
+        scopes: client.scopes || [],
+        grantTypes: client.authorization_grant_types || [],
+        authMethods: client.client_authentication_methods || ['CLIENT_SECRET_BASIC'],
+        accessTokenTTL: client.access_token_time_to_live || '1H',
+        refreshTokenTTL: client.refresh_token_time_to_live || '24H',
+        requirePkce: client.use_public_client || false,
+        reuseRefreshTokens: client.reuse_refresh_tokens || false,
+        authorityTypes: client.authority_types || [],
+      });
     } else {
       setSelectedClient(null);
-      // TODO: 폼 state 초기화
+      setFormData({
+        clientId: '',
+        clientName: '',
+        clientType: '',
+        redirectUris: '',
+        postLogoutRedirectUris: '',
+        scopes: [],
+        grantTypes: [],
+        authMethods: ['CLIENT_SECRET_BASIC'],
+        accessTokenTTL: '1H',
+        refreshTokenTTL: '24H',
+        requirePkce: false,
+        reuseRefreshTokens: false,
+        authorityTypes: [],
+      });
     }
+    setFormErrors({});
     setModalOpen(true);
   };
 
@@ -487,7 +621,7 @@ export default function OAuthClients() {
         />
       </Box>
 
-      {/* OAuth 클라이언트 추가/수정 모달 (TODO: 폼 구현 필요) */}
+      {/* OAuth 클라이언트 추가/수정 모달 */}
       <Dialog
         open={modalOpen}
         onClose={() => {
@@ -496,23 +630,245 @@ export default function OAuthClients() {
         }}
         maxWidth="md"
         fullWidth
+        scroll="paper"
       >
         <DialogTitle>
           {selectedClient ? 'OAuth 클라이언트 수정' : '새 OAuth 클라이언트 추가'}
         </DialogTitle>
-        <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            OAuth2/OIDC 클라이언트 설정 폼은 구현 중입니다.
+        <DialogContent dividers>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            OAuth2/OIDC 클라이언트 설정 - 애플리케이션이 인증 서버와 통신하기 위한 클라이언트 설정을 관리합니다.
           </Alert>
-          <Typography variant="body2" color="textSecondary">
-            TODO: 복잡한 OAuth 클라이언트 폼을 Material-UI로 구현 필요
-          </Typography>
-          <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-            - 클라이언트 정보 (이름, 타입, authority types)<br />
-            - Redirect URIs, Post Logout URIs<br />
-            - Scopes, Grant Types, PKCE 설정<br />
-            - 토큰 유효기간 설정
-          </Typography>
+
+          <Box component="form" noValidate>
+            {/* 기본 정보 */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Client ID"
+                  value={formData.clientId}
+                  onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                  disabled={!!selectedClient}
+                  error={!!formErrors.clientId}
+                  helperText={formErrors.clientId || '예: healthcare-web-app'}
+                  fullWidth
+                  required={!selectedClient}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="클라이언트 이름"
+                  value={formData.clientName}
+                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                  error={!!formErrors.clientName}
+                  helperText={formErrors.clientName || '예: Healthcare Web Application'}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>클라이언트 타입</InputLabel>
+                  <Select
+                    value={formData.clientType}
+                    onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
+                    label="클라이언트 타입"
+                  >
+                    <MenuItem value="">
+                      <em>선택 안함</em>
+                    </MenuItem>
+                    {CLIENT_TYPE_OPTIONS.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }}>OAuth2 설정</Divider>
+
+            {/* URIs */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Redirect URIs"
+                  value={formData.redirectUris}
+                  onChange={(e) => setFormData({ ...formData, redirectUris: e.target.value })}
+                  error={!!formErrors.redirectUris}
+                  helperText={formErrors.redirectUris || '각 URI를 줄바꿈으로 구분하여 입력하세요'}
+                  multiline
+                  rows={3}
+                  fullWidth
+                  required
+                  placeholder="https://example.com/callback&#10;http://localhost:3000/callback"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Post Logout Redirect URIs"
+                  value={formData.postLogoutRedirectUris}
+                  onChange={(e) => setFormData({ ...formData, postLogoutRedirectUris: e.target.value })}
+                  helperText="로그아웃 후 리다이렉트할 URI (선택사항)"
+                  multiline
+                  rows={3}
+                  fullWidth
+                  placeholder="https://example.com&#10;http://localhost:3000"
+                />
+              </Grid>
+            </Grid>
+
+            {/* Scopes & Grant Types */}
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <Autocomplete
+                  multiple
+                  freeSolo
+                  options={COMMON_SCOPES}
+                  value={formData.scopes}
+                  onChange={(_, newValue) => setFormData({ ...formData, scopes: newValue })}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Scopes"
+                      error={!!formErrors.scopes}
+                      helperText={formErrors.scopes || 'Scope 선택 또는 직접 입력'}
+                      required
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={!!formErrors.grantTypes} required>
+                  <InputLabel>Grant Types</InputLabel>
+                  <Select
+                    multiple
+                    value={formData.grantTypes}
+                    onChange={(e) => setFormData({ ...formData, grantTypes: e.target.value as string[] })}
+                    label="Grant Types"
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip key={value} label={value} size="small" />
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {GRANT_TYPE_OPTIONS.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </Select>
+                  {formErrors.grantTypes && (
+                    <FormHelperText>{formErrors.grantTypes}</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            {/* Authentication Methods */}
+            <FormControl fullWidth sx={{ mt: 2 }} error={!!formErrors.authMethods} required>
+              <InputLabel>Client Authentication Methods</InputLabel>
+              <Select
+                multiple
+                value={formData.authMethods}
+                onChange={(e) => setFormData({ ...formData, authMethods: e.target.value as string[] })}
+                label="Client Authentication Methods"
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                <MenuItem value="CLIENT_SECRET_BASIC">Client Secret Basic</MenuItem>
+                <MenuItem value="CLIENT_SECRET_POST">Client Secret Post</MenuItem>
+                <MenuItem value="CLIENT_SECRET_JWT">Client Secret JWT</MenuItem>
+                <MenuItem value="PRIVATE_KEY_JWT">Private Key JWT</MenuItem>
+                <MenuItem value="NONE">None (Public Client)</MenuItem>
+              </Select>
+              {formErrors.authMethods && (
+                <FormHelperText>{formErrors.authMethods}</FormHelperText>
+              )}
+            </FormControl>
+
+            <Divider sx={{ my: 3 }}>토큰 설정</Divider>
+
+            {/* Token Validity */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Access Token 유효기간"
+                  value={formData.accessTokenTTL}
+                  onChange={(e) => setFormData({ ...formData, accessTokenTTL: e.target.value })}
+                  helperText="예: 1H (1시간), 30M (30분)"
+                  fullWidth
+                  placeholder="1H"
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Refresh Token 유효기간"
+                  value={formData.refreshTokenTTL}
+                  onChange={(e) => setFormData({ ...formData, refreshTokenTTL: e.target.value })}
+                  helperText="예: 24H (24시간), 7D (7일)"
+                  fullWidth
+                  placeholder="24H"
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.reuseRefreshTokens}
+                      onChange={(e) => setFormData({ ...formData, reuseRefreshTokens: e.target.checked })}
+                    />
+                  }
+                  label="Refresh Token 재사용"
+                />
+                <FormHelperText>Refresh Token을 재사용할지 여부</FormHelperText>
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }}>클라이언트 설정</Divider>
+
+            {/* Client Settings */}
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.requirePkce}
+                      onChange={(e) => setFormData({ ...formData, requirePkce: e.target.checked })}
+                    />
+                  }
+                  label="Public Client (PKCE)"
+                />
+                <FormHelperText>
+                  Public Client는 PKCE를 필수로 사용합니다 (예: 모바일 앱, SPA)
+                </FormHelperText>
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }}>허용된 User Type 관리</Divider>
+
+            {/* Authority Types */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                생성 가능한 User Type
+              </Typography>
+              <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                이 클라이언트를 통해 회원가입 시 생성 가능한 사용자 유형을 설정합니다
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                <ClientAuthorityTypesManager
+                  value={formData.authorityTypes}
+                  onChange={(value) => setFormData({ ...formData, authorityTypes: value })}
+                  userTypeDefinitions={userTypeDefinitions}
+                />
+              </Box>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => {
