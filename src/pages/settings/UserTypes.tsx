@@ -131,24 +131,21 @@ export default function UserTypes() {
     {
       field: 'type_id',
       headerName: '유형 ID',
-      width: 150,
+      flex: 0.6,
+      minWidth: 130,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Typography variant="body2" fontWeight={500}>
-            {params.row.type_id}
-          </Typography>
-          {params.row.is_system_type && (
-            <Chip label="시스템 타입" color="warning" size="small" sx={{ width: 'fit-content' }} />
-          )}
-        </Box>
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.type_id}
+        </Typography>
       ),
     },
     {
       field: 'display_name',
       headerName: '표시명',
-      width: 150,
+      flex: 1,
+      minWidth: 180,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
-        <Typography variant="body2" fontWeight={500}>
+        <Typography variant="body2" fontWeight={600}>
           {params.row.display_name}
         </Typography>
       ),
@@ -156,22 +153,36 @@ export default function UserTypes() {
     {
       field: 'description',
       headerName: '설명',
-      width: 250,
-      flex: 1,
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
-        <Typography variant="body2" color="textSecondary" noWrap>
+        <Typography variant="body2" color="textSecondary">
           {params.row.description || '-'}
         </Typography>
       ),
     },
     {
-      field: 'display_order',
-      headerName: '표시 순서',
-      width: 100,
+      field: 'is_system_type',
+      headerName: '시스템',
+      width: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
-        <Typography variant="body2" color="textSecondary">
+        params.row.is_system_type ? (
+          <Chip label="시스템" color="warning" size="small" />
+        ) : (
+          <Typography variant="caption" color="textSecondary">-</Typography>
+        )
+      ),
+    },
+    {
+      field: 'display_order',
+      headerName: '순서',
+      width: 70,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
+        <Typography variant="body2">
           {params.row.display_order}
         </Typography>
       ),
@@ -179,7 +190,8 @@ export default function UserTypes() {
     {
       field: 'created_at',
       headerName: '생성일',
-      width: 110,
+      flex: 0.6,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
@@ -189,7 +201,8 @@ export default function UserTypes() {
     {
       field: 'created_by',
       headerName: '생성자',
-      width: 100,
+      flex: 0.5,
+      minWidth: 90,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.created_by || '-'}
@@ -199,7 +212,8 @@ export default function UserTypes() {
     {
       field: 'updated_at',
       headerName: '수정일',
-      width: 110,
+      flex: 0.6,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
@@ -209,7 +223,8 @@ export default function UserTypes() {
     {
       field: 'updated_by',
       headerName: '수정자',
-      width: 100,
+      flex: 0.5,
+      minWidth: 90,
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.updated_by || '-'}
@@ -264,14 +279,14 @@ export default function UserTypes() {
   ];
 
   return (
-    <Box sx={{ width: '100%', height: '100%' }}>
+    <Box sx={{ width: '100%' }}>
       {/* 헤더 */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h6" fontWeight={600}>
             사용자 유형 ({filteredUserTypes.length}개)
           </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          <Typography variant="body2" color="textSecondary">
             사용자 유형과 기본 역할 매핑 관리
           </Typography>
         </Box>
@@ -318,18 +333,26 @@ export default function UserTypes() {
       </Box>
 
       {/* 테이블 */}
-      <Box sx={{ height: 600, width: '100%' }}>
+      <Box sx={{
+        height: 'calc(100vh - 280px)',
+        width: '100%',
+        minHeight: 400,
+      }}>
         <DataGrid
           rows={filteredUserTypes}
           columns={columns}
           getRowId={(row) => row.type_id}
           loading={loading}
-          pageSizeOptions={[10, 25, 50]}
+          pageSizeOptions={[10, 25, 50, 100]}
           initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
+            pagination: { paginationModel: { pageSize: 25 } },
             sorting: { sortModel: [{ field: 'display_order', sort: 'asc' }] },
           }}
           disableRowSelectionOnClick
+          localeText={{
+            noRowsLabel: '등록된 사용자 유형이 없습니다',
+            noResultsOverlayLabel: '검색 결과가 없습니다',
+          }}
           sx={{
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
