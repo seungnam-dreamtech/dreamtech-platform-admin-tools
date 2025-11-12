@@ -680,6 +680,12 @@ export default function OAuthClients() {
         maxWidth="md"
         fullWidth
         scroll="paper"
+        PaperProps={{
+          sx: {
+            maxHeight: '90vh',
+            height: '90vh',
+          },
+        }}
       >
         <DialogTitle>
           {selectedClient ? 'OAuth 클라이언트 수정' : '새 OAuth 클라이언트 추가'}
@@ -736,6 +742,22 @@ export default function OAuthClients() {
                   <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
                 </FormControl>
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.requirePkce}
+                        onChange={(e) => setFormData({ ...formData, requirePkce: e.target.checked })}
+                      />
+                    }
+                    label="Public Client (PKCE)"
+                  />
+                  <FormHelperText>
+                    Public Client는 PKCE를 필수로 사용합니다 (예: 모바일 앱, SPA)
+                  </FormHelperText>
+                </Box>
+              </Grid>
             </Grid>
 
             {/* Accordion 섹션들 */}
@@ -746,7 +768,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>OAuth2 설정</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <Stack spacing={3}>
                   {/* Redirect URIs */}
                   <Box>
@@ -909,7 +931,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>토큰 설정</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <Stack spacing={2}>
                   <TextField
                     label="Access Token 유효기간"
@@ -943,32 +965,6 @@ export default function OAuthClients() {
               </AccordionDetails>
             </Accordion>
 
-            {/* 클라이언트 설정 */}
-            <Accordion
-              expanded={expandedAccordion === 'client'}
-              onChange={() => setExpandedAccordion(expandedAccordion === 'client' ? false : 'client')}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>클라이언트 설정</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={formData.requirePkce}
-                        onChange={(e) => setFormData({ ...formData, requirePkce: e.target.checked })}
-                      />
-                    }
-                    label="Public Client (PKCE)"
-                  />
-                  <FormHelperText>
-                    Public Client는 PKCE를 필수로 사용합니다 (예: 모바일 앱, SPA)
-                  </FormHelperText>
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-
             {/* User Type 관리 */}
             <Accordion
               expanded={expandedAccordion === 'usertype'}
@@ -977,7 +973,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>허용된 User Type 관리</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ maxHeight: '400px', overflowY: 'auto' }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                     이 클라이언트를 통해 회원가입 시 생성 가능한 사용자 유형을 설정합니다
