@@ -388,7 +388,8 @@ export default function OAuthClients() {
     {
       field: 'client',
       headerName: '클라이언트 정보',
-      width: 240,
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => (
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -406,7 +407,8 @@ export default function OAuthClients() {
     {
       field: 'client_type',
       headerName: '타입',
-      width: 130,
+      flex: 0.8,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
         if (!params.row.client_type) return <Chip label="-" size="small" />;
         const typeOption = CLIENT_TYPE_OPTIONS.find(t => t.value === params.row.client_type);
@@ -416,7 +418,8 @@ export default function OAuthClients() {
     {
       field: 'status',
       headerName: '상태',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
@@ -434,7 +437,8 @@ export default function OAuthClients() {
     {
       field: 'authorization_grant_types',
       headerName: 'Grant Types',
-      width: 160,
+      flex: 1.2,
+      minWidth: 140,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
         const types = params.row.authorization_grant_types;
         return (
@@ -454,7 +458,8 @@ export default function OAuthClients() {
     {
       field: 'authority_types',
       headerName: '생성 가능 User Type',
-      width: 170,
+      flex: 1.3,
+      minWidth: 150,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
         const authorityTypes = params.row.authority_types;
         if (!authorityTypes || authorityTypes.length === 0) {
@@ -491,7 +496,8 @@ export default function OAuthClients() {
     {
       field: 'scopes',
       headerName: 'Scopes',
-      width: 90,
+      flex: 0.6,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
@@ -506,7 +512,8 @@ export default function OAuthClients() {
     {
       field: 'redirect_uris',
       headerName: 'URIs',
-      width: 90,
+      flex: 0.6,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
@@ -521,7 +528,8 @@ export default function OAuthClients() {
     {
       field: 'use_public_client',
       headerName: 'PKCE',
-      width: 110,
+      flex: 0.8,
+      minWidth: 100,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<OAuthClient>) =>
@@ -534,7 +542,8 @@ export default function OAuthClients() {
     {
       field: 'tokenValidity',
       headerName: '토큰 유효기간',
-      width: 140,
+      flex: 1.1,
+      minWidth: 130,
       sortable: false,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => (
         <Box>
@@ -717,6 +726,7 @@ export default function OAuthClients() {
             display: 'flex',
             flexDirection: 'column',
             p: 0,
+            overflow: 'hidden',  // 전체 스크롤 제거
           }}
         >
           <Alert severity="info" sx={{ m: 2, mb: 0 }}>
@@ -774,7 +784,7 @@ export default function OAuthClients() {
           </Box>
 
           {/* Accordion 섹션들 (flex 영역 - 남은 공간 차지) */}
-          <Box sx={{ flex: 1, px: 2, pb: 2 }}>
+          <Box sx={{ flex: 1, px: 2, pb: 2, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Accordion
               expanded={expandedAccordion === 'oauth2'}
               onChange={() => setExpandedAccordion(expandedAccordion === 'oauth2' ? false : 'oauth2')}
@@ -784,7 +794,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: 'calc(90vh - 350px)',
+                  maxHeight: 'calc(90vh - 500px)',
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
@@ -962,7 +972,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: 'calc(90vh - 350px)',
+                  maxHeight: 'calc(90vh - 500px)',
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
@@ -1019,7 +1029,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: 'calc(90vh - 350px)',
+                  maxHeight: 'calc(90vh - 500px)',
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
