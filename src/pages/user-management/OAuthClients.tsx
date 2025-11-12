@@ -53,6 +53,24 @@ import { userManagementService } from '../../services/userManagementService';
 import { formatTokenDuration } from '../../utils/tokenUtils';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
+// 토큰 TTL 타입 정의
+type TokenUnit = 'M' | 'H' | 'D';
+
+// TTL 파싱 함수: "1H" -> { value: 1, unit: 'H' }
+const parseTokenTTL = (ttl: string): { value: number; unit: TokenUnit } => {
+  const match = ttl.match(/^(\d+)([MHD])$/);
+  if (match) {
+    return { value: parseInt(match[1], 10), unit: match[2] as TokenUnit };
+  }
+  // 기본값 반환
+  return { value: 1, unit: 'H' };
+};
+
+// TTL 결합 함수: { value: 1, unit: 'H' } -> "1H"
+const combineTokenTTL = (value: number, unit: TokenUnit): string => {
+  return `${value}${unit}`;
+};
+
 export default function OAuthClients() {
   const [clients, setClients] = useState<OAuthClient[]>([]);
   const [filteredClients, setFilteredClients] = useState<OAuthClient[]>([]);
@@ -79,8 +97,10 @@ export default function OAuthClients() {
     scopes: [] as string[],
     grantTypes: [] as string[],
     authMethods: ['CLIENT_SECRET_BASIC'] as string[],
-    accessTokenTTL: '1H',
-    refreshTokenTTL: '24H',
+    accessTokenValue: 1,
+    accessTokenUnit: 'H' as TokenUnit,
+    refreshTokenValue: 24,
+    refreshTokenUnit: 'H' as TokenUnit,
     requirePkce: false,
     reuseRefreshTokens: false,
     authorityTypes: [] as ClientAuthorityType[],
@@ -246,8 +266,8 @@ export default function OAuthClients() {
           scopes: formData.scopes,
           authorization_grant_types: formData.grantTypes,
           client_authentication_methods: formData.authMethods,
-          access_token_time_to_live: formData.accessTokenTTL,
-          refresh_token_time_to_live: formData.refreshTokenTTL,
+          access_token_time_to_live: combineTokenTTL(formData.accessTokenValue, formData.accessTokenUnit),
+          refresh_token_time_to_live: combineTokenTTL(formData.refreshTokenValue, formData.refreshTokenUnit),
           use_public_client: formData.requirePkce,
           reuse_refresh_tokens: formData.reuseRefreshTokens,
         };
@@ -264,8 +284,8 @@ export default function OAuthClients() {
           scopes: formData.scopes,
           authorization_grant_types: formData.grantTypes,
           client_authentication_methods: formData.authMethods,
-          access_token_time_to_live: formData.accessTokenTTL,
-          refresh_token_time_to_live: formData.refreshTokenTTL,
+          access_token_time_to_live: combineTokenTTL(formData.accessTokenValue, formData.accessTokenUnit),
+          refresh_token_time_to_live: combineTokenTTL(formData.refreshTokenValue, formData.refreshTokenUnit),
           use_public_client: formData.requirePkce,
           reuse_refresh_tokens: formData.reuseRefreshTokens,
         };
@@ -343,6 +363,10 @@ export default function OAuthClients() {
   const handleOpenModal = (client?: OAuthClient) => {
     if (client) {
       setSelectedClient(client);
+      // 토큰 TTL 파싱
+      const accessToken = parseTokenTTL(client.access_token_time_to_live || '1H');
+      const refreshToken = parseTokenTTL(client.refresh_token_time_to_live || '24H');
+
       setFormData({
         clientId: client.client_id,
         clientName: client.client_name,
@@ -354,8 +378,10 @@ export default function OAuthClients() {
         scopes: client.scopes || [],
         grantTypes: client.authorization_grant_types || [],
         authMethods: client.client_authentication_methods || ['CLIENT_SECRET_BASIC'],
-        accessTokenTTL: client.access_token_time_to_live || '1H',
-        refreshTokenTTL: client.refresh_token_time_to_live || '24H',
+        accessTokenValue: accessToken.value,
+        accessTokenUnit: accessToken.unit,
+        refreshTokenValue: refreshToken.value,
+        refreshTokenUnit: refreshToken.unit,
         requirePkce: client.use_public_client || false,
         reuseRefreshTokens: client.reuse_refresh_tokens || false,
         authorityTypes: client.authority_types || [],
@@ -371,8 +397,10 @@ export default function OAuthClients() {
         scopes: [],
         grantTypes: [],
         authMethods: ['CLIENT_SECRET_BASIC'],
-        accessTokenTTL: '1H',
-        refreshTokenTTL: '24H',
+        accessTokenValue: 1,
+        accessTokenUnit: 'H',
+        refreshTokenValue: 24,
+        refreshTokenUnit: 'H',
         requirePkce: false,
         reuseRefreshTokens: false,
         authorityTypes: [],
@@ -986,23 +1014,84 @@ export default function OAuthClients() {
                   },
                 }}
               >
-                <Stack spacing={2}>
-                  <TextField
-                    label="Access Token 유효기간"
-                    value={formData.accessTokenTTL}
-                    onChange={(e) => setFormData({ ...formData, accessTokenTTL: e.target.value })}
-                    helperText="예: 1H (1시간), 30M (30분)"
-                    fullWidth
-                    placeholder="1H"
-                  />
-                  <TextField
-                    label="Refresh Token 유효기간"
-                    value={formData.refreshTokenTTL}
-                    onChange={(e) => setFormData({ ...formData, refreshTokenTTL: e.target.value })}
-                    helperText="예: 24H (24시간), 7D (7일)"
-                    fullWidth
-                    placeholder="24H"
-                  />
+                <Stack spacing={3}>
+                  {/* Access Token TTL */}
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Access Token 유효기간
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          type="number"
+                          value={formData.accessTokenValue}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            accessTokenValue: Math.max(1, parseInt(e.target.value) || 1)
+                          })}
+                          inputProps={{ min: 1 }}
+                          fullWidth
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size="small">
+                          <Select
+                            value={formData.accessTokenUnit}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              accessTokenUnit: e.target.value as TokenUnit
+                            })}
+                          >
+                            <MenuItem value="M">분 (Minutes)</MenuItem>
+                            <MenuItem value="H">시간 (Hours)</MenuItem>
+                            <MenuItem value="D">일 (Days)</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                    <FormHelperText>예: 1시간 = 1 + 시간, 30분 = 30 + 분</FormHelperText>
+                  </Box>
+
+                  {/* Refresh Token TTL */}
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Refresh Token 유효기간
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          type="number"
+                          value={formData.refreshTokenValue}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            refreshTokenValue: Math.max(1, parseInt(e.target.value) || 1)
+                          })}
+                          inputProps={{ min: 1 }}
+                          fullWidth
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size="small">
+                          <Select
+                            value={formData.refreshTokenUnit}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              refreshTokenUnit: e.target.value as TokenUnit
+                            })}
+                          >
+                            <MenuItem value="M">분 (Minutes)</MenuItem>
+                            <MenuItem value="H">시간 (Hours)</MenuItem>
+                            <MenuItem value="D">일 (Days)</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                    <FormHelperText>예: 24시간 = 24 + 시간, 7일 = 7 + 일</FormHelperText>
+                  </Box>
+
+                  {/* Reuse Refresh Token */}
                   <Box>
                     <FormControlLabel
                       control={
