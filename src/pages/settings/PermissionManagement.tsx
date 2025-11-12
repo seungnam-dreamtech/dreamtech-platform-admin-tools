@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
   Button,
   TextField,
   Chip,
@@ -24,7 +23,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Typography,
-  InputAdornment,
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
@@ -330,174 +328,166 @@ export default function PermissionManagement() {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* 헤더 */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              권한 정의 관리
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              서비스별 권한을 정의하고 관리합니다
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(_, newMode) => newMode && setViewMode(newMode)}
-              size="small"
-            >
-              <ToggleButton value="table">
-                <Tooltip title="테이블 뷰">
-                  <ViewListIcon fontSize="small" />
-                </Tooltip>
-              </ToggleButton>
-              <ToggleButton value="grouped">
-                <Tooltip title="그룹 뷰">
-                  <ViewModuleIcon fontSize="small" />
-                </Tooltip>
-              </ToggleButton>
-            </ToggleButtonGroup>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={fetchPermissions}
-              disabled={loading}
-            >
-              새로고침
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenModal()}
-            >
-              권한 추가
-            </Button>
-          </Box>
+    <Box sx={{ width: '100%' }}>
+      {/* 헤더 */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h6" fontWeight={600}>
+            권한 정의 관리 ({filteredPermissions.length}개)
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            서비스별 권한을 정의하고 관리합니다 | 활성: {permissions.filter(p => p.is_active).length}개 | 비활성: {permissions.filter(p => !p.is_active).length}개
+          </Typography>
         </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, newMode) => newMode && setViewMode(newMode)}
+            size="small"
+          >
+            <ToggleButton value="table">
+              <Tooltip title="테이블 뷰">
+                <ViewListIcon fontSize="small" />
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="grouped">
+              <Tooltip title="그룹 뷰">
+                <ViewModuleIcon fontSize="small" />
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchPermissions}
+            disabled={loading}
+          >
+            새로고침
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenModal()}
+          >
+            권한 추가
+          </Button>
+        </Box>
+      </Box>
 
-        {/* 필터 */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <FormControl sx={{ minWidth: 180 }}>
-            <InputLabel>서비스 필터</InputLabel>
-            <Select
-              value={selectedServiceFilter || ''}
-              onChange={(e) => setSelectedServiceFilter(e.target.value || undefined)}
-              label="서비스 필터"
-            >
-              <MenuItem value="">전체 서비스</MenuItem>
-              {services.map(service => (
-                <MenuItem key={service.service_id} value={service.service_id}>
-                  {service.service_name || service.service_id}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ minWidth: 180 }}>
-            <InputLabel>카테고리 필터</InputLabel>
-            <Select
-              value={selectedCategoryFilter || ''}
-              onChange={(e) => setSelectedCategoryFilter(e.target.value || undefined)}
-              label="카테고리 필터"
-            >
-              <MenuItem value="">전체 카테고리</MenuItem>
-              {categories.map(category => (
-                <MenuItem key={category} value={category}>
-                  {category}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            placeholder="권한명, 리소스, 액션으로 검색"
-            value={searchKeyword}
-            onChange={e => setSearchKeyword(e.target.value)}
-            sx={{ flex: 1 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">🔍</InputAdornment>
-              ),
+      {/* 필터 */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <FormControl sx={{ minWidth: 180 }} size="small">
+          <InputLabel>서비스 필터</InputLabel>
+          <Select
+            value={selectedServiceFilter || ''}
+            onChange={(e) => setSelectedServiceFilter(e.target.value || undefined)}
+            label="서비스 필터"
+          >
+            <MenuItem value="">전체 서비스</MenuItem>
+            {services.map(service => (
+              <MenuItem key={service.service_id} value={service.service_id}>
+                {service.service_name || service.service_id}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl sx={{ minWidth: 180 }} size="small">
+          <InputLabel>카테고리 필터</InputLabel>
+          <Select
+            value={selectedCategoryFilter || ''}
+            onChange={(e) => setSelectedCategoryFilter(e.target.value || undefined)}
+            label="카테고리 필터"
+          >
+            <MenuItem value="">전체 카테고리</MenuItem>
+            {categories.map(category => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TextField
+          placeholder="권한명, 리소스, 액션으로 검색"
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+          size="small"
+          sx={{ flex: 1, maxWidth: 450 }}
+        />
+      </Box>
+
+      {/* 테이블 뷰 */}
+      {viewMode === 'table' && (
+        <Box sx={{
+          height: 'calc(100vh - 280px)',
+          width: '100%',
+          minHeight: 400,
+        }}>
+          <DataGrid
+            rows={filteredPermissions}
+            columns={columns}
+            loading={loading}
+            getRowId={(row) => row.id}
+            pageSizeOptions={[10, 25, 50, 100]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 25 } },
+            }}
+            getRowHeight={() => 'auto'}
+            disableRowSelectionOnClick
+            localeText={{
+              noRowsLabel: '등록된 권한이 없습니다',
+              noResultsOverlayLabel: '검색 결과가 없습니다',
+            }}
+            sx={{
+              '& .MuiDataGrid-cell': {
+                py: 1,
+              },
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
+              },
             }}
           />
         </Box>
+      )}
 
-        {/* 통계 */}
+      {/* 그룹 뷰 */}
+      {viewMode === 'grouped' && (
         <Box>
-          <Typography variant="body2" component="span" color="textSecondary">
-            전체 권한:{' '}
-          </Typography>
-          <Typography variant="body2" component="span" fontWeight={600}>
-            {permissions.length}개
-          </Typography>
-          <Typography variant="body2" component="span" color="textSecondary" sx={{ ml: 3 }}>
-            활성:{' '}
-          </Typography>
-          <Typography variant="body2" component="span" fontWeight={600}>
-            {permissions.filter(p => p.is_active).length}개
-          </Typography>
-          <Typography variant="body2" component="span" color="textSecondary" sx={{ ml: 3 }}>
-            비활성:{' '}
-          </Typography>
-          <Typography variant="body2" component="span" fontWeight={600}>
-            {permissions.filter(p => !p.is_active).length}개
-          </Typography>
+          {groupedByService.map(({ service, permissions: servicePermissions, activeCount }) => (
+            <Accordion key={service.service_id} defaultExpanded={servicePermissions.length > 0}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                  <AppsIcon color="primary" />
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {service.service_name || service.service_id}
+                  </Typography>
+                  <Badge badgeContent={servicePermissions.length} color="primary" />
+                  <Typography variant="body2" color="textSecondary">
+                    활성: {activeCount}
+                  </Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ height: 400, width: '100%' }}>
+                  <DataGrid
+                    rows={servicePermissions}
+                    columns={columns}
+                    getRowId={(row) => row.id}
+                    pageSizeOptions={[5, 10, 25]}
+                    initialState={{
+                      pagination: { paginationModel: { pageSize: 5 } },
+                    }}
+                    disableRowSelectionOnClick
+                  />
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          ))}
         </Box>
-
-        {/* 테이블 뷰 */}
-        {viewMode === 'table' && (
-          <Paper sx={{ height: 600, width: '100%' }}>
-            <DataGrid
-              rows={filteredPermissions}
-              columns={columns}
-              loading={loading}
-              getRowId={(row) => row.id}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
-              }}
-              disableRowSelectionOnClick
-            />
-          </Paper>
-        )}
-
-        {/* 그룹 뷰 */}
-        {viewMode === 'grouped' && (
-          <Box>
-            {groupedByService.map(({ service, permissions: servicePermissions, activeCount }) => (
-              <Accordion key={service.service_id} defaultExpanded={servicePermissions.length > 0}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                    <AppsIcon color="primary" />
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {service.service_name || service.service_id}
-                    </Typography>
-                    <Badge badgeContent={servicePermissions.length} color="primary" />
-                    <Typography variant="body2" color="textSecondary">
-                      활성: {activeCount}
-                    </Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Paper sx={{ height: 400, width: '100%' }}>
-                    <DataGrid
-                      rows={servicePermissions}
-                      columns={columns}
-                      getRowId={(row) => row.id}
-                      pageSizeOptions={[5, 10, 25]}
-                      initialState={{
-                        pagination: { paginationModel: { pageSize: 5 } },
-                      }}
-                      disableRowSelectionOnClick
-                    />
-                  </Paper>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-          </Box>
-        )}
-      </Box>
+      )}
 
       {/* 모달 */}
       <PermissionFormModal

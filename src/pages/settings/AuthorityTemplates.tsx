@@ -4,11 +4,9 @@
 import { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
   Button,
   TextField,
   Typography,
-  Alert,
   Select,
   MenuItem,
   FormControl,
@@ -22,9 +20,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Card,
-  CardContent,
-  InputAdornment,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -33,7 +28,6 @@ import {
   Refresh as RefreshIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
-  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
@@ -158,19 +152,6 @@ export default function AuthorityTemplates() {
     }
   };
 
-  // User Type별 통계
-  const userTypeStats = userTypes.map(userType => {
-    const typeTemplates = templates.filter(t => t.user_type === userType.type_id);
-    const defaultTemplate = typeTemplates.find(t => t.is_default);
-    return {
-      userType: userType.type_id,
-      label: userType.display_name,
-      total: typeTemplates.length,
-      hasDefault: !!defaultTemplate,
-      defaultTemplateName: defaultTemplate?.name,
-      totalAppliedUsers: typeTemplates.reduce((sum, t) => sum + (t.statistics?.applied_user_count || 0), 0),
-    };
-  });
 
   // DataGrid 컬럼 정의
   const columns: GridColDef[] = [
@@ -317,193 +298,98 @@ export default function AuthorityTemplates() {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* 안내 메시지 */}
-        <Alert severity="info">
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            권한 템플릿 (Authority Template) 관리
+    <Box sx={{ width: '100%' }}>
+      {/* 헤더 */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h6" fontWeight={600}>
+            권한 템플릿 관리 ({filteredTemplates.length}개)
           </Typography>
-          <Typography variant="body2" paragraph>
-            권한 템플릿은 User Type별로 사전 정의된 권한 세트를 제공합니다.
+          <Typography variant="body2" color="textSecondary">
+            User Type별 사전 정의된 권한 세트를 관리합니다
           </Typography>
-          <Box component="ul" sx={{ mt: 1, mb: 0 }}>
-            <li>
-              <Typography variant="body2">
-                <strong>권한 우선순위</strong>: User Type 기본 역할 (우선순위 90) → Template
-                (85) → Individual (최고)
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>기본 템플릿</strong>: User Type별로 하나의 기본 템플릿을 지정할 수 있으며,
-                사용자 생성 시 자동으로 적용됩니다
-              </Typography>
-            </li>
-            <li>
-              <Typography variant="body2">
-                <strong>유연한 관리</strong>: 템플릿을 통해 동일한 User Type의 사용자들에게 다양한
-                권한 조합을 제공할 수 있습니다
-              </Typography>
-            </li>
-          </Box>
-        </Alert>
-
-        {/* User Type별 통계 */}
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            User Type별 템플릿 통계
-          </Typography>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(4, 1fr)',
-              },
-              gap: 2,
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchTemplates}
+            disabled={loading}
+          >
+            새로고침
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setSelectedTemplate(null);
+              setModalOpen(true);
             }}
           >
-            {userTypeStats.map(stat => (
-              <Card key={stat.userType} variant="outlined">
-                <CardContent>
-                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                    {stat.label}
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="textSecondary">
-                        템플릿:
-                      </Typography>
-                      <Typography variant="body2" fontWeight={600}>
-                        {stat.total}개
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="textSecondary">
-                        적용 사용자:
-                      </Typography>
-                      <Typography variant="body2" fontWeight={600}>
-                        {stat.totalAppliedUsers}명
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {stat.hasDefault ? (
-                        <>
-                          <StarIcon sx={{ color: '#faad14', fontSize: 16 }} />
-                          <Typography variant="caption" color="success.main">
-                            {stat.defaultTemplateName}
-                          </Typography>
-                        </>
-                      ) : (
-                        <>
-                          <WarningIcon sx={{ color: 'warning.main', fontSize: 16 }} />
-                          <Typography variant="caption" color="warning.main">
-                            기본 템플릿 미설정
-                          </Typography>
-                        </>
-                      )}
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+            템플릿 추가
+          </Button>
+        </Box>
+      </Box>
+
+      {/* 검색 및 필터 */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <FormControl sx={{ minWidth: 200 }} size="small">
+          <InputLabel>User Type 필터</InputLabel>
+          <Select
+            value={filterUserType}
+            onChange={(e) => setFilterUserType(e.target.value)}
+            label="User Type 필터"
+          >
+            <MenuItem value="ALL">전체 User Type</MenuItem>
+            {userTypes.map(type => (
+              <MenuItem key={type.type_id} value={type.type_id}>
+                {type.display_name}
+              </MenuItem>
             ))}
-          </Box>
-        </Paper>
+          </Select>
+        </FormControl>
+        <TextField
+          placeholder="템플릿명 또는 설명으로 검색"
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+          size="small"
+          sx={{ flex: 1, maxWidth: 450 }}
+        />
+      </Box>
 
-        {/* 헤더 */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              권한 템플릿 관리
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              User Type별 사전 정의된 권한 세트를 관리합니다
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={fetchTemplates}
-              disabled={loading}
-            >
-              새로고침
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setSelectedTemplate(null);
-                setModalOpen(true);
-              }}
-            >
-              템플릿 추가
-            </Button>
-          </Box>
-        </Box>
-
-        {/* 검색 및 필터 */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>User Type 필터</InputLabel>
-            <Select
-              value={filterUserType}
-              onChange={(e) => setFilterUserType(e.target.value)}
-              label="User Type 필터"
-            >
-              <MenuItem value="ALL">전체 User Type</MenuItem>
-              {userTypes.map(type => (
-                <MenuItem key={type.type_id} value={type.type_id}>
-                  {type.display_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            placeholder="템플릿명 또는 설명으로 검색"
-            value={searchKeyword}
-            onChange={e => setSearchKeyword(e.target.value)}
-            sx={{ width: 400 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">🔍</InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
-        {/* 통계 */}
-        <Box>
-          <Typography variant="body2" component="span" color="textSecondary">
-            전체 템플릿:{' '}
-          </Typography>
-          <Typography variant="body2" component="span" fontWeight={600}>
-            {templates.length}개
-          </Typography>
-          <Typography variant="body2" component="span" color="textSecondary" sx={{ ml: 3 }}>
-            필터링된 템플릿:{' '}
-          </Typography>
-          <Typography variant="body2" component="span" fontWeight={600}>
-            {filteredTemplates.length}개
-          </Typography>
-        </Box>
-
-        {/* DataGrid */}
-        <Paper sx={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={filteredTemplates}
-            columns={columns}
-            loading={loading}
-            getRowId={(row) => row.id}
-            pageSizeOptions={[10, 25, 50]}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
-            }}
-            disableRowSelectionOnClick
-          />
-        </Paper>
+      {/* DataGrid */}
+      <Box sx={{
+        height: 'calc(100vh - 280px)',
+        width: '100%',
+        minHeight: 400,
+      }}>
+        <DataGrid
+          rows={filteredTemplates}
+          columns={columns}
+          loading={loading}
+          getRowId={(row) => row.id}
+          pageSizeOptions={[10, 25, 50, 100]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 25 } },
+          }}
+          getRowHeight={() => 'auto'}
+          disableRowSelectionOnClick
+          localeText={{
+            noRowsLabel: '등록된 권한 템플릿이 없습니다',
+            noResultsOverlayLabel: '검색 결과가 없습니다',
+          }}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              py: 1,
+            },
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
       </Box>
 
       {/* 템플릿 추가/수정 모달 */}
