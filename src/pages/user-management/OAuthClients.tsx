@@ -97,10 +97,8 @@ export default function OAuthClients() {
     scopes: [] as string[],
     grantTypes: [] as string[],
     authMethods: ['CLIENT_SECRET_BASIC'] as string[],
-    accessTokenValue: 1,
-    accessTokenUnit: 'H' as TokenUnit,
-    refreshTokenValue: 24,
-    refreshTokenUnit: 'H' as TokenUnit,
+    accessTokenTTL: '1H',
+    refreshTokenTTL: '24H',
     requirePkce: false,
     reuseRefreshTokens: false,
     authorityTypes: [] as ClientAuthorityType[],
@@ -266,8 +264,8 @@ export default function OAuthClients() {
           scopes: formData.scopes,
           authorization_grant_types: formData.grantTypes,
           client_authentication_methods: formData.authMethods,
-          access_token_time_to_live: combineTokenTTL(formData.accessTokenValue, formData.accessTokenUnit),
-          refresh_token_time_to_live: combineTokenTTL(formData.refreshTokenValue, formData.refreshTokenUnit),
+          access_token_time_to_live: formData.accessTokenTTL,
+          refresh_token_time_to_live: formData.refreshTokenTTL,
           use_public_client: formData.requirePkce,
           reuse_refresh_tokens: formData.reuseRefreshTokens,
         };
@@ -284,8 +282,8 @@ export default function OAuthClients() {
           scopes: formData.scopes,
           authorization_grant_types: formData.grantTypes,
           client_authentication_methods: formData.authMethods,
-          access_token_time_to_live: combineTokenTTL(formData.accessTokenValue, formData.accessTokenUnit),
-          refresh_token_time_to_live: combineTokenTTL(formData.refreshTokenValue, formData.refreshTokenUnit),
+          access_token_time_to_live: formData.accessTokenTTL,
+          refresh_token_time_to_live: formData.refreshTokenTTL,
           use_public_client: formData.requirePkce,
           reuse_refresh_tokens: formData.reuseRefreshTokens,
         };
@@ -363,10 +361,6 @@ export default function OAuthClients() {
   const handleOpenModal = (client?: OAuthClient) => {
     if (client) {
       setSelectedClient(client);
-      // 토큰 TTL 파싱
-      const accessToken = parseTokenTTL(client.access_token_time_to_live || '1H');
-      const refreshToken = parseTokenTTL(client.refresh_token_time_to_live || '24H');
-
       setFormData({
         clientId: client.client_id,
         clientName: client.client_name,
@@ -378,10 +372,8 @@ export default function OAuthClients() {
         scopes: client.scopes || [],
         grantTypes: client.authorization_grant_types || [],
         authMethods: client.client_authentication_methods || ['CLIENT_SECRET_BASIC'],
-        accessTokenValue: accessToken.value,
-        accessTokenUnit: accessToken.unit,
-        refreshTokenValue: refreshToken.value,
-        refreshTokenUnit: refreshToken.unit,
+        accessTokenTTL: client.access_token_time_to_live || '1H',
+        refreshTokenTTL: client.refresh_token_time_to_live || '24H',
         requirePkce: client.use_public_client || false,
         reuseRefreshTokens: client.reuse_refresh_tokens || false,
         authorityTypes: client.authority_types || [],
@@ -397,10 +389,8 @@ export default function OAuthClients() {
         scopes: [],
         grantTypes: [],
         authMethods: ['CLIENT_SECRET_BASIC'],
-        accessTokenValue: 1,
-        accessTokenUnit: 'H',
-        refreshTokenValue: 24,
-        refreshTokenUnit: 'H',
+        accessTokenTTL: '1H',
+        refreshTokenTTL: '24H',
         requirePkce: false,
         reuseRefreshTokens: false,
         authorityTypes: [],
@@ -1024,11 +1014,15 @@ export default function OAuthClients() {
                       <Grid item xs={12} sm={6}>
                         <TextField
                           type="number"
-                          value={formData.accessTokenValue}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            accessTokenValue: Math.max(1, parseInt(e.target.value) || 1)
-                          })}
+                          value={parseTokenTTL(formData.accessTokenTTL).value}
+                          onChange={(e) => {
+                            const value = Math.max(1, parseInt(e.target.value) || 1);
+                            const unit = parseTokenTTL(formData.accessTokenTTL).unit;
+                            setFormData({
+                              ...formData,
+                              accessTokenTTL: combineTokenTTL(value, unit)
+                            });
+                          }}
                           inputProps={{ min: 1 }}
                           fullWidth
                           size="small"
@@ -1037,11 +1031,15 @@ export default function OAuthClients() {
                       <Grid item xs={12} sm={6}>
                         <FormControl fullWidth size="small">
                           <Select
-                            value={formData.accessTokenUnit}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              accessTokenUnit: e.target.value as TokenUnit
-                            })}
+                            value={parseTokenTTL(formData.accessTokenTTL).unit}
+                            onChange={(e) => {
+                              const value = parseTokenTTL(formData.accessTokenTTL).value;
+                              const unit = e.target.value as TokenUnit;
+                              setFormData({
+                                ...formData,
+                                accessTokenTTL: combineTokenTTL(value, unit)
+                              });
+                            }}
                           >
                             <MenuItem value="M">분 (Minutes)</MenuItem>
                             <MenuItem value="H">시간 (Hours)</MenuItem>
@@ -1062,11 +1060,15 @@ export default function OAuthClients() {
                       <Grid item xs={12} sm={6}>
                         <TextField
                           type="number"
-                          value={formData.refreshTokenValue}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            refreshTokenValue: Math.max(1, parseInt(e.target.value) || 1)
-                          })}
+                          value={parseTokenTTL(formData.refreshTokenTTL).value}
+                          onChange={(e) => {
+                            const value = Math.max(1, parseInt(e.target.value) || 1);
+                            const unit = parseTokenTTL(formData.refreshTokenTTL).unit;
+                            setFormData({
+                              ...formData,
+                              refreshTokenTTL: combineTokenTTL(value, unit)
+                            });
+                          }}
                           inputProps={{ min: 1 }}
                           fullWidth
                           size="small"
@@ -1075,11 +1077,15 @@ export default function OAuthClients() {
                       <Grid item xs={12} sm={6}>
                         <FormControl fullWidth size="small">
                           <Select
-                            value={formData.refreshTokenUnit}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              refreshTokenUnit: e.target.value as TokenUnit
-                            })}
+                            value={parseTokenTTL(formData.refreshTokenTTL).unit}
+                            onChange={(e) => {
+                              const value = parseTokenTTL(formData.refreshTokenTTL).value;
+                              const unit = e.target.value as TokenUnit;
+                              setFormData({
+                                ...formData,
+                                refreshTokenTTL: combineTokenTTL(value, unit)
+                              });
+                            }}
                           >
                             <MenuItem value="M">분 (Minutes)</MenuItem>
                             <MenuItem value="H">시간 (Hours)</MenuItem>
