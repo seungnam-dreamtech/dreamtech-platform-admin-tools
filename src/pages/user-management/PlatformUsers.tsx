@@ -130,8 +130,9 @@ export default function PlatformUsers() {
       const keyword = searchKeyword.toLowerCase();
       filtered = filtered.filter(
         user =>
-          user.name.toLowerCase().includes(keyword) ||
-          user.email.toLowerCase().includes(keyword) ||
+          user.username?.toLowerCase().includes(keyword) ||
+          user.name?.toLowerCase().includes(keyword) ||
+          user.email?.toLowerCase().includes(keyword) ||
           user.phoneNumber?.toLowerCase().includes(keyword) ||
           user.department?.toLowerCase().includes(keyword)
       );
@@ -169,7 +170,7 @@ export default function PlatformUsers() {
     {
       field: 'user',
       headerName: '사용자',
-      width: 240,
+      width: 280,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar sx={{ width: 32, height: 32 }} src={params.row.profileImage}>
@@ -177,13 +178,23 @@ export default function PlatformUsers() {
           </Avatar>
           <Box>
             <Typography variant="body2" fontWeight={500}>
-              {params.row.name}
+              {params.row.username || params.row.email}
             </Typography>
             <Typography variant="caption" color="textSecondary">
-              {params.row.email}
+              {params.row.name || '-'}
             </Typography>
           </Box>
         </Box>
+      ),
+    },
+    {
+      field: 'email',
+      headerName: '이메일',
+      width: 220,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="body2">
+          {params.row.email || '-'}
+        </Typography>
       ),
     },
     {
