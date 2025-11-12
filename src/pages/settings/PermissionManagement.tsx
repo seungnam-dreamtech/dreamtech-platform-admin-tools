@@ -192,22 +192,10 @@ export default function PermissionManagement() {
   // DataGrid 컬럼 정의
   const columns: GridColDef[] = [
     {
-      field: 'id',
-      headerName: 'ID',
-      width: 60,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Typography variant="caption" color="textSecondary">
-          {params.row.id}
-        </Typography>
-      ),
-    },
-    {
       field: 'service_id',
       headerName: '서비스',
-      flex: 0.6,
-      minWidth: 120,
+      flex: 0.7,
+      minWidth: 110,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => {
         const service = services.find(s => s.service_id === params.row.service_id);
         return (
@@ -222,8 +210,8 @@ export default function PermissionManagement() {
     {
       field: 'permission_string',
       headerName: '권한 문자열',
-      flex: 1,
-      minWidth: 180,
+      flex: 1.2,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
         <Chip
           label={params.row.permission_string}
@@ -236,44 +224,27 @@ export default function PermissionManagement() {
     {
       field: 'display_name',
       headerName: '표시명',
-      flex: 0.8,
-      minWidth: 150,
+      flex: 1,
+      minWidth: 160,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Typography variant="body2">
+          {params.row.display_name}
+        </Typography>
+      ),
     },
     {
       field: 'category',
       headerName: '카테고리',
-      flex: 0.5,
+      flex: 0.6,
       minWidth: 100,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
         <Chip label={params.row.category} size="small" variant="outlined" />
       ),
     },
     {
-      field: 'resource',
-      headerName: '리소스',
-      flex: 0.5,
-      minWidth: 100,
-      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Typography variant="caption" color="textSecondary">
-          {params.row.resource}
-        </Typography>
-      ),
-    },
-    {
-      field: 'action',
-      headerName: '액션',
-      flex: 0.4,
-      minWidth: 90,
-      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Typography variant="caption" color="textSecondary">
-          {params.row.action}
-        </Typography>
-      ),
-    },
-    {
       field: 'is_system_permission',
       headerName: '시스템',
-      width: 80,
+      width: 70,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) =>
@@ -286,7 +257,7 @@ export default function PermissionManagement() {
     {
       field: 'is_active',
       headerName: '활성',
-      width: 80,
+      width: 70,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
@@ -300,10 +271,10 @@ export default function PermissionManagement() {
     {
       field: 'created_at',
       headerName: '생성일',
-      flex: 0.5,
+      flex: 0.6,
       minWidth: 100,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Typography variant="caption">
+        <Typography variant="caption" color="textSecondary">
           {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
         </Typography>
       ),
