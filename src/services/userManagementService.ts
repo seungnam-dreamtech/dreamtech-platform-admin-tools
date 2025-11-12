@@ -185,6 +185,12 @@ class UserManagementService {
 
     try {
       const requestData = adaptUserFormToApiRequest(userData as any);
+
+      // 수정 시 비밀번호가 입력되지 않았으면 제거
+      if (!userData.password) {
+        delete requestData.password;
+      }
+
       const response = await this.request<PlatformUserResponse>(
         `/v1/management/users/${userId}`,
         {

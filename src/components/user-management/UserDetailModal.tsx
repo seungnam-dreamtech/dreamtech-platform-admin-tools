@@ -182,6 +182,15 @@ export function UserDetailModal({
           serviceId: sub.serviceId,
           roles: sub.roles,
         })),
+        // 기존 사용자 수정 시 firstName/lastName 보존
+        ...(user && {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          birthDate: user.birthDate,
+          zipCode: user.zipCode,
+          address: user.address,
+          addressDetail: user.addressDetail,
+        }),
       };
 
       // 3단계: API 호출

@@ -56,6 +56,7 @@ export function adaptUserResponseArrayToUsers(
 
 /**
  * UI 폼 데이터를 API 요청 형식으로 변환
+ * OpenAPI 스펙의 UserRequest 스키마에 맞춰 변환
  */
 export function adaptUserFormToApiRequest(formData: {
   email: string;
@@ -68,24 +69,56 @@ export function adaptUserFormToApiRequest(formData: {
   userType?: string;
   platformRoles?: string[];
   serviceSubscriptions?: Array<{ serviceId: string; roles: string[] }>;
+  firstName?: string;
+  lastName?: string;
+  birthDate?: string;
+  zipCode?: string;
+  address?: string;
+  addressDetail?: string;
 }): {
-  username: string;
+  user_id: string;
   email_address: string;
   password?: string;
-  full_name: string;
-  phone_number?: string;
   user_type: string;
+  first_name: string;
+  last_name: string;
+  phone_number?: string;
+  birth_date?: string;
+  zip_code?: string;
+  address?: string;
+  address_detail?: string;
   enabled: boolean;
-  // 추가 필드는 필요 시 확장
 } {
+  // 이름 분리 처리: firstName/lastName이 별도로 제공되지 않으면 name을 분리
+  let firstName = formData.firstName || '';
+  let lastName = formData.lastName || '';
+
+  if (!firstName && !lastName && formData.name) {
+    const nameParts = formData.name.trim().split(/\s+/);
+    if (nameParts.length === 1) {
+      // 이름만 있는 경우
+      firstName = nameParts[0];
+      lastName = '';
+    } else {
+      // 성과 이름이 있는 경우 (한글: 첫 글자가 성, 나머지가 이름)
+      firstName = nameParts.slice(1).join(' ');
+      lastName = nameParts[0];
+    }
+  }
+
   return {
-    username: formData.email, // username을 email로 사용
+    user_id: formData.email, // user_id를 email로 사용
     email_address: formData.email,
     password: formData.password,
-    full_name: formData.name,
-    phone_number: formData.phoneNumber,
     user_type: formData.userType || 'USER',
+    first_name: firstName,
+    last_name: lastName,
+    phone_number: formData.phoneNumber,
+    birth_date: formData.birthDate,
+    zip_code: formData.zipCode,
+    address: formData.address,
+    address_detail: formData.addressDetail,
     enabled: formData.status === 'active',
-    // TODO: department, position 등은 API 스펙에 따라 추가
+    // TODO: department, position 등은 현재 API 스펙에 없음
   };
 }
