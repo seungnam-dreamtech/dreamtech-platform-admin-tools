@@ -118,18 +118,18 @@ export const MOCK_USER_TYPE_DEFINITIONS: UserTypeDefinition[] = [
 ];
 
 /**
- * 활성화된 User Type만 필터링 (displayOrder 순으로 정렬)
+ * 활성화된 User Type만 필터링 (display_order 순으로 정렬)
  */
 export const ACTIVE_USER_TYPES = MOCK_USER_TYPE_DEFINITIONS
-  .filter(type => type.isActive)
-  .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  .filter(type => type.is_active)
+  .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
 /**
  * User Type 선택 옵션 (Ant Design Select용)
  */
 export const USER_TYPE_OPTIONS = ACTIVE_USER_TYPES.map(type => ({
-  label: type.displayName,
-  value: type.typeId,
+  label: type.display_name,
+  value: type.type_id,
   description: type.description,
 }));
 

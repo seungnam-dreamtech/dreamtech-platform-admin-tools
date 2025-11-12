@@ -93,9 +93,9 @@ export default function PlatformUsers() {
         .filter(type => type.is_active)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
         .map(type => ({
-          label: type.display_name,
-          value: type.type_id,
-          description: type.description,
+          label: type.display_name || type.type_id,
+          value: type.type_id || '',
+          description: type.description || '',
         }));
       setUserTypeOptions(options);
     } catch (error) {

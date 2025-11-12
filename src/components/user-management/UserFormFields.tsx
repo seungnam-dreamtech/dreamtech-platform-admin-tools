@@ -7,7 +7,16 @@ import type { SelectChangeEvent } from '@mui/material';
 
 interface UserFormFieldsProps {
   isEditing?: boolean; // 편집 모드 여부
-  formData: any;
+  formData: {
+    email?: string;
+    password?: string;
+    name?: string;
+    phoneNumber?: string;
+    department?: string;
+    position?: string;
+    status?: 'active' | 'inactive' | 'suspended';
+    userType?: string;
+  };
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectChange: (e: SelectChangeEvent) => void;
   errors?: Record<string, string>;

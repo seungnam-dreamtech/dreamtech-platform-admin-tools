@@ -20,8 +20,6 @@ import {
   InputLabel,
   Badge,
   Alert,
-  Grid,
-  Divider,
   Autocomplete,
   FormControlLabel,
   FormHelperText,
@@ -756,49 +754,43 @@ export default function OAuthClients() {
             <Typography variant="h6" gutterBottom>
               기본 정보
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Client ID"
-                  value={formData.clientId}
-                  onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                  disabled={!!selectedClient}
-                  error={!!formErrors.clientId}
-                  helperText={formErrors.clientId || '예: healthcare-web-app'}
-                  fullWidth
-                  required={!selectedClient}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="클라이언트 이름"
-                  value={formData.clientName}
-                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                  error={!!formErrors.clientName}
-                  helperText={formErrors.clientName || '예: Healthcare Web Application'}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>클라이언트 타입</InputLabel>
-                  <Select
-                    value={formData.clientType}
-                    onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
-                    label="클라이언트 타입"
-                  >
-                    <MenuItem value="">
-                      <em>선택 안함</em>
-                    </MenuItem>
-                    {CLIENT_TYPE_OPTIONS.map(opt => (
-                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                    ))}
-                  </Select>
-                  <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
-                </FormControl>
-              </Grid>
-            </Grid>
+            <Stack spacing={2}>
+              <TextField
+                label="Client ID"
+                value={formData.clientId}
+                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                disabled={!!selectedClient}
+                error={!!formErrors.clientId}
+                helperText={formErrors.clientId || '예: healthcare-web-app'}
+                fullWidth
+                required={!selectedClient}
+              />
+              <TextField
+                label="클라이언트 이름"
+                value={formData.clientName}
+                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                error={!!formErrors.clientName}
+                helperText={formErrors.clientName || '예: Healthcare Web Application'}
+                fullWidth
+                required
+              />
+              <FormControl fullWidth>
+                <InputLabel>클라이언트 타입</InputLabel>
+                <Select
+                  value={formData.clientType}
+                  onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
+                  label="클라이언트 타입"
+                >
+                  <MenuItem value="">
+                    <em>선택 안함</em>
+                  </MenuItem>
+                  {CLIENT_TYPE_OPTIONS.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
+              </FormControl>
+            </Stack>
           </Box>
 
           {/* Accordion 섹션들 (flex 영역 - 남은 공간 차지) */}
@@ -1010,44 +1002,40 @@ export default function OAuthClients() {
                     <Typography variant="subtitle2" gutterBottom>
                       Access Token 유효기간
                     </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          type="number"
-                          value={parseTokenTTL(formData.accessTokenTTL).value}
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        type="number"
+                        value={parseTokenTTL(formData.accessTokenTTL).value}
+                        onChange={(e) => {
+                          const value = Math.max(1, parseInt(e.target.value) || 1);
+                          const unit = parseTokenTTL(formData.accessTokenTTL).unit;
+                          setFormData({
+                            ...formData,
+                            accessTokenTTL: combineTokenTTL(value, unit)
+                          });
+                        }}
+                        inputProps={{ min: 1 }}
+                        fullWidth
+                        size="small"
+                      />
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={parseTokenTTL(formData.accessTokenTTL).unit}
                           onChange={(e) => {
-                            const value = Math.max(1, parseInt(e.target.value) || 1);
-                            const unit = parseTokenTTL(formData.accessTokenTTL).unit;
+                            const value = parseTokenTTL(formData.accessTokenTTL).value;
+                            const unit = e.target.value as TokenUnit;
                             setFormData({
                               ...formData,
                               accessTokenTTL: combineTokenTTL(value, unit)
                             });
                           }}
-                          inputProps={{ min: 1 }}
-                          fullWidth
-                          size="small"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                          <Select
-                            value={parseTokenTTL(formData.accessTokenTTL).unit}
-                            onChange={(e) => {
-                              const value = parseTokenTTL(formData.accessTokenTTL).value;
-                              const unit = e.target.value as TokenUnit;
-                              setFormData({
-                                ...formData,
-                                accessTokenTTL: combineTokenTTL(value, unit)
-                              });
-                            }}
-                          >
-                            <MenuItem value="M">분 (Minutes)</MenuItem>
-                            <MenuItem value="H">시간 (Hours)</MenuItem>
-                            <MenuItem value="D">일 (Days)</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    </Grid>
+                        >
+                          <MenuItem value="M">분 (Minutes)</MenuItem>
+                          <MenuItem value="H">시간 (Hours)</MenuItem>
+                          <MenuItem value="D">일 (Days)</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Stack>
                     <FormHelperText>예: 1시간 = 1 + 시간, 30분 = 30 + 분</FormHelperText>
                   </Box>
 
@@ -1056,44 +1044,40 @@ export default function OAuthClients() {
                     <Typography variant="subtitle2" gutterBottom>
                       Refresh Token 유효기간
                     </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          type="number"
-                          value={parseTokenTTL(formData.refreshTokenTTL).value}
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        type="number"
+                        value={parseTokenTTL(formData.refreshTokenTTL).value}
+                        onChange={(e) => {
+                          const value = Math.max(1, parseInt(e.target.value) || 1);
+                          const unit = parseTokenTTL(formData.refreshTokenTTL).unit;
+                          setFormData({
+                            ...formData,
+                            refreshTokenTTL: combineTokenTTL(value, unit)
+                          });
+                        }}
+                        inputProps={{ min: 1 }}
+                        fullWidth
+                        size="small"
+                      />
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={parseTokenTTL(formData.refreshTokenTTL).unit}
                           onChange={(e) => {
-                            const value = Math.max(1, parseInt(e.target.value) || 1);
-                            const unit = parseTokenTTL(formData.refreshTokenTTL).unit;
+                            const value = parseTokenTTL(formData.refreshTokenTTL).value;
+                            const unit = e.target.value as TokenUnit;
                             setFormData({
                               ...formData,
                               refreshTokenTTL: combineTokenTTL(value, unit)
                             });
                           }}
-                          inputProps={{ min: 1 }}
-                          fullWidth
-                          size="small"
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                          <Select
-                            value={parseTokenTTL(formData.refreshTokenTTL).unit}
-                            onChange={(e) => {
-                              const value = parseTokenTTL(formData.refreshTokenTTL).value;
-                              const unit = e.target.value as TokenUnit;
-                              setFormData({
-                                ...formData,
-                                refreshTokenTTL: combineTokenTTL(value, unit)
-                              });
-                            }}
-                          >
-                            <MenuItem value="M">분 (Minutes)</MenuItem>
-                            <MenuItem value="H">시간 (Hours)</MenuItem>
-                            <MenuItem value="D">일 (Days)</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    </Grid>
+                        >
+                          <MenuItem value="M">분 (Minutes)</MenuItem>
+                          <MenuItem value="H">시간 (Hours)</MenuItem>
+                          <MenuItem value="D">일 (Days)</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Stack>
                     <FormHelperText>예: 24시간 = 24 + 시간, 7일 = 7 + 일</FormHelperText>
                   </Box>
 
