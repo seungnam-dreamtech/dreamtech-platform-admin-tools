@@ -16,6 +16,10 @@ import {
   Modal,
   Form,
   Alert,
+  Row,
+  Col,
+  Divider,
+  InputNumber,
 } from 'antd';
 import {
   PlusOutlined,
@@ -526,97 +530,197 @@ export default function OAuthClients() {
         />
 
         <Form form={form} layout="vertical">
+          {/* 기본 정보 */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Client ID"
+                name="clientId"
+                rules={[
+                  { required: !selectedClient, message: 'Client ID를 입력하세요' },
+                  { pattern: /^[a-zA-Z0-9-_]+$/, message: '영문, 숫자, -, _ 만 사용 가능합니다' },
+                ]}
+              >
+                <Input
+                  placeholder="예: healthcare-web-app"
+                  disabled={!!selectedClient}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="클라이언트 이름"
+                name="clientName"
+                rules={[{ required: true, message: '클라이언트 이름을 입력하세요' }]}
+              >
+                <Input placeholder="예: Healthcare Web Application" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="클라이언트 타입"
+                name="clientType"
+                tooltip="UI 분류용 (선택사항)"
+              >
+                <Select
+                  placeholder="타입 선택 (선택사항)"
+                  allowClear
+                  options={CLIENT_TYPE_OPTIONS}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left">OAuth2 설정</Divider>
+
+          {/* URIs */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Redirect URIs"
+                name="redirectUris"
+                rules={[{ required: true, message: 'Redirect URI를 입력하세요' }]}
+                tooltip="각 URI를 줄바꿈으로 구분하여 입력하세요"
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder="https://example.com/callback&#10;http://localhost:3000/callback"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Post Logout Redirect URIs"
+                name="postLogoutRedirectUris"
+                tooltip="로그아웃 후 리다이렉트할 URI (선택사항)"
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder="https://example.com&#10;http://localhost:3000"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* Scopes & Grant Types */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Scopes"
+                name="scopes"
+                rules={[{ required: true, message: '최소 하나 이상의 scope를 선택하세요' }]}
+              >
+                <Select
+                  mode="tags"
+                  placeholder="Scope 선택 또는 직접 입력"
+                  options={[...COMMON_SCOPES].map(scope => ({
+                    label: scope,
+                    value: scope,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="Grant Types"
+                name="grantTypes"
+                rules={[{ required: true, message: '최소 하나 이상의 grant type을 선택하세요' }]}
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="Grant Type 선택"
+                  options={GRANT_TYPE_OPTIONS}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* Authentication Methods */}
           <Form.Item
-            label="클라이언트 이름"
-            name="clientName"
-            rules={[{ required: true, message: '클라이언트 이름을 입력하세요' }]}
+            label="Client Authentication Methods"
+            name="authMethods"
+            rules={[{ required: true, message: '인증 방식을 선택하세요' }]}
+            initialValue={['CLIENT_SECRET_BASIC']}
           >
-            <Input placeholder="예: Healthcare Web Application" />
+            <Select
+              mode="multiple"
+              placeholder="인증 방식 선택"
+              options={[
+                { label: 'Client Secret Basic', value: 'CLIENT_SECRET_BASIC' },
+                { label: 'Client Secret Post', value: 'CLIENT_SECRET_POST' },
+                { label: 'Client Secret JWT', value: 'CLIENT_SECRET_JWT' },
+                { label: 'Private Key JWT', value: 'PRIVATE_KEY_JWT' },
+                { label: 'None (Public Client)', value: 'NONE' },
+              ]}
+            />
           </Form.Item>
 
-          <Form.Item
-            label="클라이언트 타입"
-            name="clientType"
-            rules={[{ required: true, message: '클라이언트 타입을 선택하세요' }]}
-          >
-            <Select placeholder="클라이언트 타입 선택" options={[...CLIENT_TYPE_OPTIONS]} />
-          </Form.Item>
+          <Divider orientation="left">토큰 설정</Divider>
 
+          {/* Token Validity */}
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                label="Access Token 유효기간"
+                name="accessTokenTTL"
+                tooltip="예: 1H (1시간), 30M (30분), 3600S (3600초)"
+                initialValue="1H"
+              >
+                <Input placeholder="예: 1H" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Refresh Token 유효기간"
+                name="refreshTokenTTL"
+                tooltip="예: 24H (24시간), 7D (7일)"
+                initialValue="24H"
+              >
+                <Input placeholder="예: 24H" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                label="Refresh Token 재사용"
+                name="reuseRefreshTokens"
+                valuePropName="checked"
+                tooltip="Refresh Token을 재사용할지 여부"
+                initialValue={false}
+              >
+                <Switch checkedChildren="재사용" unCheckedChildren="일회용" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left">클라이언트 설정</Divider>
+
+          {/* Client Settings */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Public Client (PKCE)"
+                name="requirePkce"
+                valuePropName="checked"
+                tooltip="Public Client는 PKCE를 필수로 사용합니다 (예: 모바일 앱, SPA)"
+                initialValue={false}
+              >
+                <Switch checkedChildren="Public" unCheckedChildren="Confidential" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left">허용된 User Type 관리</Divider>
+
+          {/* Authority Types */}
           <Form.Item
             label="생성 가능한 User Type"
             name="authorityTypes"
-            tooltip="이 클라이언트를 통해 생성 가능한 사용자 유형을 설정합니다"
+            tooltip="이 클라이언트를 통해 회원가입 시 생성 가능한 사용자 유형을 설정합니다"
           >
             <ClientAuthorityTypesManager userTypeDefinitions={userTypeDefinitions} />
-          </Form.Item>
-
-          <Form.Item label="연결된 서비스" name="serviceId">
-            <Select
-              placeholder="서비스 선택 (선택사항)"
-              allowClear
-              options={MOCK_SERVICES.map(service => ({
-                label: `${service.icon} ${service.displayName}`,
-                value: service.id,
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Redirect URIs"
-            name="redirectUris"
-            rules={[{ required: true, message: 'Redirect URI를 입력하세요' }]}
-            tooltip="각 URI를 줄바꿈으로 구분하여 입력하세요"
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder="https://example.com/callback&#10;http://localhost:3000/callback"
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Post Logout Redirect URIs"
-            name="postLogoutRedirectUris"
-            tooltip="로그아웃 후 리다이렉트할 URI (선택사항)"
-          >
-            <Input.TextArea
-              rows={2}
-              placeholder="https://example.com&#10;http://localhost:3000"
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Scopes"
-            name="scopes"
-            rules={[{ required: true, message: '최소 하나 이상의 scope를 선택하세요' }]}
-          >
-            <Select
-              mode="multiple"
-              placeholder="Scope 선택"
-              options={[...COMMON_SCOPES].map(scope => ({
-                label: scope,
-                value: scope,
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Grant Types"
-            name="grantTypes"
-            rules={[{ required: true, message: '최소 하나 이상의 grant type을 선택하세요' }]}
-          >
-            <Select
-              mode="multiple"
-              placeholder="Grant Type 선택"
-              options={[...GRANT_TYPE_OPTIONS]}
-            />
-          </Form.Item>
-
-          <Form.Item label="PKCE 필수 여부" name="requirePkce" valuePropName="checked">
-            <Switch checkedChildren="필수" unCheckedChildren="선택" />
-          </Form.Item>
-
-          <Form.Item label="클라이언트 활성화" name="enabled" valuePropName="checked">
-            <Switch checkedChildren="활성" unCheckedChildren="비활성" />
           </Form.Item>
         </Form>
       </Modal>
