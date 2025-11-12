@@ -170,7 +170,8 @@ export default function PlatformUsers() {
     {
       field: 'user',
       headerName: '사용자',
-      width: 280,
+      flex: 1,
+      minWidth: 250,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar sx={{ width: 32, height: 32 }} src={params.row.profileImage}>
@@ -190,7 +191,8 @@ export default function PlatformUsers() {
     {
       field: 'email',
       headerName: '이메일',
-      width: 220,
+      flex: 1,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Typography variant="body2">
           {params.row.email || '-'}
@@ -200,7 +202,8 @@ export default function PlatformUsers() {
     {
       field: 'userType',
       headerName: 'User Type',
-      width: 150,
+      flex: 0.7,
+      minWidth: 130,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
         const typeInfo = userTypeOptions.find(t => t.value === params.row.userType);
         const getColor = () => {
@@ -224,7 +227,8 @@ export default function PlatformUsers() {
     {
       field: 'status',
       headerName: '상태',
-      width: 90,
+      flex: 0.5,
+      minWidth: 90,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
@@ -241,7 +245,8 @@ export default function PlatformUsers() {
     {
       field: 'position',
       headerName: '부서/직책',
-      width: 160,
+      flex: 0.8,
+      minWidth: 140,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Box>
           {params.row.department && (
@@ -261,7 +266,8 @@ export default function PlatformUsers() {
     {
       field: 'platformRoles',
       headerName: '플랫폼 역할',
-      width: 140,
+      flex: 0.7,
+      minWidth: 120,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
         const roles = params.row.platformRoles;
         return (
@@ -281,7 +287,8 @@ export default function PlatformUsers() {
     {
       field: 'serviceSubscriptions',
       headerName: '서비스 가입',
-      width: 110,
+      flex: 0.5,
+      minWidth: 100,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
@@ -291,7 +298,8 @@ export default function PlatformUsers() {
     {
       field: 'phoneNumber',
       headerName: '연락처',
-      width: 140,
+      flex: 0.7,
+      minWidth: 120,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Typography variant="body2" color="textSecondary">
           {params.row.phoneNumber || '-'}
@@ -301,7 +309,8 @@ export default function PlatformUsers() {
     {
       field: 'lastLoginAt',
       headerName: '최근 로그인',
-      width: 150,
+      flex: 0.8,
+      minWidth: 140,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.lastLoginAt ? new Date(params.row.lastLoginAt).toLocaleString('ko-KR') : '-'}
@@ -413,11 +422,11 @@ export default function PlatformUsers() {
           </Select>
         </FormControl>
         <TextField
-          placeholder="이름, 이메일, 연락처, 부서로 검색"
+          placeholder="사용자ID, 이름, 이메일, 연락처로 검색"
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
           size="small"
-          sx={{ flex: 1, maxWidth: 400 }}
+          sx={{ flex: 1, maxWidth: 450 }}
           slotProps={{
             input: {
               endAdornment: searchKeyword && (
@@ -431,14 +440,18 @@ export default function PlatformUsers() {
       </Box>
 
       {/* 테이블 */}
-      <Box sx={{ height: 700, width: '100%' }}>
+      <Box sx={{
+        height: 'calc(100vh - 280px)',
+        width: '100%',
+        minHeight: 400,
+      }}>
         <DataGrid
           rows={filteredUsers}
           columns={columns}
           loading={loading}
-          pageSizeOptions={[10, 25, 50]}
+          pageSizeOptions={[10, 25, 50, 100]}
           initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
+            pagination: { paginationModel: { pageSize: 25 } },
           }}
           getRowHeight={() => 'auto'}
           disableRowSelectionOnClick
