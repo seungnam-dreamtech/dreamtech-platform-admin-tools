@@ -53,6 +53,24 @@ import { userManagementService } from '../../services/userManagementService';
 import { formatTokenDuration } from '../../utils/tokenUtils';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
+// 토큰 TTL 타입 정의
+type TokenUnit = 'M' | 'H' | 'D';
+
+// TTL 파싱 함수: "1H" -> { value: 1, unit: 'H' }
+const parseTokenTTL = (ttl: string): { value: number; unit: TokenUnit } => {
+  const match = ttl.match(/^(\d+)([MHD])$/);
+  if (match) {
+    return { value: parseInt(match[1], 10), unit: match[2] as TokenUnit };
+  }
+  // 기본값 반환
+  return { value: 1, unit: 'H' };
+};
+
+// TTL 결합 함수: { value: 1, unit: 'H' } -> "1H"
+const combineTokenTTL = (value: number, unit: TokenUnit): string => {
+  return `${value}${unit}`;
+};
+
 export default function OAuthClients() {
   const [clients, setClients] = useState<OAuthClient[]>([]);
   const [filteredClients, setFilteredClients] = useState<OAuthClient[]>([]);
@@ -986,23 +1004,100 @@ export default function OAuthClients() {
                   },
                 }}
               >
-                <Stack spacing={2}>
-                  <TextField
-                    label="Access Token 유효기간"
-                    value={formData.accessTokenTTL}
-                    onChange={(e) => setFormData({ ...formData, accessTokenTTL: e.target.value })}
-                    helperText="예: 1H (1시간), 30M (30분)"
-                    fullWidth
-                    placeholder="1H"
-                  />
-                  <TextField
-                    label="Refresh Token 유효기간"
-                    value={formData.refreshTokenTTL}
-                    onChange={(e) => setFormData({ ...formData, refreshTokenTTL: e.target.value })}
-                    helperText="예: 24H (24시간), 7D (7일)"
-                    fullWidth
-                    placeholder="24H"
-                  />
+                <Stack spacing={3}>
+                  {/* Access Token TTL */}
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Access Token 유효기간
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          type="number"
+                          value={parseTokenTTL(formData.accessTokenTTL).value}
+                          onChange={(e) => {
+                            const value = Math.max(1, parseInt(e.target.value) || 1);
+                            const unit = parseTokenTTL(formData.accessTokenTTL).unit;
+                            setFormData({
+                              ...formData,
+                              accessTokenTTL: combineTokenTTL(value, unit)
+                            });
+                          }}
+                          inputProps={{ min: 1 }}
+                          fullWidth
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size="small">
+                          <Select
+                            value={parseTokenTTL(formData.accessTokenTTL).unit}
+                            onChange={(e) => {
+                              const value = parseTokenTTL(formData.accessTokenTTL).value;
+                              const unit = e.target.value as TokenUnit;
+                              setFormData({
+                                ...formData,
+                                accessTokenTTL: combineTokenTTL(value, unit)
+                              });
+                            }}
+                          >
+                            <MenuItem value="M">분 (Minutes)</MenuItem>
+                            <MenuItem value="H">시간 (Hours)</MenuItem>
+                            <MenuItem value="D">일 (Days)</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                    <FormHelperText>예: 1시간 = 1 + 시간, 30분 = 30 + 분</FormHelperText>
+                  </Box>
+
+                  {/* Refresh Token TTL */}
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Refresh Token 유효기간
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          type="number"
+                          value={parseTokenTTL(formData.refreshTokenTTL).value}
+                          onChange={(e) => {
+                            const value = Math.max(1, parseInt(e.target.value) || 1);
+                            const unit = parseTokenTTL(formData.refreshTokenTTL).unit;
+                            setFormData({
+                              ...formData,
+                              refreshTokenTTL: combineTokenTTL(value, unit)
+                            });
+                          }}
+                          inputProps={{ min: 1 }}
+                          fullWidth
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth size="small">
+                          <Select
+                            value={parseTokenTTL(formData.refreshTokenTTL).unit}
+                            onChange={(e) => {
+                              const value = parseTokenTTL(formData.refreshTokenTTL).value;
+                              const unit = e.target.value as TokenUnit;
+                              setFormData({
+                                ...formData,
+                                refreshTokenTTL: combineTokenTTL(value, unit)
+                              });
+                            }}
+                          >
+                            <MenuItem value="M">분 (Minutes)</MenuItem>
+                            <MenuItem value="H">시간 (Hours)</MenuItem>
+                            <MenuItem value="D">일 (Days)</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                    <FormHelperText>예: 24시간 = 24 + 시간, 7일 = 7 + 일</FormHelperText>
+                  </Box>
+
+                  {/* Reuse Refresh Token */}
                   <Box>
                     <FormControlLabel
                       control={
