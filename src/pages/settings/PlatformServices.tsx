@@ -107,7 +107,8 @@ export default function PlatformServices() {
     {
       field: 'id',
       headerName: 'ID',
-      width: 70,
+      flex: 0.3,
+      minWidth: 70,
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
         <Typography variant="body2" color="textSecondary">
           #{params.row.id}
@@ -117,7 +118,8 @@ export default function PlatformServices() {
     {
       field: 'service_id',
       headerName: '서비스 ID',
-      width: 180,
+      flex: 0.8,
+      minWidth: 150,
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
         <Typography variant="body2" fontWeight={500}>
           {params.row.service_id}
@@ -127,10 +129,10 @@ export default function PlatformServices() {
     {
       field: 'description',
       headerName: '설명',
-      width: 250,
-      flex: 1,
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
-        <Typography variant="body2" color="textSecondary" noWrap>
+        <Typography variant="body2" color="textSecondary">
           {params.row.description || '-'}
         </Typography>
       ),
@@ -138,7 +140,8 @@ export default function PlatformServices() {
     {
       field: 'bit_position',
       headerName: '비트 위치',
-      width: 110,
+      flex: 0.5,
+      minWidth: 110,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
@@ -148,7 +151,8 @@ export default function PlatformServices() {
     {
       field: 'is_active',
       headerName: '상태',
-      width: 80,
+      flex: 0.4,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
@@ -162,7 +166,8 @@ export default function PlatformServices() {
     {
       field: 'created_at',
       headerName: '생성일',
-      width: 110,
+      flex: 0.6,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
@@ -172,7 +177,8 @@ export default function PlatformServices() {
     {
       field: 'updated_at',
       headerName: '수정일',
-      width: 110,
+      flex: 0.6,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
@@ -182,7 +188,8 @@ export default function PlatformServices() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 80,
+      flex: 0.4,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       sortable: false,

@@ -244,7 +244,8 @@ export default function PermissionManagement() {
     {
       field: 'is_system_permission',
       headerName: '시스템',
-      width: 70,
+      flex: 0.3,
+      minWidth: 70,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) =>
@@ -257,7 +258,8 @@ export default function PermissionManagement() {
     {
       field: 'is_active',
       headerName: '활성',
-      width: 70,
+      flex: 0.3,
+      minWidth: 70,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
@@ -315,7 +317,8 @@ export default function PermissionManagement() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 100,
+      flex: 0.4,
+      minWidth: 100,
       align: 'center',
       headerAlign: 'center',
       sortable: false,

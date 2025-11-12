@@ -301,7 +301,8 @@ export default function AuthorityTemplates() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 140,
+      flex: 0.6,
+      minWidth: 140,
       align: 'center',
       headerAlign: 'center',
       sortable: false,

@@ -164,7 +164,8 @@ export default function UserTypes() {
     {
       field: 'is_system_type',
       headerName: '시스템',
-      width: 80,
+      flex: 0.4,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
@@ -178,7 +179,8 @@ export default function UserTypes() {
     {
       field: 'display_order',
       headerName: '순서',
-      width: 70,
+      flex: 0.3,
+      minWidth: 70,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
@@ -234,7 +236,8 @@ export default function UserTypes() {
     {
       field: 'is_active',
       headerName: '상태',
-      width: 80,
+      flex: 0.4,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<UserTypeDefinition>) => (
@@ -249,7 +252,8 @@ export default function UserTypes() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 120,
+      flex: 0.5,
+      minWidth: 120,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
