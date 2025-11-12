@@ -41,7 +41,35 @@ export interface UserTypeDefinition {
 export type UserType = string;
 
 /**
- * 플랫폼 사용자
+ * 플랫폼 사용자 API 응답
+ * API Response: GET /v1/management/users
+ */
+export interface PlatformUserResponse {
+  id: string;
+  username: string;
+  user_type: string;
+  enabled: boolean;
+  account_non_locked: boolean;
+  account_non_expired: boolean;
+  credentials_non_expired: boolean;
+  created_at: string;
+  updated_at: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  email_address: string;
+  email_verified: boolean;
+  phone_number?: string;
+  birth_date?: string;
+  zip_code?: string;
+  address?: string;
+  address_detail?: string;
+  is_anonymous: boolean;
+  has_profile: boolean;
+}
+
+/**
+ * 플랫폼 사용자 (UI 전용)
  */
 export interface PlatformUser {
   id: string;
@@ -64,6 +92,19 @@ export interface PlatformUser {
   profileImage?: string;
   department?: string;
   position?: string;
+
+  // API 응답 추가 필드
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  emailVerified?: boolean;
+  birthDate?: string;
+  zipCode?: string;
+  address?: string;
+  addressDetail?: string;
+  isAnonymous?: boolean;
+  hasProfile?: boolean;
+
   metadata?: Record<string, unknown>;
 }
 
