@@ -598,7 +598,8 @@ export default function OAuthClients() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 130,
+      flex: 0.5,
+      minWidth: 130,
       align: 'center',
       headerAlign: 'center',
       sortable: false,

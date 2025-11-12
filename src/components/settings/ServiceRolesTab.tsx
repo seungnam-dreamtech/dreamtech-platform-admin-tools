@@ -207,7 +207,8 @@ export default function ServiceRolesTab() {
     {
       field: 'service_id',
       headerName: '서비스',
-      width: 130,
+      flex: 0.6,
+      minWidth: 130,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="body2" color="primary" fontWeight={500}>
           {params.row.service_id}
@@ -217,7 +218,8 @@ export default function ServiceRolesTab() {
     {
       field: 'role_name',
       headerName: 'Role Name',
-      width: 140,
+      flex: 0.7,
+      minWidth: 130,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="body2" fontWeight={500}>
           {params.row.role_name}
@@ -227,7 +229,8 @@ export default function ServiceRolesTab() {
     {
       field: 'is_system_role',
       headerName: '타입',
-      width: 90,
+      flex: 0.4,
+      minWidth: 90,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) =>
@@ -242,7 +245,8 @@ export default function ServiceRolesTab() {
     {
       field: 'display_name',
       headerName: '표시명',
-      width: 140,
+      flex: 0.8,
+      minWidth: 130,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="body2">{params.row.display_name}</Typography>
       ),
@@ -250,10 +254,10 @@ export default function ServiceRolesTab() {
     {
       field: 'description',
       headerName: '설명',
-      width: 200,
-      flex: 1,
+      flex: 1.5,
+      minWidth: 150,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
-        <Typography variant="body2" color="textSecondary" noWrap>
+        <Typography variant="body2" color="textSecondary">
           {params.row.description || '-'}
         </Typography>
       ),
@@ -261,7 +265,8 @@ export default function ServiceRolesTab() {
     {
       field: 'permissions',
       headerName: '권한 수',
-      width: 80,
+      flex: 0.3,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
@@ -273,7 +278,8 @@ export default function ServiceRolesTab() {
     {
       field: 'is_active',
       headerName: '상태',
-      width: 80,
+      flex: 0.4,
+      minWidth: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
@@ -290,7 +296,8 @@ export default function ServiceRolesTab() {
     {
       field: 'created_at',
       headerName: '생성일',
-      width: 110,
+      flex: 0.6,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
@@ -300,7 +307,8 @@ export default function ServiceRolesTab() {
     {
       field: 'created_by',
       headerName: '생성자',
-      width: 100,
+      flex: 0.5,
+      minWidth: 90,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.created_by || '-'}
@@ -310,7 +318,8 @@ export default function ServiceRolesTab() {
     {
       field: 'updated_at',
       headerName: '수정일',
-      width: 110,
+      flex: 0.6,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
@@ -320,7 +329,8 @@ export default function ServiceRolesTab() {
     {
       field: 'updated_by',
       headerName: '수정자',
-      width: 100,
+      flex: 0.5,
+      minWidth: 90,
       renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.updated_by || '-'}
@@ -330,7 +340,8 @@ export default function ServiceRolesTab() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 100,
+      flex: 0.4,
+      minWidth: 100,
       align: 'center',
       headerAlign: 'center',
       sortable: false,

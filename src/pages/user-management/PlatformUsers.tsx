@@ -342,7 +342,8 @@ export default function PlatformUsers() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 120,
+      flex: 0.5,
+      minWidth: 120,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
