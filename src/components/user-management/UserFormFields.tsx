@@ -8,6 +8,7 @@ import type { SelectChangeEvent } from '@mui/material';
 interface UserFormFieldsProps {
   isEditing?: boolean; // 편집 모드 여부
   formData: {
+    username?: string;
     email?: string;
     password?: string;
     name?: string;
@@ -33,6 +34,18 @@ export function UserFormFields({
 }: UserFormFieldsProps) {
   return (
     <Stack spacing={2}>
+      {isEditing && formData.username && (
+        <TextField
+          label="Username (사용자 ID)"
+          name="username"
+          value={formData.username}
+          disabled
+          fullWidth
+          size="small"
+          helperText="사용자 고유 식별자 (변경 불가)"
+        />
+      )}
+
       <TextField
         label="이메일"
         name="email"

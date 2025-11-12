@@ -30,6 +30,7 @@ interface UserDetailModalProps {
 }
 
 interface FormData {
+  username?: string;
   email: string;
   password?: string;
   name: string;
@@ -84,6 +85,7 @@ export function UserDetailModal({
       if (user) {
         // 편집 모드: 기존 사용자 정보로 폼 초기화
         setFormData({
+          username: user.username,
           email: user.email,
           name: user.name,
           phoneNumber: user.phoneNumber,
@@ -237,7 +239,9 @@ export function UserDetailModal({
       fullWidth
       disableEscapeKeyDown
     >
-      <DialogTitle>{isEditing ? '사용자 정보 수정' : '새 사용자 추가'}</DialogTitle>
+      <DialogTitle>
+        {isEditing ? `사용자 정보 수정 - ${user?.username || user?.email}` : '새 사용자 추가'}
+      </DialogTitle>
       <DialogContent dividers>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
