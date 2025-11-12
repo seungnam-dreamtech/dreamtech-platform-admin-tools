@@ -297,8 +297,38 @@ export default function GlobalRolesTab() {
       headerName: '생성일',
       width: 110,
       renderCell: (params: GridRenderCellParams<GlobalRole>) => (
-        <Typography variant="body2" color="textSecondary">
-          {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'created_by',
+      headerName: '생성자',
+      width: 100,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_by || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_at',
+      headerName: '수정일',
+      width: 110,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_by',
+      headerName: '수정자',
+      width: 100,
+      renderCell: (params: GridRenderCellParams<GlobalRole>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_by || '-'}
         </Typography>
       ),
     },

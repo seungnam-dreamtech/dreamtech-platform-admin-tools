@@ -275,7 +275,40 @@ export default function PermissionManagement() {
       minWidth: 100,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
         <Typography variant="caption" color="textSecondary">
-          {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
+          {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'created_by',
+      headerName: '생성자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_by || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_at',
+      headerName: '수정일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_by',
+      headerName: '수정자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_by || '-'}
         </Typography>
       ),
     },

@@ -307,6 +307,28 @@ export default function PlatformUsers() {
       ),
     },
     {
+      field: 'createdAt',
+      headerName: '생성일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.createdAt ? new Date(params.row.createdAt).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updatedAt',
+      headerName: '수정일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updatedAt ? new Date(params.row.updatedAt).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
       field: 'lastLoginAt',
       headerName: '최근 로그인',
       flex: 0.8,
