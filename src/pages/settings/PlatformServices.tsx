@@ -164,8 +164,18 @@ export default function PlatformServices() {
       headerName: '생성일',
       width: 110,
       renderCell: (params: GridRenderCellParams<ServiceScope>) => (
-        <Typography variant="body2" color="textSecondary">
-          {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_at',
+      headerName: '수정일',
+      width: 110,
+      renderCell: (params: GridRenderCellParams<ServiceScope>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
         </Typography>
       ),
     },

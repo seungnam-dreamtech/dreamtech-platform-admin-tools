@@ -574,6 +574,28 @@ export default function OAuthClients() {
       ),
     },
     {
+      field: 'client_id_issued_at',
+      headerName: '생성일',
+      flex: 0.6,
+      minWidth: 110,
+      renderCell: (params: GridRenderCellParams<OAuthClient>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.client_id_issued_at ? new Date(params.row.client_id_issued_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_at',
+      headerName: '수정일',
+      flex: 0.6,
+      minWidth: 110,
+      renderCell: (params: GridRenderCellParams<OAuthClient>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
       field: 'actions',
       headerName: '작업',
       width: 130,
