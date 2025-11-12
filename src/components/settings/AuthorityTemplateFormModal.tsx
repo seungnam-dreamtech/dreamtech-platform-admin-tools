@@ -63,9 +63,14 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`template-tabpanel-${index}`}
       aria-labelledby={`template-tab-${index}`}
+      style={{
+        flex: 1,
+        overflow: 'auto',
+        display: value === index ? 'block' : 'none'
+      }}
       {...other}
     >
-      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
+      <Box sx={{ py: 2 }}>{children}</Box>
     </div>
   );
 }
@@ -287,16 +292,16 @@ export function AuthorityTemplateFormModal({
       <DialogTitle>
         {isEditing ? `권한 템플릿 수정: ${template?.name}` : '새 권한 템플릿 추가'}
       </DialogTitle>
-      <DialogContent>
-        <Alert severity="info" sx={{ mb: 2 }}>
+      <DialogContent sx={{ minHeight: 500, maxHeight: 600, display: 'flex', flexDirection: 'column' }}>
+        <Alert severity="info" sx={{ mb: 2, flexShrink: 0 }}>
           권한 템플릿은 User Type별로 사전 정의된 권한 세트입니다. 글로벌 역할과 서비스 역할을
           조합하여 구성합니다.
         </Alert>
 
-        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
+        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)} sx={{ flexShrink: 0 }}>
           <Tab label="기본 정보" />
-          <Tab label="글로벌 역할" />
-          <Tab label="서비스 역할" />
+          <Tab label={`글로벌 역할 (${formData.global_roles.length})`} />
+          <Tab label={`서비스 역할 (${formData.service_roles.length})`} />
           <Tab label="연결 정보" />
         </Tabs>
 
@@ -383,7 +388,7 @@ export function AuthorityTemplateFormModal({
             <Typography variant="subtitle2" gutterBottom>
               사용 가능한 글로벌 역할 선택
             </Typography>
-            <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+            <List>
               {availableGlobalRoles
                 .filter((role) => role.is_active)
                 .map((role) => {
@@ -455,7 +460,7 @@ export function AuthorityTemplateFormModal({
             <Typography variant="subtitle2" gutterBottom>
               서비스별 역할 선택
             </Typography>
-            <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+            <Box>
               {Object.entries(serviceRolesByService).map(([serviceId, roles]) => (
                 <Paper key={serviceId} variant="outlined" sx={{ p: 2, mb: 2 }}>
                   <Typography variant="subtitle2" color="primary" gutterBottom>
