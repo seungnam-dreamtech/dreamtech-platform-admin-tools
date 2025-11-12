@@ -193,6 +193,7 @@ export default function PlatformUsers() {
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
         const typeInfo = userTypeOptions.find(t => t.value === params.row.userType);
         const getColor = () => {
+          if (!params.row.userType) return 'default';
           if (params.row.userType.includes('ADMIN')) return 'error';
           if (params.row.userType.includes('MANAGER')) return 'warning';
           if (params.row.userType.includes('DOCTOR')) return 'info';
@@ -201,7 +202,7 @@ export default function PlatformUsers() {
         return (
           <Tooltip title={typeInfo?.description || ''} arrow>
             <Chip
-              label={typeInfo?.label || params.row.userType}
+              label={typeInfo?.label || params.row.userType || 'N/A'}
               color={getColor()}
               size="small"
             />
