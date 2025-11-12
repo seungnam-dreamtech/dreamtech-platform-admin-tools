@@ -1,11 +1,25 @@
 // 역할 및 권한 관리 컴포넌트
 
-import { Tabs, Select, Tag, Space, Alert, Empty, Divider, Typography } from 'antd';
-import type { TabsProps } from 'antd';
+import React from 'react';
+import {
+  Tabs,
+  Tab,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  Stack,
+  Alert,
+  AlertTitle,
+  Typography,
+  Paper,
+  Divider
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { PLATFORM_ROLES, SERVICE_ROLES, MOCK_SERVICES } from '../../constants/user-management';
 import type { ServiceSubscription } from '../../types/user-management';
-
-const { Text } = Typography;
 
 interface RoleManagerProps {
   platformRoles: string[];
@@ -15,6 +29,20 @@ interface RoleManagerProps {
   userType?: string; // 사용자 유형 (User Type 기반 기본 역할 표시용)
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel({ children, value, index }: TabPanelProps) {
+  return (
+    <div role="tabpanel" hidden={value !== index}>
+      {value === index && <Box sx={{ py: 2 }}>{children}</Box>}
+    </div>
+  );
+}
+
 export function RoleManager({
   platformRoles,
   onPlatformRolesChange,
@@ -22,14 +50,19 @@ export function RoleManager({
   onServiceSubscriptionsChange,
   userType,
 }: RoleManagerProps) {
+  const [activeTab, setActiveTab] = React.useState(0);
 
   // 플랫폼 역할 변경 핸들러
-  const handlePlatformRolesChange = (selectedRoles: string[]) => {
-    onPlatformRolesChange(selectedRoles);
+  const handlePlatformRolesChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    onPlatformRolesChange(typeof value === 'string' ? value.split(',') : value);
   };
 
   // 서비스별 역할 변경 핸들러
-  const handleServiceRoleChange = (serviceId: string, selectedRoles: string[]) => {
+  const handleServiceRoleChange = (serviceId: string, event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    const selectedRoles = typeof value === 'string' ? value.split(',') : value;
+
     const updated = serviceSubscriptions.map(sub =>
       sub.serviceId === serviceId
         ? { ...sub, roles: selectedRoles }
@@ -51,100 +84,120 @@ export function RoleManager({
 
   const defaultRole = getDefaultRoleForUserType();
 
-  // 탭 아이템 정의
-  const items: TabsProps['items'] = [
-    {
-      key: 'platform',
-      label: '플랫폼 역할',
-      children: (
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+  return (
+    <Box>
+      <Alert severity="warning" sx={{ mb: 2 }}>
+        <AlertTitle>권한 해결 우선순위</AlertTitle>
+        <ol style={{ marginLeft: -16, fontSize: '12px' }}>
+          <li>User Type 기반 기본 역할 (우선순위: 90) - 자동 부여, 변경 불가</li>
+          <li>템플릿 기반 권한 (우선순위: 85) - 시스템 관리자가 설정</li>
+          <li>개별 사용자 권한 (최고 우선순위) - 여기서 설정하는 역할</li>
+        </ol>
+      </Alert>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+          <Tab label="플랫폼 역할" />
+          <Tab label="서비스별 역할" />
+        </Tabs>
+      </Box>
+
+      <TabPanel value={activeTab} index={0}>
+        <Stack spacing={3}>
           {defaultRole && (
-            <Alert
-              message={
-                <Space direction="vertical" size={0}>
-                  <Text strong>User Type 기반 기본 역할</Text>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    사용자 유형 ({userType})에 따라 자동으로 부여되는 역할입니다.
-                  </Text>
-                </Space>
-              }
-              description={
-                <Space direction="vertical" size="small">
-                  <Tag color="blue">{defaultRole.displayName}</Tag>
-                  <Text style={{ fontSize: '12px' }}>{defaultRole.description}</Text>
-                  <Text type="secondary" style={{ fontSize: '11px' }}>
-                    권한: {defaultRole.permissions.join(', ')}
-                  </Text>
-                </Space>
-              }
-              type="info"
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <AlertTitle>User Type 기반 기본 역할</AlertTitle>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                사용자 유형 ({userType})에 따라 자동으로 부여되는 역할입니다.
+              </Typography>
+              <Stack spacing={1}>
+                <Chip label={defaultRole.displayName} color="primary" size="small" sx={{ width: 'fit-content' }} />
+                <Typography variant="body2">{defaultRole.description}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  권한: {defaultRole.permissions.join(', ')}
+                </Typography>
+              </Stack>
+            </Alert>
           )}
 
-          <div>
-            <Text strong>추가 플랫폼 역할</Text>
-            <Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: '12px' }}>
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>추가 플랫폼 역할</Typography>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
               플랫폼 전역에서 적용되는 역할을 선택하세요.
-            </Text>
-            <Select
-              mode="multiple"
-              style={{ width: '100%' }}
-              placeholder="플랫폼 역할 선택"
-              value={platformRoles}
-              onChange={handlePlatformRolesChange}
-              options={PLATFORM_ROLES.filter(role => !role.isSystem || role.name !== userType).map(role => ({
-                label: (
-                  <Space direction="vertical" size={0}>
-                    <Text>{role.displayName}</Text>
-                    <Text type="secondary" style={{ fontSize: '11px' }}>{role.description}</Text>
-                  </Space>
-                ),
-                value: role.name,
-              }))}
-            />
-          </div>
+            </Typography>
+            <FormControl fullWidth size="small">
+              <InputLabel>플랫폼 역할 선택</InputLabel>
+              <Select
+                multiple
+                value={platformRoles}
+                onChange={handlePlatformRolesChange}
+                label="플랫폼 역할 선택"
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const role = PLATFORM_ROLES.find(r => r.name === value);
+                      return <Chip key={value} label={role?.displayName || value} size="small" />;
+                    })}
+                  </Box>
+                )}
+              >
+                {PLATFORM_ROLES.filter(role => !role.isSystem || role.name !== userType).map(role => (
+                  <MenuItem key={role.name} value={role.name}>
+                    <Stack spacing={0}>
+                      <Typography variant="body2">{role.displayName}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {role.description}
+                      </Typography>
+                    </Stack>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
-          <Divider style={{ margin: '16px 0' }} />
+          <Divider />
 
-          <div>
-            <Text strong>현재 보유 플랫폼 역할</Text>
-            <div style={{ marginTop: 8 }}>
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>현재 보유 플랫폼 역할</Typography>
+            <Box sx={{ mt: 1 }}>
               {platformRoles.length === 0 && !defaultRole ? (
-                <Empty description="선택된 플랫폼 역할이 없습니다" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                <Typography variant="body2" color="text.secondary">
+                  선택된 플랫폼 역할이 없습니다
+                </Typography>
               ) : (
-                <Space wrap>
+                <Stack direction="row" spacing={1} flexWrap="wrap">
                   {defaultRole && (
-                    <Tag color="blue" key={defaultRole.name}>
-                      {defaultRole.displayName} (기본)
-                    </Tag>
+                    <Chip
+                      key={defaultRole.name}
+                      label={`${defaultRole.displayName} (기본)`}
+                      color="primary"
+                      size="small"
+                    />
                   )}
                   {platformRoles.map(roleName => {
                     const role = PLATFORM_ROLES.find(r => r.name === roleName);
                     return role ? (
-                      <Tag color="green" key={roleName}>
-                        {role.displayName}
-                      </Tag>
+                      <Chip
+                        key={roleName}
+                        label={role.displayName}
+                        color="success"
+                        size="small"
+                      />
                     ) : null;
                   })}
-                </Space>
+                </Stack>
               )}
-            </div>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      key: 'service',
-      label: '서비스별 역할',
-      children: (
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            </Box>
+          </Box>
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={1}>
+        <Stack spacing={2}>
           {serviceSubscriptions.length === 0 ? (
-            <Empty
-              description="가입된 서비스가 없습니다. 먼저 서비스 가입 탭에서 서비스를 선택하세요."
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 4 }}>
+              가입된 서비스가 없습니다. 먼저 서비스 가입 탭에서 서비스를 선택하세요.
+            </Typography>
           ) : (
             serviceSubscriptions.map(subscription => {
               const service = MOCK_SERVICES.find(s => s.id === subscription.serviceId);
@@ -152,104 +205,102 @@ export function RoleManager({
               const defaultServiceRole = service?.defaultRole;
 
               return (
-                <div
+                <Paper
                   key={subscription.serviceId}
-                  style={{
-                    padding: 16,
-                    border: '1px solid #d9d9d9',
-                    borderRadius: 4,
-                    background: '#fafafa',
-                  }}
+                  variant="outlined"
+                  sx={{ p: 2, bgcolor: '#fafafa' }}
                 >
-                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                    <Space>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <span style={{ fontSize: '18px' }}>{service?.icon}</span>
-                      <Text strong>{subscription.serviceName}</Text>
-                      <Tag color={subscription.status === 'active' ? 'green' : 'red'}>
-                        {subscription.status === 'active' ? '활성' : '비활성'}
-                      </Tag>
-                    </Space>
+                      <Typography variant="subtitle2">{subscription.serviceName}</Typography>
+                      <Chip
+                        label={subscription.status === 'active' ? '활성' : '비활성'}
+                        color={subscription.status === 'active' ? 'success' : 'error'}
+                        size="small"
+                      />
+                    </Stack>
 
                     {defaultServiceRole && (
-                      <Alert
-                        message={`기본 역할: ${defaultServiceRole}`}
-                        type="info"
-                        showIcon
-                        style={{ fontSize: '12px' }}
-                      />
+                      <Alert severity="info" sx={{ fontSize: '12px' }}>
+                        기본 역할: {defaultServiceRole}
+                      </Alert>
                     )}
 
-                    <div style={{ marginTop: 8 }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>역할 선택:</Text>
-                      <Select
-                        mode="multiple"
-                        style={{ width: '100%', marginTop: 4 }}
-                        placeholder="서비스 역할 선택"
-                        value={subscription.roles}
-                        onChange={(roles) => handleServiceRoleChange(subscription.serviceId, roles)}
-                        options={availableRoles.map(role => ({
-                          label: (
-                            <Space direction="vertical" size={0}>
-                              <Space>
-                                <Text>{role.displayName}</Text>
-                                {role.isDefault && <Tag color="blue" style={{ fontSize: '10px' }}>기본</Tag>}
-                              </Space>
-                              <Text type="secondary" style={{ fontSize: '11px' }}>{role.description}</Text>
-                            </Space>
-                          ),
-                          value: role.name,
-                        }))}
-                      />
-                    </div>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                        역할 선택:
+                      </Typography>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>서비스 역할 선택</InputLabel>
+                        <Select
+                          multiple
+                          value={subscription.roles}
+                          onChange={(e) => handleServiceRoleChange(subscription.serviceId, e)}
+                          label="서비스 역할 선택"
+                          renderValue={(selected) => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map((value) => {
+                                const role = availableRoles.find(r => r.name === value);
+                                return <Chip key={value} label={role?.displayName || value} size="small" />;
+                              })}
+                            </Box>
+                          )}
+                        >
+                          {availableRoles.map(role => (
+                            <MenuItem key={role.name} value={role.name}>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Stack spacing={0} sx={{ flex: 1 }}>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography variant="body2">{role.displayName}</Typography>
+                                    {role.isDefault && (
+                                      <Chip label="기본" color="primary" size="small" sx={{ height: 16, fontSize: '10px' }} />
+                                    )}
+                                  </Stack>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {role.description}
+                                  </Typography>
+                                </Stack>
+                              </Stack>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
 
-                    <div style={{ marginTop: 8 }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>현재 역할:</Text>
-                      <div style={{ marginTop: 4 }}>
-                        {subscription.roles.length === 0 ? (
-                          <Text type="secondary" style={{ fontSize: '12px' }}>선택된 역할 없음</Text>
-                        ) : (
-                          <Space wrap>
-                            {subscription.roles.map(roleName => {
-                              const role = availableRoles.find(r => r.name === roleName);
-                              return role ? (
-                                <Tag color="purple" key={roleName}>
-                                  {role.displayName}
-                                </Tag>
-                              ) : (
-                                <Tag key={roleName}>{roleName}</Tag>
-                              );
-                            })}
-                          </Space>
-                        )}
-                      </div>
-                    </div>
-                  </Space>
-                </div>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                        현재 역할:
+                      </Typography>
+                      {subscription.roles.length === 0 ? (
+                        <Typography variant="caption" color="text.secondary">
+                          선택된 역할 없음
+                        </Typography>
+                      ) : (
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {subscription.roles.map(roleName => {
+                            const role = availableRoles.find(r => r.name === roleName);
+                            return role ? (
+                              <Chip
+                                key={roleName}
+                                label={role.displayName}
+                                color="secondary"
+                                size="small"
+                              />
+                            ) : (
+                              <Chip key={roleName} label={roleName} size="small" />
+                            );
+                          })}
+                        </Stack>
+                      )}
+                    </Box>
+                  </Stack>
+                </Paper>
               );
             })
           )}
-        </Space>
-      ),
-    },
-  ];
-
-  return (
-    <div>
-      <Alert
-        message="권한 해결 우선순위"
-        description={
-          <ol style={{ marginLeft: -24, fontSize: '12px' }}>
-            <li>User Type 기반 기본 역할 (우선순위: 90) - 자동 부여, 변경 불가</li>
-            <li>템플릿 기반 권한 (우선순위: 85) - 시스템 관리자가 설정</li>
-            <li>개별 사용자 권한 (최고 우선순위) - 여기서 설정하는 역할</li>
-          </ol>
-        }
-        type="warning"
-        showIcon
-        style={{ marginBottom: 16 }}
-      />
-
-      <Tabs defaultActiveKey="platform" items={items} />
-    </div>
+        </Stack>
+      </TabPanel>
+    </Box>
   );
 }

@@ -1,11 +1,26 @@
 // 동적 필드 입력 공통 컴포넌트
 import React from 'react';
-import { Input, InputNumber, Select, Checkbox, DatePicker, Space, Button, Tag } from 'antd';
-import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  Button,
+  Box,
+  Typography,
+  IconButton
+} from '@mui/material';
+import { Add as AddIcon, RemoveCircle as RemoveCircleIcon } from '@mui/icons-material';
 
 interface DynamicFormFieldProps {
   label: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onChange: (value: any) => void;
   type: 'text' | 'number' | 'select' | 'checkbox' | 'datetime' | 'array';
   placeholder?: string;
@@ -28,89 +43,113 @@ export const DynamicFormField: React.FC<DynamicFormFieldProps> = ({
     switch (type) {
       case 'text':
         return (
-          <Input
-            value={value}
+          <TextField
+            value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
+            fullWidth
+            size="small"
           />
         );
 
       case 'number':
         return (
-          <InputNumber
-            value={value}
-            onChange={onChange}
+          <TextField
+            type="number"
+            value={value ?? ''}
+            onChange={(e) => onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
             placeholder={placeholder}
-            style={{ width: '100%' }}
+            fullWidth
+            size="small"
           />
         );
 
       case 'select':
         return (
-          <Select
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            options={options}
-            style={{ width: '100%' }}
-          />
+          <FormControl fullWidth size="small">
+            <InputLabel>{placeholder}</InputLabel>
+            <Select
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+              label={placeholder}
+            >
+              {options?.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         );
 
       case 'checkbox':
         return (
-          <Checkbox checked={value} onChange={(e) => onChange(e.target.checked)}>
-            {placeholder}
-          </Checkbox>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={!!value}
+                onChange={(e) => onChange(e.target.checked)}
+              />
+            }
+            label={placeholder}
+          />
         );
 
       case 'datetime':
         return (
-          <DatePicker
-            showTime
-            value={value}
-            onChange={onChange}
+          <TextField
+            type="datetime-local"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            style={{ width: '100%' }}
+            fullWidth
+            size="small"
+            InputLabelProps={{
+              shrink: true,
+            }}
           />
         );
 
-      case 'array':
+      case 'array': {
         const arrayValue = Array.isArray(value) ? value : [];
         return (
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Stack spacing={1}>
             {arrayValue.map((item, index) => (
-              <Space key={index} style={{ width: '100%' }}>
-                <Input
-                  value={item}
+              <Stack key={index} direction="row" spacing={1} alignItems="center">
+                <TextField
+                  value={item || ''}
                   onChange={(e) => {
                     const newArray = [...arrayValue];
                     newArray[index] = e.target.value;
                     onChange(newArray);
                   }}
                   placeholder={placeholder}
-                  style={{ width: '300px' }}
+                  size="small"
+                  fullWidth
                 />
-                <Button
-                  type="text"
-                  danger
-                  icon={<MinusCircleOutlined />}
+                <IconButton
+                  color="error"
                   onClick={() => {
                     const newArray = arrayValue.filter((_, i) => i !== index);
                     onChange(newArray);
                   }}
-                />
-              </Space>
+                  size="small"
+                >
+                  <RemoveCircleIcon />
+                </IconButton>
+              </Stack>
             ))}
             <Button
-              type="dashed"
-              icon={<PlusOutlined />}
+              variant="outlined"
+              startIcon={<AddIcon />}
               onClick={() => onChange([...arrayValue, ''])}
-              style={{ width: '100%' }}
+              fullWidth
             >
               추가
             </Button>
-          </Space>
+          </Stack>
         );
+      }
 
       default:
         return null;
@@ -118,19 +157,17 @@ export const DynamicFormField: React.FC<DynamicFormFieldProps> = ({
   };
 
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <div style={{ marginBottom: '8px' }}>
-        <span style={{ fontWeight: 'bold' }}>
-          {label}
-          {required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}
-        </span>
-      </div>
+    <Box sx={{ mb: 2 }}>
+      <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+        {label}
+        {required && <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>}
+      </Typography>
       {renderField()}
       {help && (
-        <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
           💡 {help}
-        </div>
+        </Typography>
       )}
-    </div>
+    </Box>
   );
 };

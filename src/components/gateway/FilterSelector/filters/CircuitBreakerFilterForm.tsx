@@ -1,6 +1,6 @@
 // CircuitBreaker Filter 폼 컴포넌트
 import React from 'react';
-import { Input, Space, Tag, Select } from 'antd';
+import { TextField, Stack, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorCircuitBreakerFilterArgs } from '../../../../types/gateway';
 
 interface CircuitBreakerFilterFormProps {
@@ -13,104 +13,99 @@ export const CircuitBreakerFilterForm: React.FC<CircuitBreakerFilterFormProps> =
   onChange
 }) => {
   return (
-    <div>
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        {/* Name */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              Circuit Breaker 이름
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Input
-            value={value.name}
-            onChange={(e) => onChange({ ...value, name: e.target.value })}
-            placeholder="예: myCircuitBreaker"
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 Resilience4j 설정에서 참조할 Circuit Breaker 이름
-          </div>
-        </div>
+    <Stack spacing={2}>
+      {/* Name */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          Circuit Breaker 이름
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <TextField
+          value={value.name || ''}
+          onChange={(e) => onChange({ ...value, name: e.target.value })}
+          placeholder="예: myCircuitBreaker"
+          fullWidth
+          size="small"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 Resilience4j 설정에서 참조할 Circuit Breaker 이름
+        </Typography>
+      </Box>
 
-        {/* Fallback URI */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              폴백 URI (선택사항)
-            </span>
-          </div>
-          <Input
-            value={value.fallbackUri || ''}
-            onChange={(e) => onChange({ ...value, fallbackUri: e.target.value })}
-            placeholder="예: forward:/fallback 또는 forward:/error"
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 Circuit이 Open되었을 때 리다이렉트될 URI
-          </div>
-        </div>
+      {/* Fallback URI */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          폴백 URI (선택사항)
+        </Typography>
+        <TextField
+          value={value.fallbackUri || ''}
+          onChange={(e) => onChange({ ...value, fallbackUri: e.target.value })}
+          placeholder="예: forward:/fallback 또는 forward:/error"
+          fullWidth
+          size="small"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 Circuit이 Open되었을 때 리다이렉트될 URI
+        </Typography>
+      </Box>
 
-        {/* Status Codes (선택) */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              실패로 간주할 HTTP 상태 코드 (선택사항)
-            </span>
-          </div>
-          <Input
-            value={value.statusCodes || ''}
-            onChange={(e) => onChange({ ...value, statusCodes: e.target.value })}
-            placeholder="예: 500,502,503,504"
-            style={{ width: '100%' }}
-          />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 쉼표로 구분하여 입력 (비워두면 5xx 에러만 실패로 간주)
-          </div>
-        </div>
-      </Space>
+      {/* Status Codes (선택) */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          실패로 간주할 HTTP 상태 코드 (선택사항)
+        </Typography>
+        <TextField
+          value={value.statusCodes || ''}
+          onChange={(e) => onChange({ ...value, statusCodes: e.target.value })}
+          placeholder="예: 500,502,503,504"
+          fullWidth
+          size="small"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 쉼표로 구분하여 입력 (비워두면 5xx 에러만 실패로 간주)
+        </Typography>
+      </Box>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>CircuitBreaker 설정 예시:</strong>
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="blue" style={{ fontSize: '11px' }}>기본 설정</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">CircuitBreaker 설정 예시:</Typography>
+        <Box sx={{ mt: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Chip label="기본 설정" size="small" color="primary" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               name = <code>backendService</code>
-            </div>
-            <div style={{ marginLeft: '8px', color: '#666' }}>
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block' }}>
               fallbackUri = <code>forward:/service-unavailable</code>
-            </div>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#52c41a' }}>
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1, display: 'block', color: '#52c41a', mt: 0.5 }}>
               → 백엔드 장애 시 폴백 페이지로 리다이렉트
-            </div>
-          </div>
+            </Typography>
+          </Box>
 
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="green" style={{ fontSize: '11px' }}>커스텀 상태 코드</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+          <Box sx={{ mb: 1.5 }}>
+            <Chip label="커스텀 상태 코드" size="small" color="success" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               statusCodes = <code>500,503,504</code>
-            </div>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#52c41a' }}>
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1, display: 'block', color: '#52c41a', mt: 0.5 }}>
               → 지정한 상태 코드만 실패로 간주
-            </div>
-          </div>
+            </Typography>
+          </Box>
 
-          <div style={{ marginBottom: '8px' }}>
-            <Tag color="orange" style={{ fontSize: '11px' }}>폴백 없음</Tag>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#666' }}>
+          <Box sx={{ mb: 1 }}>
+            <Chip label="폴백 없음" size="small" color="warning" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
               fallbackUri = (비워둠)
-            </div>
-            <div style={{ marginLeft: '8px', marginTop: '4px', color: '#52c41a' }}>
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1, display: 'block', color: '#52c41a', mt: 0.5 }}>
               → Circuit Open 시 503 Service Unavailable 반환
-            </div>
-          </div>
-        </div>
-        <div style={{ marginTop: '8px', color: '#fa8c16' }}>
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
           💡 Resilience4j와 통합되어 동작 (application.yml에서 세부 설정 필요)
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Stack>
   );
 };

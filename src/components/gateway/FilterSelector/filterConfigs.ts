@@ -1,5 +1,4 @@
 // Filter 타입별 설정 메타데이터
-import type { ActuatorFilter } from '../../../types/gateway';
 
 export interface FilterConfig {
   name: string;
@@ -7,6 +6,7 @@ export interface FilterConfig {
   description: string;
   icon: string;
   category: 'request' | 'response' | 'url' | 'control' | 'advanced';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultArgs: Record<string, any>;
 }
 

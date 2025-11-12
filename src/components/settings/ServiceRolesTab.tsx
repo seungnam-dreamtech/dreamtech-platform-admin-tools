@@ -1,31 +1,38 @@
 // 서비스 역할 관리 탭
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import {
-  Table,
+  Box,
   Button,
-  Space,
-  Tag,
-  message,
-  Input,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
   Switch,
-  Popconfirm,
-  Select,
   Tooltip,
-} from 'antd';
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  FilterOutlined,
-} from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { ServiceRoleFormModal } from './ServiceRoleFormModal';
 import { userManagementService } from '../../services/userManagementService';
 import type { ServiceRoleDefinition, ServiceScope } from '../../types/user-management';
-
-const { Search } = Input;
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function ServiceRolesTab() {
   const [roles, setRoles] = useState<ServiceRoleDefinition[]>([]);
@@ -35,7 +42,16 @@ export default function ServiceRolesTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<ServiceRoleDefinition | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | undefined>(undefined);
+  const [selectedServiceFilter, setSelectedServiceFilter] = useState<string>('');
+  const snackbar = useSnackbar();
+
+  // 삭제 확인 다이얼로그
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<{
+    serviceId: string;
+    roleName: string;
+    isSystem: boolean;
+  } | null>(null);
 
   // 서비스 목록 조회 (역할 추가 시 서비스 선택용)
   const fetchServices = async () => {
@@ -74,13 +90,13 @@ export default function ServiceRolesTab() {
         }
       } else {
         console.error('⚠️ API response is not an array:', data);
-        message.warning('API 응답 형식이 올바르지 않습니다.');
+        snackbar.warning('API 응답 형식이 올바르지 않습니다.');
       }
 
       setRoles(rolesList);
       setFilteredRoles(rolesList);
     } catch (error) {
-      message.error('서비스 역할 목록 조회에 실패했습니다');
+      snackbar.error('서비스 역할 목록 조회에 실패했습니다');
       console.error('Failed to fetch service roles:', error);
       setRoles([]);
       setFilteredRoles([]);
@@ -99,7 +115,7 @@ export default function ServiceRolesTab() {
     let filtered = [...roles];
 
     // 서비스 필터
-    if (selectedServiceFilter) {
+    if (selectedServiceFilter && selectedServiceFilter !== 'all') {
       filtered = filtered.filter((role) => role.service_id === selectedServiceFilter);
     }
 
@@ -132,13 +148,13 @@ export default function ServiceRolesTab() {
           description: roleData.description,
           permissions: roleData.permissions,
         });
-        message.success('새 서비스 역할이 추가되었습니다');
+        snackbar.success('새 서비스 역할이 추가되었습니다');
         fetchRoles();
       }
       setModalOpen(false);
       setSelectedRole(null);
     } catch (error) {
-      message.error('역할 저장에 실패했습니다');
+      snackbar.error('역할 저장에 실패했습니다');
       console.error('Failed to save service role:', error);
     }
   };
@@ -151,199 +167,188 @@ export default function ServiceRolesTab() {
   ) => {
     try {
       await userManagementService.toggleServiceRoleActivation(serviceId, roleName, isActive);
-      message.success(`역할이 ${isActive ? '활성화' : '비활성화'}되었습니다`);
+      snackbar.success(`역할이 ${isActive ? '활성화' : '비활성화'}되었습니다`);
       fetchRoles();
     } catch (error) {
-      message.error('역할 상태 변경에 실패했습니다');
+      snackbar.error('역할 상태 변경에 실패했습니다');
       console.error('Failed to toggle service role:', error);
     }
   };
 
-  // 역할 삭제
-  const handleDelete = async (
-    serviceId: string,
-    roleName: string,
-    isSystemRole: boolean
-  ) => {
+  // 역할 삭제 확인
+  const confirmDelete = (serviceId: string, roleName: string, isSystemRole: boolean) => {
     if (isSystemRole) {
-      message.warning('시스템 역할은 삭제할 수 없습니다');
+      snackbar.warning('시스템 역할은 삭제할 수 없습니다');
       return;
     }
+    setRoleToDelete({ serviceId, roleName, isSystem: isSystemRole });
+    setDeleteConfirmOpen(true);
+  };
+
+  // 역할 삭제
+  const handleDelete = async () => {
+    if (!roleToDelete) return;
 
     try {
-      await userManagementService.deleteServiceRole(serviceId, roleName);
-      message.success('역할이 삭제되었습니다');
+      await userManagementService.deleteServiceRole(roleToDelete.serviceId, roleToDelete.roleName);
+      snackbar.success('역할이 삭제되었습니다');
       fetchRoles();
     } catch (error) {
-      message.error('역할 삭제에 실패했습니다');
+      snackbar.error('역할 삭제에 실패했습니다');
       console.error('Failed to delete service role:', error);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setRoleToDelete(null);
     }
   };
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<ServiceRoleDefinition> = [
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
     {
-      title: <span style={{ fontSize: '11px' }}>서비스</span>,
-      dataIndex: 'service_id',
-      key: 'service_id',
-      width: 110,
-      sorter: (a, b) => a.service_id.localeCompare(b.service_id),
-      render: (serviceId) => (
-        <span style={{ fontSize: '11px', color: '#1890ff', fontWeight: 500 }}>{serviceId}</span>
+      field: 'service_id',
+      headerName: '서비스',
+      width: 130,
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Typography variant="body2" color="primary" fontWeight={500}>
+          {params.row.service_id}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>Role Name</span>,
-      dataIndex: 'role_name',
-      key: 'role_name',
-      width: 120,
-      sorter: (a, b) => a.role_name.localeCompare(b.role_name),
-      render: (roleName) => (
-        <span style={{ fontWeight: 500, fontSize: '12px' }}>{roleName}</span>
+      field: 'role_name',
+      headerName: 'Role Name',
+      width: 140,
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.role_name}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>타입</span>,
-      dataIndex: 'is_system_role',
-      key: 'is_system_role',
-      width: 85,
+      field: 'is_system_role',
+      headerName: '타입',
+      width: 90,
       align: 'center',
-      filters: [
-        { text: '시스템', value: true },
-        { text: '사용자', value: false },
-      ],
-      onFilter: (value, record) => record.is_system_role === value,
-      render: (isSystemRole: boolean) =>
-        isSystemRole ? (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) =>
+        params.row.is_system_role ? (
           <Tooltip title="시스템 역할 (삭제/비활성화 불가)">
-            <Tag color="red" style={{ fontSize: '10px', margin: 0 }}>
-              SYSTEM
-            </Tag>
+            <Chip label="SYSTEM" color="error" size="small" />
           </Tooltip>
         ) : (
-          <Tag color="green" style={{ fontSize: '10px', margin: 0 }}>
-            사용자
-          </Tag>
+          <Chip label="사용자" color="success" size="small" />
         ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>표시명</span>,
-      dataIndex: 'display_name',
-      key: 'display_name',
-      width: 130,
-      ellipsis: true,
-      render: (text) => <span style={{ fontSize: '12px' }}>{text}</span>,
-    },
-    {
-      title: <span style={{ fontSize: '11px' }}>설명</span>,
-      dataIndex: 'description',
-      key: 'description',
-      width: 200,
-      ellipsis: true,
-      render: (text) => <span style={{ fontSize: '11px', color: '#666' }}>{text || '-'}</span>,
-    },
-    {
-      title: <span style={{ fontSize: '11px' }}>권한 수</span>,
-      dataIndex: 'permissions',
-      key: 'permissions',
-      width: 70,
-      align: 'center',
-      render: (permissions: string[]) => (
-        <span style={{ fontSize: '11px', color: '#666' }}>{permissions?.length || 0}</span>
+      field: 'display_name',
+      headerName: '표시명',
+      width: 140,
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Typography variant="body2">{params.row.display_name}</Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>상태</span>,
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 70,
+      field: 'description',
+      headerName: '설명',
+      width: 200,
+      flex: 1,
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Typography variant="body2" color="textSecondary" noWrap>
+          {params.row.description || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'permissions',
+      headerName: '권한 수',
+      width: 80,
       align: 'center',
-      filters: [
-        { text: '활성', value: true },
-        { text: '비활성', value: false },
-      ],
-      onFilter: (value, record) => record.is_active === value,
-      render: (isActive: boolean, record) => (
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Typography variant="body2" color="textSecondary">
+          {params.row.permissions?.length || 0}
+        </Typography>
+      ),
+    },
+    {
+      field: 'is_active',
+      headerName: '상태',
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
         <Switch
           size="small"
-          checked={isActive}
-          onChange={(checked) =>
-            handleToggleActive(record.service_id, record.role_name, checked)
+          checked={params.row.is_active}
+          onChange={(e) =>
+            handleToggleActive(params.row.service_id, params.row.role_name, e.target.checked)
           }
-          disabled={record.is_system_role}
+          disabled={params.row.is_system_role}
         />
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>생성일</span>,
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 100,
-      sorter: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      render: (date) => (
-        <span style={{ fontSize: '10px', color: '#999' }}>
-          {new Date(date).toLocaleDateString('ko-KR')}
-        </span>
+      field: 'created_at',
+      headerName: '생성일',
+      width: 110,
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Typography variant="body2" color="textSecondary">
+          {new Date(params.row.created_at).toLocaleDateString('ko-KR')}
+        </Typography>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>작업</span>,
-      key: 'actions',
+      field: 'actions',
+      headerName: '작업',
       width: 100,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size={4}>
-          <Button
-            icon={<EditOutlined />}
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<ServiceRoleDefinition>) => (
+        <Box>
+          <IconButton
             size="small"
-            type="text"
             onClick={() => {
-              setSelectedRole(record);
+              setSelectedRole(params.row);
               setModalOpen(true);
             }}
-          />
-          <Popconfirm
-            title="역할 삭제"
-            description="정말로 이 역할을 삭제하시겠습니까?"
-            onConfirm={() =>
-              handleDelete(record.service_id, record.role_name, record.is_system_role)
-            }
-            okText="삭제"
-            cancelText="취소"
-            disabled={record.is_system_role}
           >
-            <Button
-              icon={<DeleteOutlined />}
-              size="small"
-              type="text"
-              danger
-              disabled={record.is_system_role}
-            />
-          </Popconfirm>
-        </Space>
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            color="error"
+            disabled={params.row.is_system_role}
+            onClick={() =>
+              confirmDelete(params.row.service_id, params.row.role_name, params.row.is_system_role)
+            }
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
       ),
     },
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h6" fontWeight={600}>
             서비스 역할 ({filteredRoles.length}개)
-          </span>
-          <span style={{ marginLeft: 8, color: '#999' }}>
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
             특정 서비스에만 적용되는 역할
-          </span>
-        </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={fetchRoles} loading={loading}>
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchRoles} disabled={loading}>
             새로고침
           </Button>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => {
               setSelectedRole(null);
               setModalOpen(true);
@@ -351,48 +356,67 @@ export default function ServiceRolesTab() {
           >
             역할 추가
           </Button>
-        </Space>
-      </div>
+        </Box>
+      </Box>
 
       {/* 필터 및 검색 */}
-      <Space style={{ width: '100%' }} size="middle">
-        <Select
-          placeholder="서비스 필터"
-          allowClear
-          style={{ width: 250 }}
-          value={selectedServiceFilter}
-          onChange={setSelectedServiceFilter}
-          suffixIcon={<FilterOutlined />}
-          options={[
-            { label: '전체 서비스', value: undefined },
-            ...services.map((s) => ({
-              label: `${s.service_id} (${s.description})`,
-              value: s.service_id,
-            })),
-          ]}
-        />
-        <Search
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <FormControl sx={{ minWidth: 250 }} size="small">
+          <InputLabel>서비스 필터</InputLabel>
+          <Select
+            value={selectedServiceFilter || 'all'}
+            onChange={(e) => setSelectedServiceFilter(e.target.value === 'all' ? '' : e.target.value)}
+            label="서비스 필터"
+          >
+            <MenuItem value="all">전체 서비스</MenuItem>
+            {services.map((s) => (
+              <MenuItem key={s.service_id} value={s.service_id}>
+                {s.service_id} ({s.description})
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TextField
           placeholder="Role Name, 표시명 또는 설명으로 검색"
-          allowClear
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
-          style={{ flex: 1, maxWidth: 400 }}
+          size="small"
+          sx={{ flex: 1, maxWidth: 400 }}
+          slotProps={{
+            input: {
+              endAdornment: searchKeyword && (
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+            },
+          }}
         />
-      </Space>
+      </Box>
 
       {/* 테이블 */}
-      <Table
-        columns={columns}
-        dataSource={filteredRoles}
-        rowKey={(record) => `${record.service_id}:${record.role_name}`}
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개`,
-        }}
-        scroll={{ x: 1500 }}
-      />
+      <Box sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredRoles}
+          columns={columns}
+          getRowId={(row) => `${row.service_id}:${row.role_name}`}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+            sorting: { sortModel: [{ field: 'service_id', sort: 'asc' }] },
+          }}
+          disableRowSelectionOnClick
+          sx={{
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
+      </Box>
 
       {/* 역할 추가/수정 모달 */}
       <ServiceRoleFormModal
@@ -405,6 +429,20 @@ export default function ServiceRolesTab() {
         role={selectedRole}
         services={services}
       />
-    </Space>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>역할 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>정말로 이 역할을 삭제하시겠습니까?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>취소</Button>
+          <Button color="error" variant="contained" onClick={handleDelete}>
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

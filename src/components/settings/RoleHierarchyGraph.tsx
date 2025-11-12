@@ -1,4 +1,5 @@
 // 역할 계층 구조 그래프 시각화 컴포넌트 (Neo4J 스타일)
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useCallback, useMemo } from 'react';
 import ReactFlow, {
@@ -6,7 +7,6 @@ import ReactFlow, {
   Background,
   MarkerType,
   Position,
-  ConnectionLineType,
   useNodesState,
   useEdgesState,
   Panel,
@@ -15,10 +15,8 @@ import ReactFlow, {
 import type { Node, Edge } from 'reactflow';
 import dagre from 'dagre';
 import 'reactflow/dist/style.css';
-import { Typography, Tooltip } from 'antd';
+import { Typography, Tooltip } from '@mui/material';
 import type { GlobalRole } from '../../types/user-management';
-
-const { Text } = Typography;
 
 interface RoleHierarchyGraphProps {
   allRoles: GlobalRole[];
@@ -121,7 +119,7 @@ function RoleNode({ data }: { data: any }) {
   );
 
   return (
-    <Tooltip title={tooltipContent} placement="top">
+    <Tooltip title={tooltipContent} placement="top" arrow>
       <>
         <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
         <div
@@ -146,16 +144,17 @@ function RoleNode({ data }: { data: any }) {
             e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
           }}
         >
-          <Text
-            strong
-            style={{
+          <Typography
+            variant="body2"
+            sx={{
               fontSize: '13px',
               color: textColor,
               userSelect: 'none',
+              fontWeight: 'bold',
             }}
           >
             {role.role_id}
-          </Text>
+          </Typography>
         </div>
         <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
       </>
@@ -213,8 +212,8 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         isAncestor: ancestors.has(role.role_id),
         isDescendant: descendants.has(role.role_id),
       },
-      sourcePosition: 'bottom' as const,
-      targetPosition: 'top' as const,
+      sourcePosition: Position.Bottom,
+      targetPosition: Position.Top,
     }));
 
     // 관련된 역할들 사이의 부모-자식 관계만 엣지로 생성
@@ -271,8 +270,8 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
     return layouted;
   }, [allRoles, currentRoleId, ancestors, descendants]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedElements.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedElements.edges);
+  const [nodes, , onNodesChange] = useNodesState(layoutedElements.nodes);
+  const [edges, , onEdgesChange] = useEdgesState(layoutedElements.edges);
 
   console.log('⚛️ React State - 노드 개수:', nodes.length, '엣지 개수:', edges.length);
   console.log('⚛️ React State - 노드:', nodes);
@@ -334,11 +333,9 @@ export function RoleHierarchyGraph({ allRoles, currentRoleId }: RoleHierarchyGra
         <Controls
           showInteractive={false}
           style={{
-            button: {
-              backgroundColor: '#fff',
-              border: '1px solid #d9d9d9',
-              borderRadius: '4px',
-            },
+            backgroundColor: '#fff',
+            border: '1px solid #d9d9d9',
+            borderRadius: '4px',
           }}
         />
         <Panel

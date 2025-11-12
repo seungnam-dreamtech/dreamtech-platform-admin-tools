@@ -1,7 +1,27 @@
 // Filter 선택 및 관리 컴포넌트
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import { Select, Button, Space, Card, Tag, Empty } from 'antd';
-import { PlusOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import {
+  Select,
+  MenuItem,
+  Button,
+  Stack,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Box,
+  FormControl,
+  InputLabel,
+  Typography,
+  IconButton
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  ArrowUpward as ArrowUpIcon,
+  ArrowDownward as ArrowDownIcon
+} from '@mui/icons-material';
 import { FormSection } from '../common/FormSection';
 import { FILTER_CONFIGS, FILTER_CATEGORIES, getFiltersByCategory } from './filterConfigs';
 import { AddHeaderFilterForm } from './filters/AddHeaderFilterForm';
@@ -76,7 +96,7 @@ export const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (!config) return null;
 
     let FormComponent: React.ComponentType<any> | null = null;
-    let formProps: any = { value: filter.args, onChange: (newArgs: any) => handleFilterChange(index, newArgs) };
+    const formProps: any = { value: filter.args, onChange: (newArgs: any) => handleFilterChange(index, newArgs) };
 
     switch (filter.name) {
       case 'AddRequestHeader':
@@ -137,10 +157,12 @@ export const FilterSelector: React.FC<FilterSelectorProps> = ({
         break;
       default:
         return (
-          <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-            <Tag color="orange">미구현</Tag>
-            <span style={{ marginLeft: '8px' }}>{config.label} 폼은 아직 구현 중입니다</span>
-          </div>
+          <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Chip label="미구현" color="warning" size="small" />
+            <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+              {config.label} 폼은 아직 구현 중입니다
+            </Typography>
+          </Box>
         );
     }
 
@@ -148,64 +170,74 @@ export const FilterSelector: React.FC<FilterSelectorProps> = ({
   };
 
   const filteredFilters = getFiltersByCategory(selectedCategory);
-  const filterOptions = filteredFilters.map(config => ({
-    label: (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span>{config.icon}</span>
-        <span>{config.label}</span>
-        <Tag color="blue" style={{ fontSize: '10px', marginLeft: 'auto' }}>
-          {config.category}
-        </Tag>
-      </div>
-    ),
-    value: config.name
-  }));
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Stack spacing={3}>
       {/* 추가 영역 */}
       <FormSection
         title="필터 추가하기"
         description="요청/응답 변환 필터를 선택하고 추가합니다"
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="small">
+        <Stack spacing={2}>
           {/* 카테고리 선택 */}
-          <div>
-            <span style={{ fontWeight: 'bold', marginRight: '8px' }}>카테고리:</span>
-            <Select
-              value={selectedCategory}
-              onChange={(val) => {
-                setSelectedCategory(val);
-                setSelectedType('');
-              }}
-              style={{ width: '200px' }}
-              options={FILTER_CATEGORIES}
-            />
-          </div>
+          <Box>
+            <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+              카테고리:
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>전체</InputLabel>
+              <Select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setSelectedType('');
+                }}
+                label="전체"
+              >
+                {FILTER_CATEGORIES.map((cat) => (
+                  <MenuItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
           {/* 필터 선택 */}
-          <Space style={{ width: '100%' }}>
-            <Select
-              value={selectedType}
-              onChange={setSelectedType}
-              placeholder="Filter 타입 선택"
-              style={{ width: '400px' }}
-              options={filterOptions}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.value as string).toLowerCase().includes(input.toLowerCase())
-              }
-            />
+          <Stack direction="row" spacing={1}>
+            <FormControl size="small" sx={{ flex: 1, maxWidth: 400 }}>
+              <InputLabel>Filter 타입 선택</InputLabel>
+              <Select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                label="Filter 타입 선택"
+              >
+                {filteredFilters.map((config) => (
+                  <MenuItem key={config.name} value={config.name}>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ width: '100%' }}>
+                      <span>{config.icon}</span>
+                      <span>{config.label}</span>
+                      <Chip
+                        label={config.category}
+                        size="small"
+                        color="primary"
+                        sx={{ ml: 'auto', fontSize: '10px' }}
+                      />
+                    </Stack>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Button
-              type="primary"
-              icon={<PlusOutlined />}
+              variant="contained"
+              startIcon={<AddIcon />}
               onClick={handleAddFilter}
               disabled={!selectedType}
             >
               추가
             </Button>
-          </Space>
-        </Space>
+          </Stack>
+        </Stack>
       </FormSection>
 
       {/* 추가된 Filter 목록 */}
@@ -214,69 +246,74 @@ export const FilterSelector: React.FC<FilterSelectorProps> = ({
         description="위에서 아래 순서대로 실행됩니다"
         extra={
           value.length > 0 && (
-            <Tag color="cyan" style={{ fontSize: '11px' }}>
-              ↑↓ 버튼으로 순서 조정 가능
-            </Tag>
+            <Chip label="↑↓ 버튼으로 순서 조정 가능" size="small" color="info" />
           )
         }
       >
         {value.length === 0 ? (
-          <Empty
-            description="추가된 필터가 없습니다"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
+          <Box sx={{ textAlign: 'center', py: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              추가된 필터가 없습니다
+            </Typography>
+          </Box>
         ) : (
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <Stack spacing={2}>
             {value.map((filter, index) => {
               const config = FILTER_CONFIGS[filter.name];
               return (
-                <Card
-                  key={index}
-                  size="small"
-                  title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Tag color="purple" style={{ fontSize: '11px', fontFamily: 'monospace' }}>
-                        #{index + 1}
-                      </Tag>
-                      <span>{config?.icon || '🔸'}</span>
-                      <span>{config?.label || filter.name}</span>
-                    </div>
-                  }
-                  extra={
-                    <Space size="small">
-                      <Button
-                        type="text"
-                        icon={<ArrowUpOutlined />}
-                        onClick={() => handleMoveUp(index)}
-                        disabled={index === 0}
-                        title="위로 이동"
-                      />
-                      <Button
-                        type="text"
-                        icon={<ArrowDownOutlined />}
-                        onClick={() => handleMoveDown(index)}
-                        disabled={index === value.length - 1}
-                        title="아래로 이동"
-                      />
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleRemoveFilter(index)}
-                      >
-                        삭제
-                      </Button>
-                    </Space>
-                  }
-                  style={{ border: '1px solid #d9d9d9' }}
-                >
-                  {renderFilterForm(filter, index)}
+                <Card key={index} variant="outlined">
+                  <CardHeader
+                    title={
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip
+                          label={`#${index + 1}`}
+                          size="small"
+                          color="secondary"
+                        />
+                        <span>{config?.icon || '🔸'}</span>
+                        <Typography variant="body2" fontWeight="bold">
+                          {config?.label || filter.name}
+                        </Typography>
+                      </Stack>
+                    }
+                    action={
+                      <Stack direction="row" spacing={0.5}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMoveUp(index)}
+                          disabled={index === 0}
+                          title="위로 이동"
+                        >
+                          <ArrowUpIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMoveDown(index)}
+                          disabled={index === value.length - 1}
+                          title="아래로 이동"
+                        >
+                          <ArrowDownIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveFilter(index)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    }
+                    sx={{ pb: 0 }}
+                  />
+                  <CardContent>
+                    {renderFilterForm(filter, index)}
+                  </CardContent>
                 </Card>
               );
             })}
-          </Space>
+          </Stack>
         )}
       </FormSection>
-    </Space>
+    </Stack>
   );
 };

@@ -1,7 +1,8 @@
 // Spring Cloud Gateway Actuator API 데이터 변환 유틸리티
 // UI의 배열 형식을 API의 _genkey_N 형식으로 변환
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { ActuatorPredicate, ActuatorFilter } from '../types/gateway';
+import type { ActuatorPredicate, ActuatorFilter, ActuatorCircuitBreakerFilterArgs, ActuatorModifyBodyFilterArgs } from '../types/gateway';
 
 /**
  * UI 배열을 Actuator API의 _genkey_N 형식으로 변환
@@ -363,13 +364,14 @@ export function convertFilterArgsToApi(filter: ActuatorFilter): ActuatorFilter {
     case 'CircuitBreaker': {
       // name과 fallbackUri를 _genkey_N으로 변환
       const apiArgs: Record<string, string> = {};
+      const cbArgs = args as ActuatorCircuitBreakerFilterArgs;
 
-      if ('name' in args) {
-        apiArgs._genkey_0 = args.name;
+      if ('name' in cbArgs && cbArgs.name) {
+        apiArgs._genkey_0 = cbArgs.name;
       }
 
-      if ('fallbackUri' in args && args.fallbackUri) {
-        apiArgs._genkey_1 = args.fallbackUri;
+      if ('fallbackUri' in cbArgs && cbArgs.fallbackUri) {
+        apiArgs._genkey_1 = cbArgs.fallbackUri;
       }
 
       return {
@@ -420,13 +422,14 @@ export function convertFilterArgsToApi(filter: ActuatorFilter): ActuatorFilter {
     case 'ModifyResponseBody': {
       // contentType과 rewriteFunction을 _genkey_N으로 변환
       const apiArgs: Record<string, string> = {};
+      const modArgs = args as ActuatorModifyBodyFilterArgs;
 
-      if ('contentType' in args) {
-        apiArgs._genkey_0 = args.contentType;
+      if ('contentType' in modArgs && modArgs.contentType) {
+        apiArgs._genkey_0 = modArgs.contentType;
       }
 
-      if ('rewriteFunction' in args) {
-        apiArgs._genkey_1 = args.rewriteFunction;
+      if ('rewriteFunction' in modArgs && modArgs.rewriteFunction) {
+        apiArgs._genkey_1 = modArgs.rewriteFunction;
       }
 
       return {

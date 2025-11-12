@@ -1,60 +1,187 @@
 // API Gateway 실제 라우트 관리 페이지
 import React, { useState, useEffect } from 'react';
 import {
-  Table,
+  Box,
   Button,
-  Space,
-  Tag,
-  message,
+  Chip,
   Alert,
   Badge,
   Tooltip,
-  Modal,
-  Spin,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  CircularProgress,
   Select,
+  MenuItem,
   Tabs,
-  Descriptions,
-  App,
-  Input,
+  Tab,
+  TextField,
   Typography,
   Card,
-  Row,
-  Col,
-  Statistic,
-} from 'antd';
+  CardContent,
+  Paper,
+  Stack,
+  InputAdornment,
+  IconButton,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import type {
+  GridColDef,
+  GridRowParams,
+} from '@mui/x-data-grid';
 import {
-  ReloadOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ApiOutlined,
-  PlusOutlined,
-  FilterOutlined,
-  GlobalOutlined,
-} from '@ant-design/icons';
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  FilterList as FilterListIcon,
+  Search as SearchIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
 
-const { Text } = Typography;
-import type { ColumnsType } from 'antd/es/table';
 import { gatewayService } from '../../services/gatewayService';
-import type { GatewayRoute, GatewayMetrics, RouteMetrics, RouteDefinitionResponse, ActuatorRouteResponse } from '../../types/gateway'
+import type { GatewayRoute, RouteMetrics, RouteDefinitionResponse, ActuatorRouteResponse } from '../../types/gateway'
 import { convertRouteDefinitionToGatewayRoute } from '../../utils/gatewayConverter';
 import { getFilterTypeColor, getPredicateTypeColor } from '../../utils/messageParser';
 import { parsePredicateString, parseFilterStrings } from '../../utils/routeParser';
 import { RouteFormModal } from '../../components/gateway/RouteFormModal/RouteFormModal';
-import styles from './GatewayRoutes.module.css';
-
-const { TabPane } = Tabs;
-const { Search } = Input;
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
 interface RouteWithMetrics extends GatewayRoute {
   metrics?: RouteMetrics;
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: string;
+  value: string;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+// Statistic 컴포넌트 대체
+interface StatisticProps {
+  title: string;
+  value: number | string;
+  suffix?: string;
+}
+
+function Statistic({ title, value, suffix }: StatisticProps) {
+  return (
+    <Box>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        {title}
+      </Typography>
+      <Typography variant="h4" component="div">
+        {value}{suffix}
+      </Typography>
+    </Box>
+  );
+}
+
+// Descriptions 컴포넌트 대체
+interface DescriptionItemProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+function DescriptionItem({ label, children }: DescriptionItemProps) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '200px 1fr',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        py: 1.5,
+        '&:last-child': {
+          borderBottom: 'none',
+        },
+      }}
+    >
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 600,
+          color: 'text.secondary',
+          px: 2,
+          bgcolor: 'grey.50',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        {label}
+      </Typography>
+      <Box sx={{ px: 2, display: 'flex', alignItems: 'center' }}>
+        {children}
+      </Box>
+    </Box>
+  );
+}
+
+interface DescriptionsProps {
+  children: React.ReactNode;
+}
+
+function Descriptions({ children }: DescriptionsProps) {
+  return (
+    <Paper variant="outlined" sx={{ border: '1px solid', borderColor: 'divider' }}>
+      {children}
+    </Paper>
+  );
+}
+
+// Confirm Dialog
+interface ConfirmDialogProps {
+  open: boolean;
+  title: string;
+  content: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ConfirmDialog({ open, title, content, onConfirm, onCancel }: ConfirmDialogProps) {
+  return (
+    <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <Typography>{content}</Typography>
+      </DialogContent>
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Button onClick={onCancel}>취소</Button>
+        <Button onClick={onConfirm} variant="contained" color="error">
+          삭제
+        </Button>
+      </Box>
+    </Dialog>
+  );
+}
+
 const GatewayRoutes: React.FC = () => {
-  const { modal } = App.useApp();
+  const snackbar = useSnackbar();
 
   const [loading, setLoading] = useState(false);
   const [routes, setRoutes] = useState<RouteWithMetrics[]>([]);
-  const [gatewayMetrics, setGatewayMetrics] = useState<GatewayMetrics | null>(null);
   const [routeMetrics, setRouteMetrics] = useState<RouteMetrics[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<GatewayRoute | null>(null);
@@ -68,6 +195,8 @@ const GatewayRoutes: React.FC = () => {
   const [routeFormModalVisible, setRouteFormModalVisible] = useState(false);
   const [editingRoute, setEditingRoute] = useState<RouteDefinitionResponse | undefined>(undefined);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<GatewayRoute | null>(null);
 
   // 데이터 로드
   const loadRoutes = async () => {
@@ -84,11 +213,11 @@ const GatewayRoutes: React.FC = () => {
       });
 
       setRoutes(convertedRoutes);
-      message.success(`${convertedRoutes.length}개의 라우트를 로드했습니다.`);
+      snackbar.success(`${convertedRoutes.length}개의 라우트를 로드했습니다.`);
     } catch (error) {
       console.error('Failed to load routes:', error);
       setError('라우트 정보를 불러오는데 실패했습니다.');
-      message.error('라우트 정보 로드 실패');
+      snackbar.error('라우트 정보 로드 실패');
     } finally {
       setLoading(false);
     }
@@ -97,12 +226,11 @@ const GatewayRoutes: React.FC = () => {
   const loadMetrics = async () => {
     try {
       console.log('📊 Loading gateway metrics...');
-      const [gatewayMetricsData, routeMetricsData] = await Promise.all([
+      const [, routeMetricsData] = await Promise.all([
         gatewayService.getGatewayMetrics().catch(() => null),
         gatewayService.getRouteMetrics().catch(() => [])
       ]);
 
-      setGatewayMetrics(gatewayMetricsData);
       setRouteMetrics(routeMetricsData);
     } catch (error) {
       console.error('Failed to load metrics:', error);
@@ -124,10 +252,10 @@ const GatewayRoutes: React.FC = () => {
     try {
       await gatewayService.refreshRoutes();
       await loadRoutes();
-      message.success('라우트를 새로고침했습니다.');
+      snackbar.success('라우트를 새로고침했습니다.');
     } catch (error) {
       console.error('Failed to refresh routes:', error);
-      message.error('라우트 새로고침 실패');
+      snackbar.error('라우트 새로고침 실패');
     } finally {
       setLoading(false);
     }
@@ -145,7 +273,7 @@ const GatewayRoutes: React.FC = () => {
       setRouteDetail(detail);
     } catch (error) {
       console.error('Failed to load route detail:', error);
-      message.error('라우트 상세 정보 로드 실패');
+      snackbar.error('라우트 상세 정보 로드 실패');
     } finally {
       setDetailLoading(false);
     }
@@ -193,51 +321,49 @@ const GatewayRoutes: React.FC = () => {
         setEditingRoute(convertedRouteDefinition);
         setRouteFormModalVisible(true);
       } else {
-        message.error('라우트 정보를 찾을 수 없습니다');
+        snackbar.error('라우트 정보를 찾을 수 없습니다');
       }
     } catch (error) {
       console.error('Failed to load route for editing:', error);
-      message.error('라우트 정보 로드 실패');
+      snackbar.error('라우트 정보 로드 실패');
     }
   };
 
   // 라우트 삭제 핸들러
   const handleDeleteRoute = (route: GatewayRoute) => {
     console.log('🗑️ handleDeleteRoute called for:', route.id);
+    setRouteToDelete(route);
+    setConfirmDialogOpen(true);
+  };
 
-    modal.confirm({
-      title: '라우트 삭제',
-      content: `정말로 라우트 "${route.id}"를 삭제하시겠습니까?`,
-      okText: '삭제',
-      okType: 'danger',
-      cancelText: '취소',
-      centered: true,
-      maskClosable: false,
-      keyboard: true,
-      zIndex: 1000,
-      onOk: async () => {
-        console.log('✅ Delete confirmed for:', route.id);
-        try {
-          setLoading(true);
-          console.log('🔄 Calling deleteRoute API...');
-          await gatewayService.deleteRoute(route.id);
-          console.log('✅ Delete API call successful');
-          message.success(`라우트 "${route.id}"가 삭제되었습니다.`);
+  const confirmDelete = async () => {
+    if (!routeToDelete) return;
 
-          console.log('🔄 Reloading routes...');
-          await loadRoutes(); // 라우트 목록 새로고침
-          console.log('✅ Routes reloaded');
-        } catch (error) {
-          console.error('❌ Failed to delete route:', error);
-          message.error('라우트 삭제에 실패했습니다.');
-        } finally {
-          setLoading(false);
-        }
-      },
-      onCancel: () => {
-        console.log('❌ Delete cancelled for:', route.id);
-      },
-    });
+    console.log('✅ Delete confirmed for:', routeToDelete.id);
+    try {
+      setLoading(true);
+      console.log('🔄 Calling deleteRoute API...');
+      await gatewayService.deleteRoute(routeToDelete.id);
+      console.log('✅ Delete API call successful');
+      snackbar.success(`라우트 "${routeToDelete.id}"가 삭제되었습니다.`);
+
+      console.log('🔄 Reloading routes...');
+      await loadRoutes(); // 라우트 목록 새로고침
+      console.log('✅ Routes reloaded');
+    } catch (error) {
+      console.error('❌ Failed to delete route:', error);
+      snackbar.error('라우트 삭제에 실패했습니다.');
+    } finally {
+      setLoading(false);
+      setConfirmDialogOpen(false);
+      setRouteToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    console.log('❌ Delete cancelled for:', routeToDelete?.id);
+    setConfirmDialogOpen(false);
+    setRouteToDelete(null);
   };
 
   // 서비스별 그룹핑 및 통계 계산을 위한 헬퍼 함수
@@ -339,217 +465,250 @@ const GatewayRoutes: React.FC = () => {
 
   const filteredRoutes = getFilteredRoutes();
 
-
   // 테이블 컬럼 정의
-  const columns: ColumnsType<RouteWithMetrics> = [
+  const columns: GridColDef[] = [
     {
-      title: <span style={{ fontSize: '11px' }}>Route ID</span>,
-      dataIndex: 'id',
-      key: 'id',
+      field: 'id',
+      headerName: 'Route ID',
       width: 180,
-      render: (id: string) => (
-        <code style={{ fontSize: '11px', background: '#f5f5f5', padding: '2px 6px', borderRadius: '3px', fontWeight: 500 }}>
-          {id}
-        </code>
+      renderCell: (params) => (
+        <Box
+          component="code"
+          sx={{
+            fontSize: '11px',
+            background: '#f5f5f5',
+            padding: '2px 6px',
+            borderRadius: '3px',
+            fontWeight: 500,
+          }}
+        >
+          {params.value}
+        </Box>
       ),
     },
     {
-      title: <span style={{ fontSize: '11px' }}>Service URI</span>,
-      dataIndex: 'uri',
-      key: 'uri',
+      field: 'uri',
+      headerName: 'Service URI',
       width: 250,
-      ellipsis: true,
-      render: (uri: string) => (
-        <Tooltip title={uri}>
-          <span style={{ fontSize: '11px', color: '#1890ff' }}>
-            {uri}
-          </span>
+      renderCell: (params) => (
+        <Tooltip title={params.value}>
+          <Typography variant="body2" sx={{ fontSize: '11px', color: 'primary.main' }}>
+            {params.value}
+          </Typography>
         </Tooltip>
       ),
     },
     {
-      title: 'Path',
-      key: 'path',
+      field: 'path',
+      headerName: 'Path',
       width: 220,
-      render: (_, record) => {
-        const paths = record.conditions.path || [];
+      renderCell: (params) => {
+        const paths = params.row.conditions.path || [];
 
-        if (paths.length === 0) return <Text type="secondary">-</Text>;
+        if (paths.length === 0) return <Typography color="text.secondary">-</Typography>;
 
         return (
-          <div>
-            {paths.slice(0, 1).map((path, index) => (
-              <div key={index} style={{
-                fontSize: '12px',
-                fontFamily: 'Monaco, Consolas, monospace',
-                background: '#f5f5f5',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #d9d9d9',
-                marginBottom: '2px',
-                color: '#1890ff'
-              }}>
+          <Box>
+            {paths.slice(0, 1).map((path: string, index: number) => (
+              <Box
+                key={index}
+                sx={{
+                  fontSize: '12px',
+                  fontFamily: 'Monaco, Consolas, monospace',
+                  background: '#f5f5f5',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  border: '1px solid #d9d9d9',
+                  marginBottom: '2px',
+                  color: 'primary.main',
+                }}
+              >
                 {path}
-              </div>
+              </Box>
             ))}
             {paths.length > 1 && (
-              <Tooltip title={
-                <div>
-                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>모든 경로:</div>
-                  {paths.map((p, i) => (
-                    <div key={i} style={{ fontFamily: 'monospace', fontSize: '11px' }}>
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              }>
-                <Text style={{
-                  fontSize: '10px',
-                  color: '#666',
-                  cursor: 'pointer'
-                }}>
+              <Tooltip
+                title={
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                      모든 경로:
+                    </Typography>
+                    {paths.map((p: string, i: number) => (
+                      <Typography
+                        key={i}
+                        variant="body2"
+                        sx={{ fontFamily: 'monospace', fontSize: '11px' }}
+                      >
+                        {p}
+                      </Typography>
+                    ))}
+                  </Box>
+                }
+              >
+                <Typography
+                  sx={{
+                    fontSize: '10px',
+                    color: '#666',
+                    cursor: 'pointer',
+                  }}
+                >
                   +{paths.length - 1}개 더
-                </Text>
+                </Typography>
               </Tooltip>
             )}
-          </div>
+          </Box>
         );
       },
     },
     {
-      title: 'Method',
-      key: 'method',
+      field: 'method',
+      headerName: 'Method',
       width: 120,
-      render: (_, record) => {
-        const methods = record.conditions.method || [];
+      renderCell: (params) => {
+        const methods = params.row.conditions.method || [];
 
-        if (methods.length === 0) return <Text type="secondary">ALL</Text>;
+        if (methods.length === 0) return <Typography color="text.secondary">ALL</Typography>;
 
         return (
-          <Space wrap>
-            {methods.map((method, index) => {
-              let color = 'default';
+          <Stack direction="row" spacing={0.5} flexWrap="wrap">
+            {methods.map((method: string, index: number) => {
+              let color: 'success' | 'primary' | 'warning' | 'error' | 'secondary' | 'default' = 'default';
               switch (method) {
-                case 'GET': color = 'green'; break;
-                case 'POST': color = 'blue'; break;
-                case 'PUT': color = 'orange'; break;
-                case 'DELETE': color = 'red'; break;
-                case 'PATCH': color = 'purple'; break;
+                case 'GET': color = 'success'; break;
+                case 'POST': color = 'primary'; break;
+                case 'PUT': color = 'warning'; break;
+                case 'DELETE': color = 'error'; break;
+                case 'PATCH': color = 'secondary'; break;
               }
 
               return (
-                <Tag key={index} color={color} style={{ fontSize: '10px', fontWeight: 'bold' }}>
-                  {method}
-                </Tag>
+                <Chip
+                  key={index}
+                  label={method}
+                  color={color}
+                  size="small"
+                  sx={{ fontSize: '10px', fontWeight: 'bold', height: '20px' }}
+                />
               );
             })}
-          </Space>
+          </Stack>
         );
       },
     },
     {
-      title: 'Priority',
-      dataIndex: 'order',
-      key: 'priority',
+      field: 'order',
+      headerName: 'Priority',
       width: 80,
-      sorter: (a, b) => a.order - b.order,
-      render: (order: number) => {
-        let color = 'default';
+      sortable: true,
+      renderCell: (params) => {
+        const order = params.value as number;
+        let color: 'error' | 'warning' | 'success' = 'success';
 
         if (order < 0) {
-          color = 'red';
+          color = 'error';
         } else if (order < 100) {
-          color = 'orange';
+          color = 'warning';
         } else {
-          color = 'green';
+          color = 'success';
         }
 
         return (
-          <div style={{ textAlign: 'center' }}>
-            <Tag color={color} style={{
-              fontSize: '11px',
-              fontWeight: 'bold',
-              fontFamily: 'monospace',
-              minWidth: '36px',
-              textAlign: 'center'
-            }}>
-              {order}
-            </Tag>
-          </div>
+          <Box sx={{ textAlign: 'center' }}>
+            <Chip
+              label={order}
+              color={color}
+              size="small"
+              sx={{
+                fontSize: '11px',
+                fontWeight: 'bold',
+                fontFamily: 'monospace',
+                minWidth: '36px',
+              }}
+            />
+          </Box>
         );
       },
     },
     {
-      title: 'Status',
-      dataIndex: 'enabled',
-      key: 'status',
+      field: 'enabled',
+      headerName: 'Status',
       width: 80,
-      sorter: (a, b) => Number(b.enabled) - Number(a.enabled),
-      render: (enabled: boolean) => (
-        <div style={{ textAlign: 'center' }}>
-          <Tag color={enabled ? 'green' : 'red'} style={{
-            fontSize: '10px',
-            fontWeight: 'bold'
-          }}>
-            {enabled ? 'Active' : 'Inactive'}
-          </Tag>
-        </div>
+      sortable: true,
+      renderCell: (params) => (
+        <Box sx={{ textAlign: 'center' }}>
+          <Chip
+            label={params.value ? 'Active' : 'Inactive'}
+            color={params.value ? 'success' : 'error'}
+            size="small"
+            sx={{
+              fontSize: '10px',
+              fontWeight: 'bold',
+            }}
+          />
+        </Box>
       ),
     },
     {
-      title: '작업',
-      key: 'actions',
-      width: 100,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
+      field: 'actions',
+      headerName: '작업',
+      width: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5}>
           <Tooltip title="수정">
-            <Button
-              icon={<EditOutlined />}
+            <IconButton
               size="small"
-              type="primary"
+              color="primary"
               onClick={(e) => {
                 e.stopPropagation();
-                handleEditRoute(record);
+                handleEditRoute(params.row as RouteWithMetrics);
               }}
-            />
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
           </Tooltip>
           <Tooltip title="삭제">
-            <Button
-              icon={<DeleteOutlined />}
+            <IconButton
               size="small"
-              danger
+              color="error"
               onClick={(e) => {
-                console.log('🗑️ Delete button clicked for route:', record.id);
+                console.log('🗑️ Delete button clicked for route:', params.row.id);
                 e.stopPropagation();
-                handleDeleteRoute(record);
+                handleDeleteRoute(params.row as RouteWithMetrics);
               }}
-            />
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
           </Tooltip>
-        </Space>
+        </Stack>
       ),
     },
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Stack spacing={3} sx={{ width: '100%' }}>
       {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h6" component="span" sx={{ fontWeight: 'bold' }}>
             API Gateway 라우트 ({filteredRoutes.length}개)
-          </span>
-          <span style={{ marginLeft: 8, color: '#999' }}>
+          </Typography>
+          <Typography variant="body2" component="span" sx={{ ml: 1, color: 'text.secondary' }}>
             {routes.length}개 라우트 | 활성 {activeRoutes}개 | 서비스 {servicesCount}개
-          </span>
-        </div>
-        <Space>
-          <Button icon={<ReloadOutlined />} onClick={refreshRoutes} loading={loading}>
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={refreshRoutes}
+            disabled={loading}
+          >
             새로고침
           </Button>
           <Button
-            type="primary"
-            icon={<PlusOutlined />}
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => {
               setEditingRoute(undefined);
               setRouteFormModalVisible(true);
@@ -557,81 +716,92 @@ const GatewayRoutes: React.FC = () => {
           >
             라우트 추가
           </Button>
-        </Space>
-      </div>
+        </Stack>
+      </Box>
 
       {/* 에러 표시 */}
       {error && (
         <Alert
-          message="데이터 로드 오류"
-          description={error}
-          type="error"
-          closable
+          severity="error"
+          onClose={() => setError(null)}
           action={
             <Button size="small" onClick={loadRoutes}>
               다시 시도
             </Button>
           }
-        />
+        >
+          <Typography variant="body2" fontWeight="bold">데이터 로드 오류</Typography>
+          <Typography variant="body2">{error}</Typography>
+        </Alert>
       )}
 
       {/* 필터 및 검색 */}
-      <Space style={{ width: '100%' }} size="middle">
-        <Select
-          placeholder="서비스 필터"
-          allowClear
-          style={{ width: 250 }}
-          value={selectedService}
-          onChange={setSelectedService}
-          suffixIcon={<FilterOutlined />}
-          showSearch
-          filterOption={(input, option) => {
-            const service = option?.value === 'all' ? '전체 서비스' : option?.value || '';
-            return service.toLowerCase().includes(input.toLowerCase());
-          }}
-          options={[
-            { label: `전체 서비스 (${routesWithMetrics.length})`, value: 'all' },
-            ...Object.keys(serviceGroups).map(service => ({
-              label: `${service} (${serviceGroups[service].length})`,
-              value: service,
-            })),
-          ]}
-        />
-        <Search
+      <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+        <FormControl sx={{ width: 250 }}>
+          <InputLabel>서비스 필터</InputLabel>
+          <Select
+            value={selectedService}
+            onChange={(e) => setSelectedService(e.target.value)}
+            label="서비스 필터"
+            startAdornment={
+              <InputAdornment position="start">
+                <FilterListIcon fontSize="small" />
+              </InputAdornment>
+            }
+          >
+            <MenuItem value="all">전체 서비스 ({routesWithMetrics.length})</MenuItem>
+            {Object.keys(serviceGroups).map(service => (
+              <MenuItem key={service} value={service}>
+                {service} ({serviceGroups[service].length})
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <TextField
           placeholder="Route ID, URI, Path로 검색"
-          allowClear
           value={searchKeyword}
           onChange={(e) => setSearchKeyword(e.target.value)}
-          style={{ flex: 1, maxWidth: 500 }}
+          sx={{ flex: 1, maxWidth: 500 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: searchKeyword && (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <ClearIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
-      </Space>
+      </Stack>
 
       {/* 테이블 */}
-      <Table
-        columns={columns}
-        dataSource={filteredRoutes}
-        rowKey="id"
-        loading={loading}
-        onRow={(record) => ({
-          onClick: (e) => {
-            // 버튼 클릭인 경우 행 클릭 이벤트 무시
-            const target = e.target as HTMLElement;
-            if (target.closest('button') || target.closest('.ant-btn')) {
-              console.log('🚫 Row click ignored - button clicked');
-              return;
-            }
-            handleShowRouteDetail(record);
-          },
-          style: { cursor: 'pointer' }
-        })}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개`,
-          pageSizeOptions: ['10', '20', '50', '100'],
-        }}
-        scroll={{ x: 1200 }}
-      />
+      <Box sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredRoutes}
+          columns={columns}
+          getRowId={(row) => row.id}
+          loading={loading}
+          onRowClick={(params: GridRowParams) => {
+            handleShowRouteDetail(params.row as RouteWithMetrics);
+          }}
+          pageSizeOptions={[10, 20, 50, 100]}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 10 },
+            },
+          }}
+          sx={{
+            '& .MuiDataGrid-row': {
+              cursor: 'pointer',
+            },
+          }}
+        />
+      </Box>
 
       {/* 라우트 추가/수정 모달 */}
       <RouteFormModal
@@ -647,11 +817,11 @@ const GatewayRoutes: React.FC = () => {
             if (editingRoute) {
               // 수정 모드
               await gatewayService.updateRoute(editingRoute.id, route);
-              message.success('라우트가 수정되었습니다');
+              snackbar.success('라우트가 수정되었습니다');
             } else {
               // 추가 모드
               await gatewayService.addRoute(route);
-              message.success('라우트가 추가되었습니다');
+              snackbar.success('라우트가 추가되었습니다');
               addedRouteUri = route.uri; // 추가된 라우트의 URI 저장
             }
 
@@ -680,398 +850,517 @@ const GatewayRoutes: React.FC = () => {
       />
 
       {/* 상세 정보 모달 */}
-      <Modal
-        title={`라우트 상세 정보: ${selectedRoute?.id}`}
+      <Dialog
         open={detailModalVisible}
-        onCancel={() => {
+        onClose={() => {
           setDetailModalVisible(false);
           setRouteDetail(null);
         }}
-        footer={null}
-        width={1000}
+        maxWidth="lg"
+        fullWidth
       >
-        {selectedRoute && (
-          <Spin spinning={detailLoading}>
-            <Tabs activeKey={activeTabKey} onChange={setActiveTabKey}>
+        <DialogTitle>라우트 상세 정보: {selectedRoute?.id}</DialogTitle>
+        <DialogContent>
+          {selectedRoute && (
+            <Box sx={{ position: 'relative', minHeight: 400 }}>
+              {detailLoading && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              )}
+              <Tabs value={activeTabKey} onChange={(_, newValue) => setActiveTabKey(newValue)}>
+                <Tab label="기본 정보" value="basic" />
+                <Tab label="Predicates" value="predicates" />
+                <Tab label="Filters" value="filters" />
+                <Tab label="원시 데이터" value="raw" />
+              </Tabs>
+
               {/* 1탭: 기본 정보 + 메트릭스 */}
-              <TabPane tab="기본 정보" key="basic">
-                <Space direction="vertical" style={{ width: '100%' }}>
+              <TabPanel value={activeTabKey} index="basic">
+                <Stack spacing={2}>
                   {/* 라우트 기본 정보 */}
-                  <Card size="small" title="라우트 정보">
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <Text strong>Route ID:</Text>
-                        <br />
-                        <Text code>{selectedRoute.id}</Text>
-                      </Col>
-                      <Col span={8}>
-                        <Text strong>URI:</Text>
-                        <br />
-                        <Text>{selectedRoute.uri}</Text>
-                      </Col>
-                      <Col span={8}>
-                        <Text strong>Order:</Text>
-                        <br />
-                        <Badge count={selectedRoute.order} color="orange" />
-                      </Col>
-                    </Row>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>라우트 정보</Typography>
+                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <Box sx={{ flex: '1 1 30%', minWidth: 200 }}>
+                          <Typography variant="body2" fontWeight="bold">Route ID:</Typography>
+                          <Typography
+                            component="code"
+                            sx={{
+                              bgcolor: 'grey.100',
+                              px: 1,
+                              py: 0.5,
+                              borderRadius: 1,
+                              display: 'inline-block',
+                            }}
+                          >
+                            {selectedRoute.id}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ flex: '1 1 30%', minWidth: 200 }}>
+                          <Typography variant="body2" fontWeight="bold">URI:</Typography>
+                          <Typography>{selectedRoute.uri}</Typography>
+                        </Box>
+                        <Box sx={{ flex: '1 1 30%', minWidth: 200 }}>
+                          <Typography variant="body2" fontWeight="bold">Order:</Typography>
+                          <Badge badgeContent={selectedRoute.order} color="warning" />
+                        </Box>
+                      </Box>
+                    </CardContent>
                   </Card>
 
                   {/* 메트릭스 정보 */}
-                  <Card size="small" title="라우트 메트릭스">
-                    {routeMetrics.find(metric => metric.routeId === selectedRoute.id) ? (
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Card>
-                            <Statistic
-                              title="총 요청 수"
-                              value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.requestCount || 0}
-                            />
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>라우트 메트릭스</Typography>
+                      {routeMetrics.find(metric => metric.routeId === selectedRoute.id) ? (
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+                          <Card variant="outlined">
+                            <CardContent>
+                              <Statistic
+                                title="총 요청 수"
+                                value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.requestCount || 0}
+                              />
+                            </CardContent>
                           </Card>
-                        </Col>
-                        <Col span={12}>
-                          <Card>
-                            <Statistic
-                              title="성공 요청"
-                              value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.successCount || 0}
-                            />
+                          <Card variant="outlined">
+                            <CardContent>
+                              <Statistic
+                                title="성공 요청"
+                                value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.successCount || 0}
+                              />
+                            </CardContent>
                           </Card>
-                        </Col>
-                        <Col span={12}>
-                          <Card>
-                            <Statistic
-                              title="실패 요청"
-                              value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.errorCount || 0}
-                            />
+                          <Card variant="outlined">
+                            <CardContent>
+                              <Statistic
+                                title="실패 요청"
+                                value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.errorCount || 0}
+                              />
+                            </CardContent>
                           </Card>
-                        </Col>
-                        <Col span={12}>
-                          <Card>
-                            <Statistic
-                              title="평균 응답시간"
-                              value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.averageResponseTime || 0}
-                              suffix="ms"
-                            />
+                          <Card variant="outlined">
+                            <CardContent>
+                              <Statistic
+                                title="평균 응답시간"
+                                value={routeMetrics.find(metric => metric.routeId === selectedRoute.id)?.averageResponseTime || 0}
+                                suffix="ms"
+                              />
+                            </CardContent>
                           </Card>
-                        </Col>
-                      </Row>
-                    ) : (
-                      <Alert message="메트릭스 데이터가 없습니다." type="info" />
-                    )}
+                        </Box>
+                      ) : (
+                        <Alert severity="info">메트릭스 데이터가 없습니다.</Alert>
+                      )}
+                    </CardContent>
                   </Card>
-                </Space>
-              </TabPane>
+                </Stack>
+              </TabPanel>
 
               {/* 2탭: Predicates */}
-              <TabPane tab="Predicates" key="predicates">
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Card size="small" title={`Predicates (조건) - ${routeDetail ? (parsePredicateString(routeDetail.predicate).length || 0) : '로딩 중...'}개`}>
-                    {routeDetail ? (
-                      (() => {
-                        const parsedPredicates = parsePredicateString(routeDetail.predicate);
-                        return parsedPredicates.length > 0 ? (
-                          <Space direction="vertical" style={{ width: '100%', gap: '12px' }}>
-                            <Select
-                              placeholder="조건을 선택하여 상세 정보를 확인하세요"
-                              style={{ width: '100%' }}
-                              size="small"
-                              value={selectedPredicateIndex}
-                              onChange={(value) => setSelectedPredicateIndex(value)}
-                              allowClear
-                              onClear={() => setSelectedPredicateIndex(null)}
-                              options={parsedPredicates.map((predicate, index) => ({
-                                value: index,
-                                label: (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Tag color={getPredicateTypeColor(predicate.type)} style={{ margin: 0 }}>
-                                      {predicate.type}
-                                    </Tag>
-                                    <Text>{predicate.description}</Text>
-                                  </div>
-                                )
-                              }))}
-                            />
+              <TabPanel value={activeTabKey} index="predicates">
+                <Stack spacing={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Predicates (조건) - {routeDetail ? (parsePredicateString(routeDetail.predicate).length || 0) : '로딩 중...'}개
+                      </Typography>
+                      {routeDetail ? (
+                        (() => {
+                          const parsedPredicates = parsePredicateString(routeDetail.predicate);
+                          return parsedPredicates.length > 0 ? (
+                            <Stack spacing={2}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel>조건 선택</InputLabel>
+                                <Select
+                                  value={selectedPredicateIndex !== null ? String(selectedPredicateIndex) : ''}
+                                  onChange={(e) => setSelectedPredicateIndex(e.target.value === '' ? null : Number(e.target.value))}
+                                  label="조건 선택"
+                                >
+                                  <MenuItem value="">
+                                    <em>선택 해제</em>
+                                  </MenuItem>
+                                  {parsedPredicates.map((predicate, index) => (
+                                    <MenuItem key={index} value={String(index)}>
+                                      <Stack direction="row" spacing={1} alignItems="center">
+                                        <Chip
+                                          label={predicate.type}
+                                          size="small"
+                                          sx={{ bgcolor: getPredicateTypeColor(predicate.type) }}
+                                        />
+                                        <Typography>{predicate.description}</Typography>
+                                      </Stack>
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
 
-                            {/* 선택된 Predicate 상세 정보 */}
-                            {selectedPredicateIndex !== null && parsedPredicates[selectedPredicateIndex] && (
-                              <Card
-                                size="small"
-                                style={{
-                                  background: '#fafafa',
-                                  border: '1px solid #d9d9d9'
-                                }}
-                              >
-                                <Descriptions size="small" column={1} bordered>
-                                  <Descriptions.Item label="타입">
-                                    <Tag color={getPredicateTypeColor(parsedPredicates[selectedPredicateIndex].type)}>
-                                      {parsedPredicates[selectedPredicateIndex].type}
-                                    </Tag>
-                                  </Descriptions.Item>
-                                  <Descriptions.Item label="설명">
-                                    <Text strong>{parsedPredicates[selectedPredicateIndex].description}</Text>
-                                  </Descriptions.Item>
+                              {/* 선택된 Predicate 상세 정보 */}
+                              {selectedPredicateIndex !== null && parsedPredicates[selectedPredicateIndex] && (
+                                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                                  <Descriptions>
+                                    <DescriptionItem label="타입">
+                                      <Chip
+                                        label={parsedPredicates[selectedPredicateIndex].type}
+                                        size="small"
+                                        sx={{ bgcolor: getPredicateTypeColor(parsedPredicates[selectedPredicateIndex].type) }}
+                                      />
+                                    </DescriptionItem>
+                                    <DescriptionItem label="설명">
+                                      <Typography fontWeight="bold">
+                                        {parsedPredicates[selectedPredicateIndex].description}
+                                      </Typography>
+                                    </DescriptionItem>
 
-                                  {/* 파싱된 인자들을 키-값 형태로 표시 */}
-                                  {Object.keys(parsedPredicates[selectedPredicateIndex].args).length > 0 && (
-                                    <Descriptions.Item label="설정 파라미터">
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                                        {Object.entries(parsedPredicates[selectedPredicateIndex].args).map(([key, value]) => (
-                                          <div key={key} style={{
-                                            display: 'flex',
-                                            alignItems: 'flex-start',
-                                            padding: '6px 8px',
-                                            background: '#fff',
-                                            border: '1px solid #e8e8e8',
-                                            borderRadius: '4px',
-                                            maxWidth: '100%',
-                                            overflow: 'hidden'
-                                          }}>
-                                            <Text strong style={{ minWidth: '120px', flexShrink: 0, color: '#1890ff' }}>
-                                              {key}:
-                                            </Text>
-                                            <div style={{
-                                              flex: 1,
-                                              minWidth: 0,
-                                              wordBreak: 'break-word',
-                                              overflowWrap: 'break-word'
-                                            }}>
-                                              {Array.isArray(value) ? (
-                                                <Space wrap>
-                                                  {value.map((v, i) => (
-                                                    <Tag key={i} color="green" style={{
-                                                      maxWidth: '100%',
-                                                      whiteSpace: 'normal',
-                                                      wordBreak: 'break-word'
-                                                    }}>{v}</Tag>
-                                                  ))}
-                                                </Space>
-                                              ) : typeof value === 'boolean' ? (
-                                                <Tag color={value ? 'success' : 'default'}>{value ? 'true' : 'false'}</Tag>
-                                              ) : (
-                                                <code style={{
-                                                  background: '#f5f5f5',
-                                                  padding: '2px 6px',
-                                                  borderRadius: '3px',
-                                                  fontSize: '11px',
-                                                  wordBreak: 'break-all',
-                                                  whiteSpace: 'pre-wrap',
-                                                  display: 'inline-block',
-                                                  maxWidth: '100%'
-                                                }}>{String(value)}</code>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </Descriptions.Item>
-                                  )}
+                                    {/* 파싱된 인자들을 키-값 형태로 표시 */}
+                                    {Object.keys(parsedPredicates[selectedPredicateIndex].args).length > 0 && (
+                                      <DescriptionItem label="설정 파라미터">
+                                        <Stack spacing={1} sx={{ width: '100%' }}>
+                                          {Object.entries(parsedPredicates[selectedPredicateIndex].args).map(([key, value]) => (
+                                            <Box
+                                              key={key}
+                                              sx={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                p: 1,
+                                                bgcolor: 'background.paper',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                borderRadius: 1,
+                                              }}
+                                            >
+                                              <Typography
+                                                fontWeight="bold"
+                                                sx={{ minWidth: 120, flexShrink: 0, color: 'primary.main' }}
+                                              >
+                                                {key}:
+                                              </Typography>
+                                              <Box sx={{ flex: 1, wordBreak: 'break-word' }}>
+                                                {Array.isArray(value) ? (
+                                                  <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                                                    {value.map((v, i) => (
+                                                      <Chip key={i} label={v} color="success" size="small" />
+                                                    ))}
+                                                  </Stack>
+                                                ) : typeof value === 'boolean' ? (
+                                                  <Chip label={value ? 'true' : 'false'} color={value ? 'success' : 'default'} size="small" />
+                                                ) : (
+                                                  <Typography
+                                                    component="code"
+                                                    sx={{
+                                                      bgcolor: 'grey.100',
+                                                      px: 0.5,
+                                                      py: 0.25,
+                                                      borderRadius: 0.5,
+                                                      fontSize: '11px',
+                                                    }}
+                                                  >
+                                                    {String(value)}
+                                                  </Typography>
+                                                )}
+                                              </Box>
+                                            </Box>
+                                          ))}
+                                        </Stack>
+                                      </DescriptionItem>
+                                    )}
 
-                                  {/* 메타데이터 (참고용) */}
-                                  {parsedPredicates[selectedPredicateIndex].metadata && Object.keys(parsedPredicates[selectedPredicateIndex].metadata).length > 0 && (
-                                    <Descriptions.Item label="메타데이터 (참고)">
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                                        {Object.entries(parsedPredicates[selectedPredicateIndex].metadata!).map(([key, value]) => (
-                                          <div key={key} style={{
-                                            display: 'flex',
-                                            alignItems: 'flex-start',
-                                            padding: '6px 8px',
-                                            background: '#f9f9f9',
-                                            border: '1px solid #d9d9d9',
-                                            borderRadius: '4px',
-                                            maxWidth: '100%',
-                                            overflow: 'hidden'
-                                          }}>
-                                            <Text strong style={{ minWidth: '120px', flexShrink: 0, color: '#8c8c8c' }}>
-                                              {key}:
-                                            </Text>
-                                            <div style={{
-                                              flex: 1,
-                                              minWidth: 0,
-                                              wordBreak: 'break-word',
-                                              overflowWrap: 'break-word'
-                                            }}>
-                                              {typeof value === 'boolean' ? (
-                                                <Tag color={value ? 'default' : 'default'}>{value ? 'true' : 'false'}</Tag>
-                                              ) : (
-                                                <Text type="secondary">{String(value)}</Text>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </Descriptions.Item>
-                                  )}
+                                    {/* 메타데이터 (참고용) */}
+                                    {parsedPredicates[selectedPredicateIndex].metadata && Object.keys(parsedPredicates[selectedPredicateIndex].metadata).length > 0 && (
+                                      <DescriptionItem label="메타데이터 (참고)">
+                                        <Stack spacing={1} sx={{ width: '100%' }}>
+                                          {Object.entries(parsedPredicates[selectedPredicateIndex].metadata!).map(([key, value]) => (
+                                            <Box
+                                              key={key}
+                                              sx={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                p: 1,
+                                                bgcolor: 'grey.50',
+                                                border: '1px solid',
+                                                borderColor: 'grey.300',
+                                                borderRadius: 1,
+                                              }}
+                                            >
+                                              <Typography
+                                                fontWeight="bold"
+                                                sx={{ minWidth: 120, flexShrink: 0, color: 'text.secondary' }}
+                                              >
+                                                {key}:
+                                              </Typography>
+                                              <Box sx={{ flex: 1, wordBreak: 'break-word' }}>
+                                                {typeof value === 'boolean' ? (
+                                                  <Chip label={value ? 'true' : 'false'} size="small" />
+                                                ) : (
+                                                  <Typography color="text.secondary">{String(value)}</Typography>
+                                                )}
+                                              </Box>
+                                            </Box>
+                                          ))}
+                                        </Stack>
+                                      </DescriptionItem>
+                                    )}
 
-                                  <Descriptions.Item label="원시 설정">
-                                    <pre style={{
-                                      background: '#f9f9f9',
-                                      padding: '8px',
-                                      borderRadius: '4px',
-                                      fontSize: '11px',
-                                      margin: 0,
-                                      fontFamily: 'Monaco, Consolas, monospace',
-                                      maxHeight: '150px',
-                                      overflow: 'auto'
-                                    }}>
-                                      {parsedPredicates[selectedPredicateIndex].raw}
-                                    </pre>
-                                  </Descriptions.Item>
-                                </Descriptions>
-                              </Card>
-                            )}
-                          </Space>
-                        ) : (
-                          <Alert message="설정된 Predicate가 없습니다." type="info" showIcon />
-                        );
-                      })()
-                    ) : (
-                      <Alert message="Predicate 정보를 로드하고 있습니다..." type="warning" showIcon />
-                    )}
+                                    <DescriptionItem label="원시 설정">
+                                      <Box
+                                        component="pre"
+                                        sx={{
+                                          bgcolor: 'grey.50',
+                                          p: 1,
+                                          borderRadius: 1,
+                                          fontSize: '11px',
+                                          m: 0,
+                                          fontFamily: 'Monaco, Consolas, monospace',
+                                          maxHeight: 150,
+                                          overflow: 'auto',
+                                          width: '100%',
+                                        }}
+                                      >
+                                        {parsedPredicates[selectedPredicateIndex].raw}
+                                      </Box>
+                                    </DescriptionItem>
+                                  </Descriptions>
+                                </Paper>
+                              )}
+                            </Stack>
+                          ) : (
+                            <Alert severity="info">설정된 Predicate가 없습니다.</Alert>
+                          );
+                        })()
+                      ) : (
+                        <Alert severity="warning">Predicate 정보를 로드하고 있습니다...</Alert>
+                      )}
+                    </CardContent>
                   </Card>
-                </Space>
-              </TabPane>
+                </Stack>
+              </TabPanel>
 
               {/* 3탭: Filters */}
-              <TabPane tab="Filters" key="filters">
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Card size="small" title={`Filters (필터) - ${routeDetail ? routeDetail.filters?.length || 0 : '로딩 중...'}개`}>
-                    {routeDetail ? (
+              <TabPanel value={activeTabKey} index="filters">
+                <Stack spacing={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Filters (필터) - {routeDetail ? routeDetail.filters?.length || 0 : '로딩 중...'}개
+                      </Typography>
+                      {routeDetail ? (
                         (() => {
                           const parsedFilters = parseFilterStrings(routeDetail.filters || []);
                           return parsedFilters.length > 0 ? (
-                            <Space direction="vertical" style={{ width: '100%', gap: '12px' }}>
-                              <Select
-                                placeholder="필터를 선택하여 상세 정보를 확인하세요"
-                                style={{ width: '100%' }}
-                                size="small"
-                                value={selectedFilterIndex}
-                                onChange={(value) => setSelectedFilterIndex(value)}
-                                allowClear
-                                onClear={() => setSelectedFilterIndex(null)}
-                                options={parsedFilters.map((filter, index) => ({
-                                  value: index,
-                                  label: (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <Tag color={getFilterTypeColor(filter.name)} style={{ margin: 0 }}>
-                                        {filter.name}
-                                      </Tag>
-                                      <Text>{filter.description}</Text>
-                                    </div>
-                                  )
-                                }))}
-                              />
+                            <Stack spacing={2}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel>필터 선택</InputLabel>
+                                <Select
+                                  value={selectedFilterIndex !== null ? String(selectedFilterIndex) : ''}
+                                  onChange={(e) => setSelectedFilterIndex(e.target.value === '' ? null : Number(e.target.value))}
+                                  label="필터 선택"
+                                >
+                                  <MenuItem value="">
+                                    <em>선택 해제</em>
+                                  </MenuItem>
+                                  {parsedFilters.map((filter, index) => (
+                                    <MenuItem key={index} value={String(index)}>
+                                      <Stack direction="row" spacing={1} alignItems="center">
+                                        <Chip
+                                          label={filter.name}
+                                          size="small"
+                                          sx={{ bgcolor: getFilterTypeColor(filter.name) }}
+                                        />
+                                        <Typography>{filter.description}</Typography>
+                                      </Stack>
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
 
                               {/* 선택된 Filter 상세 정보 */}
                               {selectedFilterIndex !== null && parsedFilters[selectedFilterIndex] && (
-                                <Card
-                                  size="small"
-                                  style={{
-                                    background: '#fafafa',
-                                    border: '1px solid #d9d9d9'
-                                  }}
-                                >
-                                  <Descriptions
-                                    size="small"
-                                    column={1}
-                                    bordered
-                                    className={styles.filterDescriptions}
-                                  >
-                                    <Descriptions.Item label="타입">
-                                      <Tag color={getFilterTypeColor(parsedFilters[selectedFilterIndex].name)}>
-                                        {parsedFilters[selectedFilterIndex].name}
-                                      </Tag>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="설명">
-                                      <Text strong>{parsedFilters[selectedFilterIndex].description}</Text>
-                                    </Descriptions.Item>
+                                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                                  <Descriptions>
+                                    <DescriptionItem label="타입">
+                                      <Chip
+                                        label={parsedFilters[selectedFilterIndex].name}
+                                        size="small"
+                                        sx={{ bgcolor: getFilterTypeColor(parsedFilters[selectedFilterIndex].name) }}
+                                      />
+                                    </DescriptionItem>
+                                    <DescriptionItem label="설명">
+                                      <Typography fontWeight="bold">
+                                        {parsedFilters[selectedFilterIndex].description}
+                                      </Typography>
+                                    </DescriptionItem>
                                     {parsedFilters[selectedFilterIndex].order !== undefined && (
-                                      <Descriptions.Item label="실행 순서">
-                                        <Tag color="blue">{parsedFilters[selectedFilterIndex].order}</Tag>
-                                      </Descriptions.Item>
+                                      <DescriptionItem label="실행 순서">
+                                        <Chip label={parsedFilters[selectedFilterIndex].order} color="primary" size="small" />
+                                      </DescriptionItem>
                                     )}
 
                                     {/* 파싱된 인자들을 키-값 형태로 표시 */}
                                     {Object.keys(parsedFilters[selectedFilterIndex].args).length > 0 && (
-                                      <Descriptions.Item label="설정값">
-                                        <div className={styles.configValuesContainer}>
+                                      <DescriptionItem label="설정값">
+                                        <Stack spacing={1} sx={{ width: '100%' }}>
                                           {Object.entries(parsedFilters[selectedFilterIndex].args).map(([key, value]) => (
-                                            <div key={key} className={styles.configValueItem}>
-                                              <Text strong className={styles.configValueKey}>
+                                            <Box
+                                              key={key}
+                                              sx={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                p: 1,
+                                                bgcolor: 'background.paper',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                borderRadius: 1,
+                                              }}
+                                            >
+                                              <Typography
+                                                fontWeight="bold"
+                                                sx={{ minWidth: 120, flexShrink: 0, color: 'primary.main' }}
+                                              >
                                                 {key}:
-                                              </Text>
-                                              <div className={styles.configValueContent}>
+                                              </Typography>
+                                              <Box sx={{ flex: 1, wordBreak: 'break-word' }}>
                                                 {Array.isArray(value) ? (
-                                                  <Space wrap>
+                                                  <Stack direction="row" spacing={0.5} flexWrap="wrap">
                                                     {value.map((v, i) => (
-                                                      <Tag key={i} color="green">{v}</Tag>
+                                                      <Chip key={i} label={v} color="success" size="small" />
                                                     ))}
-                                                  </Space>
+                                                  </Stack>
                                                 ) : typeof value === 'boolean' ? (
-                                                  <Tag color={value ? 'success' : 'default'}>{value ? 'true' : 'false'}</Tag>
+                                                  <Chip label={value ? 'true' : 'false'} color={value ? 'success' : 'default'} size="small" />
                                                 ) : typeof value === 'number' ? (
-                                                  <Tag color="purple">{value}</Tag>
+                                                  <Chip label={value} color="secondary" size="small" />
                                                 ) : (
-                                                  <code className={styles.configValueCode}>{String(value)}</code>
+                                                  <Typography
+                                                    component="code"
+                                                    sx={{
+                                                      bgcolor: 'grey.100',
+                                                      px: 0.5,
+                                                      py: 0.25,
+                                                      borderRadius: 0.5,
+                                                      fontSize: '11px',
+                                                    }}
+                                                  >
+                                                    {String(value)}
+                                                  </Typography>
                                                 )}
-                                              </div>
-                                            </div>
+                                              </Box>
+                                            </Box>
                                           ))}
-                                        </div>
-                                      </Descriptions.Item>
+                                        </Stack>
+                                      </DescriptionItem>
                                     )}
 
-                                    <Descriptions.Item label="필터 카테고리">
-                                      <Tag color="blue">
-                                        {parsedFilters[selectedFilterIndex].name.includes('Request') ? '요청 변환' :
-                                         parsedFilters[selectedFilterIndex].name.includes('Response') ? '응답 변환' :
-                                         parsedFilters[selectedFilterIndex].name.includes('Path') ? 'URL 변환' :
-                                         (parsedFilters[selectedFilterIndex].name.includes('Rate') || parsedFilters[selectedFilterIndex].name.includes('Circuit') || parsedFilters[selectedFilterIndex].name.includes('Retry')) ? '제어 & 안정성' :
-                                         '기타'}
-                                      </Tag>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="원시 설정">
-                                      <pre className={styles.rawConfigPre}>
+                                    <DescriptionItem label="필터 카테고리">
+                                      <Chip
+                                        label={
+                                          parsedFilters[selectedFilterIndex].name.includes('Request') ? '요청 변환' :
+                                          parsedFilters[selectedFilterIndex].name.includes('Response') ? '응답 변환' :
+                                          parsedFilters[selectedFilterIndex].name.includes('Path') ? 'URL 변환' :
+                                          (parsedFilters[selectedFilterIndex].name.includes('Rate') || parsedFilters[selectedFilterIndex].name.includes('Circuit') || parsedFilters[selectedFilterIndex].name.includes('Retry')) ? '제어 & 안정성' :
+                                          '기타'
+                                        }
+                                        color="primary"
+                                        size="small"
+                                      />
+                                    </DescriptionItem>
+                                    <DescriptionItem label="원시 설정">
+                                      <Box
+                                        component="pre"
+                                        sx={{
+                                          bgcolor: 'grey.50',
+                                          p: 1,
+                                          borderRadius: 1,
+                                          fontSize: '11px',
+                                          m: 0,
+                                          fontFamily: 'Monaco, Consolas, monospace',
+                                          maxHeight: 150,
+                                          overflow: 'auto',
+                                          width: '100%',
+                                        }}
+                                      >
                                         {parsedFilters[selectedFilterIndex].raw}
-                                      </pre>
-                                    </Descriptions.Item>
+                                      </Box>
+                                    </DescriptionItem>
                                   </Descriptions>
-                                </Card>
+                                </Paper>
                               )}
-                            </Space>
+                            </Stack>
                           ) : (
-                            <Alert message="적용된 필터가 없습니다." type="info" showIcon />
+                            <Alert severity="info">적용된 필터가 없습니다.</Alert>
                           );
                         })()
                       ) : (
-                        <Alert message="필터 정보를 로드하고 있습니다..." type="warning" showIcon />
+                        <Alert severity="warning">필터 정보를 로드하고 있습니다...</Alert>
                       )}
-                    </Card>
-                  </Space>
-              </TabPane>
+                    </CardContent>
+                  </Card>
+                </Stack>
+              </TabPanel>
 
               {/* 4탭: 원시 데이터 */}
-              <TabPane tab="원시 데이터" key="raw">
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Card size="small" title="라우트 정의 (routedefinitions)">
-                    <pre style={{ background: '#f5f5f5', padding: '16px', borderRadius: '4px', maxHeight: '200px', overflow: 'auto' }}>
-                      {JSON.stringify(selectedRoute, null, 2)}
-                    </pre>
+              <TabPanel value={activeTabKey} index="raw">
+                <Stack spacing={2}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>라우트 정의 (routedefinitions)</Typography>
+                      <Box
+                        component="pre"
+                        sx={{
+                          bgcolor: 'grey.100',
+                          p: 2,
+                          borderRadius: 1,
+                          maxHeight: 200,
+                          overflow: 'auto',
+                        }}
+                      >
+                        {JSON.stringify(selectedRoute, null, 2)}
+                      </Box>
+                    </CardContent>
                   </Card>
 
                   {routeDetail && (
-                    <Card size="small" title="실행 시간 정보 (routes/{id})">
-                      <pre style={{ background: '#f5f5f5', padding: '16px', borderRadius: '4px', maxHeight: '200px', overflow: 'auto' }}>
-                        {JSON.stringify(routeDetail, null, 2)}
-                      </pre>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>실행 시간 정보 (routes/{'{id}'})</Typography>
+                        <Box
+                          component="pre"
+                          sx={{
+                            bgcolor: 'grey.100',
+                            p: 2,
+                            borderRadius: 1,
+                            maxHeight: 200,
+                            overflow: 'auto',
+                          }}
+                        >
+                          {JSON.stringify(routeDetail, null, 2)}
+                        </Box>
+                      </CardContent>
                     </Card>
                   )}
-                </Space>
-              </TabPane>
-            </Tabs>
-          </Spin>
-        )}
-      </Modal>
-    </Space>
+                </Stack>
+              </TabPanel>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        title="라우트 삭제"
+        content={`정말로 라우트 "${routeToDelete?.id}"를 삭제하시겠습니까?`}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
+    </Stack>
   );
 };
 

@@ -1,6 +1,6 @@
 // Header Predicate 폼 컴포넌트
 import React from 'react';
-import { Input, Space, Tag } from 'antd';
+import { TextField, Stack, Box, Typography, Chip } from '@mui/material';
 import type { ActuatorHeaderPredicateArgs } from '../../../../types/gateway';
 
 interface HeaderPredicateFormProps {
@@ -13,50 +13,56 @@ export const HeaderPredicateForm: React.FC<HeaderPredicateFormProps> = ({
   onChange
 }) => {
   return (
-    <div>
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
-        {/* Header Name */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>
-              헤더 이름
-              <span style={{ color: 'red', marginLeft: '4px' }}>*</span>
-            </span>
-          </div>
-          <Input
-            value={value.name || value.header}
-            onChange={(e) => onChange({ ...value, name: e.target.value })}
-            placeholder="예: X-Request-Id"
-          />
-        </div>
+    <Stack spacing={2}>
+      {/* Header Name */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          헤더 이름
+          <Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+        </Typography>
+        <TextField
+          value={value.name || value.header || ''}
+          onChange={(e) => onChange({ ...value, name: e.target.value })}
+          placeholder="예: X-Request-Id"
+          fullWidth
+          size="small"
+        />
+      </Box>
 
-        {/* Header Value (Regexp) */}
-        <div>
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ fontWeight: 'bold' }}>헤더 값 (정규식)</span>
-          </div>
-          <Input
-            value={value.value || value.regexp}
-            onChange={(e) => onChange({ ...value, regexp: e.target.value })}
-            placeholder="예: \\d+"
-          />
-          <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-            💡 정규식으로 헤더 값을 검증합니다 (선택사항)
-          </div>
-        </div>
-      </Space>
+      {/* Header Value (Regexp) */}
+      <Box>
+        <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+          헤더 값 (정규식)
+        </Typography>
+        <TextField
+          value={value.value || value.regexp || ''}
+          onChange={(e) => onChange({ ...value, regexp: e.target.value })}
+          placeholder="예: \\d+"
+          fullWidth
+          size="small"
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          💡 정규식으로 헤더 값을 검증합니다 (선택사항)
+        </Typography>
+      </Box>
 
-      <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '12px', padding: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-        <strong>예시:</strong>
-        <div style={{ marginTop: '4px' }}>
-          • <Tag color="blue" style={{ fontSize: '11px' }}>X-Request-Id</Tag> + <Tag color="green" style={{ fontSize: '11px' }}>\d+</Tag>
-          <div style={{ marginLeft: '8px', marginTop: '2px', color: '#666' }}>→ X-Request-Id 헤더가 숫자만 포함하는 경우</div>
-        </div>
-        <div style={{ marginTop: '4px' }}>
-          • <Tag color="blue" style={{ fontSize: '11px' }}>Authorization</Tag> + <Tag color="green" style={{ fontSize: '11px' }}>Bearer .*</Tag>
-          <div style={{ marginLeft: '8px', marginTop: '2px', color: '#666' }}>→ Authorization 헤더가 Bearer로 시작하는 경우</div>
-        </div>
-      </div>
-    </div>
+      <Box sx={{ p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+        <Typography variant="body2" fontWeight="bold">예시:</Typography>
+        <Box sx={{ mt: 0.5 }}>
+          <Box sx={{ mb: 1 }}>
+            • <Chip label="X-Request-Id" size="small" color="primary" /> + <Chip label="\d+" size="small" color="success" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
+              → X-Request-Id 헤더가 숫자만 포함하는 경우
+            </Typography>
+          </Box>
+          <Box sx={{ mb: 1 }}>
+            • <Chip label="Authorization" size="small" color="primary" /> + <Chip label="Bearer .*" size="small" color="success" />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1, display: 'block', mt: 0.5 }}>
+              → Authorization 헤더가 Bearer로 시작하는 경우
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Stack>
   );
 };
