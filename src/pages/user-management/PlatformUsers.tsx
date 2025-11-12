@@ -40,6 +40,7 @@ import {
   USER_STATUS_OPTIONS,
 } from '../../constants/user-management';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { userManagementService } from '../../services/userManagementService';
 
 export default function PlatformUsers() {
   const [users, setUsers] = useState<PlatformUser[]>([]);
@@ -56,25 +57,58 @@ export default function PlatformUsers() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
+  // User Type Definitions (동적 로드)
+  const [userTypeOptions, setUserTypeOptions] = useState(USER_TYPES);
+  const [loadingUserTypes, setLoadingUserTypes] = useState(false);
+
   // 사용자 목록 조회
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // TODO: 실제 API 연동
-      // const data = await userManagementService.getUsers();
-      const data: PlatformUser[] = [...MOCK_USERS];
+      // 실제 API 연동
+      const data = await userManagementService.getUsers();
       setUsers(data);
       setFilteredUsers(data);
     } catch (error) {
       snackbar.error('사용자 목록 조회에 실패했습니다');
       console.error(error);
+      // API 실패 시 Mock 데이터 사용 (개발 환경)
+      if (import.meta.env.DEV) {
+        console.warn('🔄 API 실패, Mock 데이터로 대체합니다');
+        const data: PlatformUser[] = [...MOCK_USERS];
+        setUsers(data);
+        setFilteredUsers(data);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // User Type Definitions 로드
+  const fetchUserTypes = async () => {
+    setLoadingUserTypes(true);
+    try {
+      const types = await userManagementService.getUserTypeDefinitions();
+      const options = types
+        .filter(type => type.is_active)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+        .map(type => ({
+          label: type.display_name,
+          value: type.type_id,
+          description: type.description,
+        }));
+      setUserTypeOptions(options);
+    } catch (error) {
+      console.error('User Type 목록 로드 실패:', error);
+      // 실패 시 기본값 사용
+    } finally {
+      setLoadingUserTypes(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchUserTypes();
   }, []);
 
   // 검색 및 필터링
@@ -117,7 +151,7 @@ export default function PlatformUsers() {
     if (!userToDelete) return;
 
     try {
-      console.log('Deleting user:', userToDelete);
+      await userManagementService.deleteUser(userToDelete);
       snackbar.success('사용자가 삭제되었습니다');
       fetchUsers();
     } catch (error) {
@@ -155,10 +189,24 @@ export default function PlatformUsers() {
     {
       field: 'userType',
       headerName: 'User Type',
-      width: 130,
+      width: 150,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
-        const typeInfo = USER_TYPES.find(t => t.value === params.row.userType);
-        return <Chip label={typeInfo?.label || params.row.userType} color="secondary" size="small" />;
+        const typeInfo = userTypeOptions.find(t => t.value === params.row.userType);
+        const getColor = () => {
+          if (params.row.userType.includes('ADMIN')) return 'error';
+          if (params.row.userType.includes('MANAGER')) return 'warning';
+          if (params.row.userType.includes('DOCTOR')) return 'info';
+          return 'default';
+        };
+        return (
+          <Tooltip title={typeInfo?.description || ''} arrow>
+            <Chip
+              label={typeInfo?.label || params.row.userType}
+              color={getColor()}
+              size="small"
+            />
+          </Tooltip>
+        );
       },
     },
     {
@@ -287,6 +335,14 @@ export default function PlatformUsers() {
     },
   ];
 
+  // 통계 계산
+  const stats = {
+    total: users.length,
+    active: users.filter(u => u.status === 'active').length,
+    inactive: users.filter(u => u.status === 'inactive').length,
+    suspended: users.filter(u => u.status === 'suspended').length,
+  };
+
   return (
     <Box sx={{ width: '100%' }}>
       {/* 헤더 */}
@@ -296,7 +352,7 @@ export default function PlatformUsers() {
             플랫폼 사용자 ({filteredUsers.length}명)
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            플랫폼에 등록된 모든 사용자 관리
+            플랫폼에 등록된 모든 사용자 관리 | 활성: {stats.active}명 | 비활성: {stats.inactive}명 | 정지: {stats.suspended}명
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -318,7 +374,7 @@ export default function PlatformUsers() {
 
       {/* 검색 및 필터 */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 200 }} size="small">
+        <FormControl sx={{ minWidth: 200 }} size="small" disabled={loadingUserTypes}>
           <InputLabel>User Type</InputLabel>
           <Select
             value={filterUserType}
@@ -326,7 +382,7 @@ export default function PlatformUsers() {
             label="User Type"
           >
             <MenuItem value="ALL">전체 User Type</MenuItem>
-            {USER_TYPES.map(type => (
+            {userTypeOptions.map(type => (
               <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
             ))}
           </Select>
@@ -374,6 +430,10 @@ export default function PlatformUsers() {
           }}
           getRowHeight={() => 'auto'}
           disableRowSelectionOnClick
+          localeText={{
+            noRowsLabel: '등록된 사용자가 없습니다',
+            noResultsOverlayLabel: '검색 결과가 없습니다',
+          }}
           sx={{
             '& .MuiDataGrid-cell': {
               py: 1,
@@ -401,6 +461,7 @@ export default function PlatformUsers() {
           setSelectedUser(null);
         }}
         user={selectedUser}
+        userTypeOptions={userTypeOptions}
       />
 
       {/* 삭제 확인 다이얼로그 */}
