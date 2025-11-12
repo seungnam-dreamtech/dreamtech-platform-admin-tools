@@ -28,6 +28,7 @@ import {
   Refresh as RefreshIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
+  Clear as ClearIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
@@ -309,25 +310,27 @@ export default function AuthorityTemplates() {
     },
   ];
 
+  // 통계 계산
+  const stats = {
+    total: templates.length,
+    withDefault: templates.filter(t => t.is_default).length,
+    totalAppliedUsers: templates.reduce((sum, t) => sum + (t.statistics?.applied_user_count || 0), 0),
+  };
+
   return (
     <Box sx={{ width: '100%' }}>
       {/* 헤더 */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box>
           <Typography variant="h6" fontWeight={600}>
-            권한 템플릿 관리 ({filteredTemplates.length}개)
+            권한 템플릿 ({filteredTemplates.length}개)
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            User Type별 사전 정의된 권한 세트를 관리합니다
+            User Type별 사전 정의된 권한 세트 관리 | 전체: {stats.total}개 | 기본 템플릿: {stats.withDefault}개 | 적용 사용자: {stats.totalAppliedUsers}명
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={fetchTemplates}
-            disabled={loading}
-          >
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchTemplates} disabled={loading}>
             새로고침
           </Button>
           <Button
@@ -346,11 +349,11 @@ export default function AuthorityTemplates() {
       {/* 검색 및 필터 */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <FormControl sx={{ minWidth: 200 }} size="small">
-          <InputLabel>User Type 필터</InputLabel>
+          <InputLabel>User Type</InputLabel>
           <Select
             value={filterUserType}
             onChange={(e) => setFilterUserType(e.target.value)}
-            label="User Type 필터"
+            label="User Type"
           >
             <MenuItem value="ALL">전체 User Type</MenuItem>
             {userTypes.map(type => (
@@ -363,9 +366,18 @@ export default function AuthorityTemplates() {
         <TextField
           placeholder="템플릿명 또는 설명으로 검색"
           value={searchKeyword}
-          onChange={e => setSearchKeyword(e.target.value)}
+          onChange={(e) => setSearchKeyword(e.target.value)}
           size="small"
           sx={{ flex: 1, maxWidth: 450 }}
+          slotProps={{
+            input: {
+              endAdornment: searchKeyword && (
+                <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ),
+            },
+          }}
         />
       </Box>
 
