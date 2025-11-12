@@ -107,23 +107,12 @@ export default function AuthorityTemplates() {
     setFilteredTemplates(filtered);
   }, [searchKeyword, filterUserType, templates, userTypes]);
 
-  // 템플릿 추가/수정
+  // 템플릿 추가/수정 완료 후 호출
   const handleSave = async () => {
-    try {
-      if (selectedTemplate) {
-        // 수정
-        snackbar.success('권한 템플릿이 수정되었습니다');
-      } else {
-        // 추가
-        snackbar.success('새 권한 템플릿이 추가되었습니다');
-      }
-      fetchTemplates();
-      setModalOpen(false);
-      setSelectedTemplate(null);
-    } catch (error) {
-      snackbar.error('권한 템플릿 저장에 실패했습니다');
-      console.error(error);
-    }
+    // 모달 내부에서 이미 처리되므로 목록만 새로고침
+    fetchTemplates();
+    setModalOpen(false);
+    setSelectedTemplate(null);
   };
 
   // 템플릿 삭제
