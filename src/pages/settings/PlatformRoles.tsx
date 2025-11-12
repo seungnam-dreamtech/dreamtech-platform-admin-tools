@@ -94,11 +94,12 @@ export default function PlatformRoles() {
   };
 
   // 역할 삭제
-  const handleDelete = async (_id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('이 역할을 삭제하시겠습니까? 이 역할을 사용 중인 사용자가 있을 수 있습니다.')) {
       try {
         // TODO: API 호출
         // await userManagementService.deletePlatformRole(id);
+        console.log('Delete role:', id);
         enqueueSnackbar('역할이 삭제되었습니다', { variant: 'success' });
         fetchRoles();
       } catch (error) {

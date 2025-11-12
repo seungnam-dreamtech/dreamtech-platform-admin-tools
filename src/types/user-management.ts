@@ -296,6 +296,7 @@ export interface PlatformRole {
  */
 export interface UserFormData {
   email: string;
+  password?: string;
   name: string;
   phoneNumber?: string;
   department?: string;
@@ -306,6 +307,7 @@ export interface UserFormData {
     roles: string[];
   }>;
   status: 'active' | 'inactive' | 'suspended';
+  userType?: string;
 }
 
 /**
