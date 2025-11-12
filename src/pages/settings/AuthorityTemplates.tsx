@@ -83,9 +83,14 @@ export default function AuthorityTemplates() {
   useEffect(() => {
     let filtered = [...templates];
 
-    // User Type 필터
+    // User Type 필터 (역조회 방식)
     if (filterUserType !== 'ALL') {
-      filtered = filtered.filter(template => template.user_type === filterUserType);
+      const selectedUserType = userTypes.find(ut => ut.type_id === filterUserType);
+      if (selectedUserType) {
+        filtered = filtered.filter(template =>
+          selectedUserType.default_template_names?.includes(template.name)
+        );
+      }
     }
 
     // 키워드 검색
@@ -95,12 +100,12 @@ export default function AuthorityTemplates() {
         template =>
           template.name.toLowerCase().includes(keyword) ||
           (template.description?.toLowerCase().includes(keyword) ?? false) ||
-          (template.user_type?.toLowerCase().includes(keyword) ?? false)
+          (template.category?.toLowerCase().includes(keyword) ?? false)
       );
     }
 
     setFilteredTemplates(filtered);
-  }, [searchKeyword, filterUserType, templates]);
+  }, [searchKeyword, filterUserType, templates, userTypes]);
 
   // 템플릿 추가/수정
   const handleSave = async () => {
@@ -185,47 +190,45 @@ export default function AuthorityTemplates() {
     {
       field: 'user_type',
       headerName: 'User Type',
-      flex: 0.6,
+      flex: 0.8,
+      minWidth: 150,
+      renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
+        // 템플릿 name으로 해당 템플릿을 기본으로 사용하는 User Type들 찾기
+        const matchingUserTypes = userTypes.filter(ut =>
+          ut.default_template_names?.includes(params.row.name)
+        );
+
+        if (matchingUserTypes.length === 0) {
+          return <Typography variant="caption" color="textSecondary">-</Typography>;
+        }
+
+        return (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {matchingUserTypes.map(ut => (
+              <Chip
+                key={ut.type_id}
+                label={ut.display_name}
+                color="secondary"
+                size="small"
+              />
+            ))}
+          </Box>
+        );
+      },
+    },
+    {
+      field: 'global_roles',
+      headerName: '글로벌 역할',
+      flex: 0.7,
       minWidth: 130,
-      renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
-        const typeInfo = userTypes.find(t => t.type_id === params.row.user_type);
-        return (
-          <Chip
-            label={typeInfo?.display_name || params.row.user_type}
-            color="secondary"
-            size="small"
-          />
-        );
-      },
-    },
-    {
-      field: 'roles',
-      headerName: '역할',
-      width: 80,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
-        const roles = params.row.roles || [];
+        const globalRoles = params.row.global_roles || [];
+        const roleNames = globalRoles.map(r => r.display_name);
         return (
-          <Tooltip title={roles.length > 0 ? roles.join(', ') : '없음'}>
-            <Badge badgeContent={roles.length} color="primary" showZero>
-              <Box sx={{ width: 24 }} />
-            </Badge>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      field: 'permissions',
-      headerName: '권한',
-      width: 80,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
-        const permissions = params.row.permissions || [];
-        return (
-          <Tooltip title={permissions.length > 0 ? permissions.join(', ') : '없음'}>
-            <Badge badgeContent={permissions.length} color="success" showZero>
+          <Tooltip title={roleNames.length > 0 ? roleNames.join(', ') : '없음'}>
+            <Badge badgeContent={globalRoles.length} color="primary" showZero>
               <Box sx={{ width: 24 }} />
             </Badge>
           </Tooltip>
@@ -235,8 +238,8 @@ export default function AuthorityTemplates() {
     {
       field: 'service_roles',
       headerName: '서비스 역할',
-      flex: 0.5,
-      minWidth: 110,
+      flex: 0.7,
+      minWidth: 130,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
@@ -250,19 +253,6 @@ export default function AuthorityTemplates() {
           </Tooltip>
         );
       },
-    },
-    {
-      field: 'applied_user_count',
-      headerName: '적용 사용자',
-      flex: 0.5,
-      minWidth: 110,
-      align: 'right',
-      headerAlign: 'right',
-      renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => (
-        <Typography variant="body2" fontWeight={600}>
-          {params.row.statistics?.applied_user_count || 0}명
-        </Typography>
-      ),
     },
     {
       field: 'created_at',
@@ -358,7 +348,6 @@ export default function AuthorityTemplates() {
   const stats = {
     total: templates.length,
     withDefault: templates.filter(t => t.is_default).length,
-    totalAppliedUsers: templates.reduce((sum, t) => sum + (t.statistics?.applied_user_count || 0), 0),
   };
 
   return (
@@ -370,7 +359,7 @@ export default function AuthorityTemplates() {
             권한 템플릿 ({filteredTemplates.length}개)
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            User Type별 사전 정의된 권한 세트 관리 | 전체: {stats.total}개 | 기본 템플릿: {stats.withDefault}개 | 적용 사용자: {stats.totalAppliedUsers}명
+            User Type별 사전 정의된 권한 세트 관리 | 전체: {stats.total}개 | 기본 템플릿: {stats.withDefault}개
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -483,8 +472,6 @@ export default function AuthorityTemplates() {
         <DialogContent>
           <DialogContentText>
             "{templateToDelete?.name}" 템플릿을 삭제하시겠습니까?
-            <br />
-            현재 {templateToDelete?.statistics?.applied_user_count || 0}명의 사용자에게 적용 중입니다.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
