@@ -158,7 +158,8 @@ export default function AuthorityTemplates() {
     {
       field: 'name',
       headerName: '템플릿 이름',
-      width: 250,
+      flex: 1,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Tooltip title={params.row.is_default ? '기본 템플릿' : '일반 템플릿'}>
@@ -177,13 +178,14 @@ export default function AuthorityTemplates() {
     {
       field: 'description',
       headerName: '설명',
-      flex: 1,
+      flex: 1.2,
       minWidth: 200,
     },
     {
       field: 'user_type',
       headerName: 'User Type',
-      width: 150,
+      flex: 0.6,
+      minWidth: 130,
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
         const typeInfo = userTypes.find(t => t.type_id === params.row.user_type);
         return (
@@ -198,7 +200,9 @@ export default function AuthorityTemplates() {
     {
       field: 'roles',
       headerName: '역할',
-      width: 120,
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
         const roles = params.row.roles || [];
         return (
@@ -213,7 +217,9 @@ export default function AuthorityTemplates() {
     {
       field: 'permissions',
       headerName: '권한',
-      width: 120,
+      width: 80,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
         const permissions = params.row.permissions || [];
         return (
@@ -228,7 +234,10 @@ export default function AuthorityTemplates() {
     {
       field: 'service_roles',
       headerName: '서비스 역할',
-      width: 180,
+      flex: 0.5,
+      minWidth: 110,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => {
         const serviceRoles = params.row.service_roles || [];
         const roleNames = serviceRoles.map(r => `${r.service_id}:${r.role_name}`);
@@ -243,8 +252,9 @@ export default function AuthorityTemplates() {
     },
     {
       field: 'applied_user_count',
-      headerName: '적용 사용자 수',
-      width: 140,
+      headerName: '적용 사용자',
+      flex: 0.5,
+      minWidth: 110,
       align: 'right',
       headerAlign: 'right',
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => (
@@ -256,7 +266,9 @@ export default function AuthorityTemplates() {
     {
       field: 'actions',
       headerName: '작업',
-      width: 180,
+      width: 140,
+      align: 'center',
+      headerAlign: 'center',
       sortable: false,
       renderCell: (params: GridRenderCellParams<AuthorityTemplate>) => (
         <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -266,7 +278,7 @@ export default function AuthorityTemplates() {
               color={params.row.is_default ? 'primary' : 'default'}
               onClick={() => handleToggleDefault(params.row)}
             >
-              {params.row.is_default ? <StarIcon /> : <StarBorderIcon />}
+              {params.row.is_default ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
           <Tooltip title="수정">
