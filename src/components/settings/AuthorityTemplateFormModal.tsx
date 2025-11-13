@@ -66,11 +66,12 @@ function TabPanel(props: TabPanelProps) {
       style={{
         flex: 1,
         overflow: 'auto',
-        display: value === index ? 'block' : 'none'
+        display: value === index ? 'flex' : 'none',
+        flexDirection: 'column'
       }}
       {...other}
     >
-      <Box sx={{ py: 2 }}>{children}</Box>
+      <Box sx={{ px: 3, py: 2 }}>{children}</Box>
     </div>
   );
 }
@@ -288,17 +289,39 @@ export function AuthorityTemplateFormModal({
   );
 
   return (
-    <Dialog open={open} onClose={onCancel} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          height: '80vh',
+          maxHeight: '700px',
+        }
+      }}
+    >
       <DialogTitle>
         {isEditing ? `권한 템플릿 수정: ${template?.name}` : '새 권한 템플릿 추가'}
       </DialogTitle>
-      <DialogContent sx={{ minHeight: 500, maxHeight: 600, display: 'flex', flexDirection: 'column' }}>
-        <Alert severity="info" sx={{ mb: 2, flexShrink: 0 }}>
-          권한 템플릿은 User Type별로 사전 정의된 권한 세트입니다. 글로벌 역할과 서비스 역할을
-          조합하여 구성합니다.
-        </Alert>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
+        <Box sx={{ px: 3, pt: 2, pb: 1, flexShrink: 0 }}>
+          <Alert severity="info">
+            권한 템플릿은 User Type별로 사전 정의된 권한 세트입니다. 글로벌 역할과 서비스 역할을
+            조합하여 구성합니다.
+          </Alert>
+        </Box>
 
-        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)} sx={{ flexShrink: 0 }}>
+        <Tabs
+          value={currentTab}
+          onChange={(_, newValue) => setCurrentTab(newValue)}
+          sx={{
+            flexShrink: 0,
+            borderBottom: 1,
+            borderColor: 'divider',
+            px: 3
+          }}
+        >
           <Tab label="기본 정보" />
           <Tab label={`글로벌 역할 (${formData.global_roles.length})`} />
           <Tab label={`서비스 역할 (${formData.service_roles.length})`} />
@@ -355,140 +378,78 @@ export function AuthorityTemplateFormModal({
 
         {/* 탭 2: 글로벌 역할 */}
         <TabPanel value={currentTab} index={1}>
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              현재 선택된 글로벌 역할 ({formData.global_roles.length}개)
-            </Typography>
-            {formData.global_roles.length > 0 ? (
-              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {formData.global_roles.map((role) => (
-                    <Chip
-                      key={role.role_id}
-                      label={`${role.display_name} (${role.role_id})`}
-                      color="primary"
-                      onDelete={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          global_roles: prev.global_roles.filter((r) => r.role_id !== role.role_id),
-                        }));
-                      }}
-                    />
-                  ))}
-                </Box>
-              </Paper>
-            ) : (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                선택된 글로벌 역할이 없습니다
-              </Alert>
-            )}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="subtitle2" gutterBottom>
-              사용 가능한 글로벌 역할 선택
-            </Typography>
-            <List>
-              {availableGlobalRoles
-                .filter((role) => role.is_active)
-                .map((role) => {
-                  const isSelected = formData.global_roles.some(
-                    (r) => r.role_id === role.role_id
-                  );
-                  return (
-                    <ListItem
-                      key={role.role_id}
-                      dense
-                      button
-                      onClick={() => handleToggleGlobalRole(role)}
-                      sx={{
-                        bgcolor: isSelected ? 'action.selected' : 'transparent',
-                      }}
-                    >
-                      <ListItemIcon>
-                        <Checkbox checked={isSelected} edge="start" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`${role.display_name} (${role.role_id})`}
-                        secondary={role.description}
-                      />
-                      {role.is_system_role && (
-                        <Chip label="SYSTEM" color="error" size="small" />
-                      )}
-                    </ListItem>
-                  );
-                })}
-            </List>
-          </Box>
-        </TabPanel>
-
-        {/* 탭 3: 서비스 역할 */}
-        <TabPanel value={currentTab} index={2}>
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              현재 선택된 서비스 역할 ({formData.service_roles.length}개)
-            </Typography>
-            {formData.service_roles.length > 0 ? (
-              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {formData.service_roles.map((role) => (
-                    <Chip
-                      key={`${role.service_id}:${role.role_name}`}
-                      label={`${role.service_id}:${role.role_name}`}
-                      color="info"
-                      onDelete={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          service_roles: prev.service_roles.filter(
-                            (r) =>
-                              !(r.service_id === role.service_id && r.role_name === role.role_name)
-                          ),
-                        }));
-                      }}
-                    />
-                  ))}
-                </Box>
-              </Paper>
-            ) : (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                선택된 서비스 역할이 없습니다
-              </Alert>
-            )}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography variant="subtitle2" gutterBottom>
-              서비스별 역할 선택
-            </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box>
-              {Object.entries(serviceRolesByService).map(([serviceId, roles]) => (
-                <Paper key={serviceId} variant="outlined" sx={{ p: 2, mb: 2 }}>
-                  <Typography variant="subtitle2" color="primary" gutterBottom>
-                    {serviceId}
-                  </Typography>
-                  <List dense>
-                    {roles
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                현재 선택된 글로벌 역할 ({formData.global_roles.length}개)
+              </Typography>
+              {formData.global_roles.length > 0 ? (
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.global_roles.map((role) => (
+                      <Chip
+                        key={role.role_id}
+                        label={`${role.display_name} (${role.role_id})`}
+                        color="primary"
+                        onDelete={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            global_roles: prev.global_roles.filter((r) => r.role_id !== role.role_id),
+                          }));
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Paper>
+              ) : (
+                <Alert severity="warning">
+                  선택된 글로벌 역할이 없습니다. 아래 목록에서 역할을 선택하세요.
+                </Alert>
+              )}
+            </Box>
+
+            <Divider />
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                사용 가능한 글로벌 역할 선택 ({availableGlobalRoles.filter(r => r.is_active).length}개)
+              </Typography>
+              {availableGlobalRoles.filter((role) => role.is_active).length === 0 ? (
+                <Alert severity="info">
+                  등록된 활성 글로벌 역할이 없습니다.
+                </Alert>
+              ) : (
+                <Paper variant="outlined">
+                  <List dense disablePadding>
+                    {availableGlobalRoles
                       .filter((role) => role.is_active)
                       .map((role) => {
-                        const isSelected = formData.service_roles.some(
-                          (r) =>
-                            r.service_id === role.service_id && r.role_name === role.role_name
+                        const isSelected = formData.global_roles.some(
+                          (r) => r.role_id === role.role_id
                         );
                         return (
                           <ListItem
-                            key={`${role.service_id}:${role.role_name}`}
-                            dense
+                            key={role.role_id}
                             button
-                            onClick={() => handleToggleServiceRole(role)}
+                            onClick={() => handleToggleGlobalRole(role)}
                             sx={{
                               bgcolor: isSelected ? 'action.selected' : 'transparent',
+                              borderBottom: '1px solid',
+                              borderColor: 'divider',
+                              '&:last-child': {
+                                borderBottom: 'none',
+                              },
                             }}
                           >
                             <ListItemIcon>
                               <Checkbox checked={isSelected} edge="start" />
                             </ListItemIcon>
                             <ListItemText
-                              primary={`${role.role_name} - ${role.display_name}`}
+                              primary={
+                                <Typography variant="body2" fontWeight={isSelected ? 600 : 400}>
+                                  {role.display_name} ({role.role_id})
+                                </Typography>
+                              }
                               secondary={role.description}
                             />
                             {role.is_system_role && (
@@ -499,7 +460,112 @@ export function AuthorityTemplateFormModal({
                       })}
                   </List>
                 </Paper>
-              ))}
+              )}
+            </Box>
+          </Box>
+        </TabPanel>
+
+        {/* 탭 3: 서비스 역할 */}
+        <TabPanel value={currentTab} index={2}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                현재 선택된 서비스 역할 ({formData.service_roles.length}개)
+              </Typography>
+              {formData.service_roles.length > 0 ? (
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.service_roles.map((role) => (
+                      <Chip
+                        key={`${role.service_id}:${role.role_name}`}
+                        label={`${role.service_id}:${role.role_name}`}
+                        color="info"
+                        onDelete={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            service_roles: prev.service_roles.filter(
+                              (r) =>
+                                !(r.service_id === role.service_id && r.role_name === role.role_name)
+                            ),
+                          }));
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Paper>
+              ) : (
+                <Alert severity="warning">
+                  선택된 서비스 역할이 없습니다. 아래 목록에서 역할을 선택하세요.
+                </Alert>
+              )}
+            </Box>
+
+            <Divider />
+
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                사용 가능한 서비스 역할 선택
+              </Typography>
+              {Object.keys(serviceRolesByService).length === 0 ? (
+                <Alert severity="info">
+                  등록된 서비스 역할이 없습니다. 먼저 서비스 역할을 등록해주세요.
+                </Alert>
+              ) : (
+                <Box>
+                  {Object.entries(serviceRolesByService).map(([serviceId, roles]) => {
+                    const activeRoles = roles.filter((role) => role.is_active);
+                    if (activeRoles.length === 0) return null;
+
+                    return (
+                      <Paper key={serviceId} variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
+                        <Box sx={{ p: 1.5, bgcolor: 'primary.main', color: 'white' }}>
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            {serviceId} ({activeRoles.length}개)
+                          </Typography>
+                        </Box>
+                        <List dense disablePadding>
+                          {activeRoles.map((role) => {
+                            const isSelected = formData.service_roles.some(
+                              (r) =>
+                                r.service_id === role.service_id && r.role_name === role.role_name
+                            );
+                            return (
+                              <ListItem
+                                key={`${role.service_id}:${role.role_name}`}
+                                button
+                                onClick={() => handleToggleServiceRole(role)}
+                                sx={{
+                                  bgcolor: isSelected ? 'action.selected' : 'transparent',
+                                  borderBottom: '1px solid',
+                                  borderColor: 'divider',
+                                  '&:last-child': {
+                                    borderBottom: 'none',
+                                  },
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <Checkbox checked={isSelected} edge="start" />
+                                </ListItemIcon>
+                                <ListItemText
+                                  primary={
+                                    <Typography variant="body2" fontWeight={isSelected ? 600 : 400}>
+                                      {role.role_name} - {role.display_name}
+                                    </Typography>
+                                  }
+                                  secondary={role.description}
+                                />
+                                {role.is_system_role && (
+                                  <Chip label="SYSTEM" color="error" size="small" />
+                                )}
+                              </ListItem>
+                            );
+                          })}
+                        </List>
+                      </Paper>
+                    );
+                  })}
+                </Box>
+              )}
             </Box>
           </Box>
         </TabPanel>
@@ -557,9 +623,11 @@ export function AuthorityTemplateFormModal({
           </Box>
         </TabPanel>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel}>취소</Button>
-        <Button onClick={handleSave} variant="contained" disabled={loading}>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={onCancel} size="large">
+          취소
+        </Button>
+        <Button onClick={handleSave} variant="contained" size="large" disabled={loading}>
           {isEditing ? '수정' : '추가'}
         </Button>
       </DialogActions>
