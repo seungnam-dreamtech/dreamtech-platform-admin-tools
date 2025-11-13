@@ -484,6 +484,8 @@ export default function PlatformUsers() {
           }}
           sx={{
             '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
               py: 1,
             },
             '& .MuiDataGrid-cell:focus': {

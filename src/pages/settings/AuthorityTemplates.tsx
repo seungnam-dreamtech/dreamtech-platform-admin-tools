@@ -427,6 +427,8 @@ export default function AuthorityTemplates() {
           }}
           sx={{
             '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
               py: 1,
             },
             '& .MuiDataGrid-cell:focus': {

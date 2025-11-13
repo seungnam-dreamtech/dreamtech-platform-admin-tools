@@ -449,6 +449,10 @@ export default function ServiceRolesTab() {
           }}
           disableRowSelectionOnClick
           sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
+            },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },

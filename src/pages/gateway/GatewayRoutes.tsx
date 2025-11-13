@@ -796,6 +796,10 @@ const GatewayRoutes: React.FC = () => {
             },
           }}
           sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex',
+              alignItems: 'center',
+            },
             '& .MuiDataGrid-row': {
               cursor: 'pointer',
             },

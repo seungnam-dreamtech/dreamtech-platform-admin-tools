@@ -462,6 +462,8 @@ export default function PermissionManagement() {
             }}
             sx={{
               '& .MuiDataGrid-cell': {
+                display: 'flex',
+                alignItems: 'center',
                 py: 1,
               },
               '& .MuiDataGrid-cell:focus': {
@@ -503,6 +505,12 @@ export default function PermissionManagement() {
                       pagination: { paginationModel: { pageSize: 5 } },
                     }}
                     disableRowSelectionOnClick
+                    sx={{
+                      '& .MuiDataGrid-cell': {
+                        display: 'flex',
+                        alignItems: 'center',
+                      },
+                    }}
                   />
                 </Box>
               </AccordionDetails>
