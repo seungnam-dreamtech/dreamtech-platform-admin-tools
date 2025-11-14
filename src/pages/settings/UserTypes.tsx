@@ -358,6 +358,11 @@ export default function UserTypes() {
             noResultsOverlayLabel: '검색 결과가 없습니다',
           }}
           sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex !important',
+              alignItems: 'center !important',
+              padding: '0 16px !important',
+            },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },

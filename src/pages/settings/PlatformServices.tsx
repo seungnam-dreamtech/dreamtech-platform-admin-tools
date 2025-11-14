@@ -275,6 +275,11 @@ export default function PlatformServices() {
           }}
           disableRowSelectionOnClick
           sx={{
+            '& .MuiDataGrid-cell': {
+              display: 'flex !important',
+              alignItems: 'center !important',
+              padding: '0 16px !important',
+            },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },

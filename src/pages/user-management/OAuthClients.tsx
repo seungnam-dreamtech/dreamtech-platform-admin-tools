@@ -706,6 +706,8 @@ export default function OAuthClients() {
           disableRowSelectionOnClick
           sx={{
             '& .MuiDataGrid-cell': {
+              display: 'flex !important',
+              alignItems: 'center !important',
               py: 1,
             },
             '& .MuiDataGrid-cell:focus': {
