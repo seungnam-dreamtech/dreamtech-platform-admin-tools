@@ -10,6 +10,12 @@ import type {
   ServiceSubscriptionChange,
   UserSearchFilter,
   ServiceSearchFilter,
+  CodeGroup,
+  Code,
+  CreateCodeGroupRequest,
+  UpdateCodeGroupRequest,
+  CreateCodeRequest,
+  UpdateCodeRequest,
 } from '../types/user-management';
 
 import {
@@ -1338,6 +1344,159 @@ class UserManagementService {
   async deleteAuthorityTemplate(templateId: number) {
     console.warn('⚠️ deleteAuthorityTemplate is deprecated. Use deletePermissionTemplate instead.');
     return this.deletePermissionTemplate(templateId);
+  }
+
+  // ============================================
+  // 공통 코드 관리 (Common Code Management)
+  // ============================================
+
+  /**
+   * 코드 그룹 목록 조회
+   * GET /v1/management/codes/groups
+   */
+  async getCodeGroups(activeOnly: boolean = false) {
+    const params = new URLSearchParams();
+    if (activeOnly) {
+      params.append('activeOnly', 'true');
+    }
+    const query = params.toString();
+    return this.request<CodeGroup[]>(
+      `/v1/management/codes/groups${query ? `?${query}` : ''}`
+    );
+  }
+
+  /**
+   * 특정 코드 그룹 조회
+   * GET /v1/management/codes/groups/{groupId}
+   */
+  async getCodeGroup(groupId: string) {
+    return this.request<CodeGroup>(`/v1/management/codes/groups/${groupId}`);
+  }
+
+  /**
+   * 코드 그룹 생성
+   * POST /v1/management/codes/groups
+   */
+  async createCodeGroup(data: CreateCodeGroupRequest) {
+    return this.request<CodeGroup>('/v1/management/codes/groups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * 코드 그룹 수정
+   * PUT /v1/management/codes/groups/{groupId}
+   */
+  async updateCodeGroup(groupId: string, data: UpdateCodeGroupRequest) {
+    return this.request<CodeGroup>(`/v1/management/codes/groups/${groupId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * 코드 그룹 삭제
+   * DELETE /v1/management/codes/groups/{groupId}
+   * ⚠️ 코드가 하나라도 있으면 삭제 불가
+   */
+  async deleteCodeGroup(groupId: string) {
+    return this.request<void>(`/v1/management/codes/groups/${groupId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * 코드 그룹 활성화/비활성화
+   * PATCH /v1/management/codes/groups/{groupId}/activation?isActive={isActive}
+   */
+  async toggleCodeGroupActivation(groupId: string, isActive: boolean) {
+    return this.request<CodeGroup>(
+      `/v1/management/codes/groups/${groupId}/activation?isActive=${isActive}`,
+      {
+        method: 'PATCH',
+      }
+    );
+  }
+
+  /**
+   * 특정 그룹의 코드 목록 조회
+   * GET /v1/management/codes/groups/{groupId}/codes
+   */
+  async getCodesByGroup(groupId: string, activeOnly: boolean = true) {
+    const params = new URLSearchParams();
+    if (activeOnly) {
+      params.append('activeOnly', 'true');
+    }
+    const query = params.toString();
+    return this.request<Code[]>(
+      `/v1/management/codes/groups/${groupId}/codes${query ? `?${query}` : ''}`
+    );
+  }
+
+  /**
+   * 특정 코드 조회
+   * GET /v1/management/codes/groups/{groupId}/codes/{codeValue}
+   */
+  async getCode(groupId: string, codeValue: string) {
+    return this.request<Code>(
+      `/v1/management/codes/groups/${groupId}/codes/${codeValue}`
+    );
+  }
+
+  /**
+   * 코드 생성
+   * POST /v1/management/codes/groups/{groupId}/codes
+   */
+  async createCode(groupId: string, data: CreateCodeRequest) {
+    return this.request<Code>(`/v1/management/codes/groups/${groupId}/codes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * 코드 수정
+   * PUT /v1/management/codes/codes/{codeId}
+   */
+  async updateCode(codeId: number, data: UpdateCodeRequest) {
+    return this.request<Code>(`/v1/management/codes/codes/${codeId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * 코드 삭제
+   * DELETE /v1/management/codes/codes/{codeId}
+   * ⚠️ 하위 코드가 있으면 삭제 불가
+   */
+  async deleteCode(codeId: number) {
+    return this.request<void>(`/v1/management/codes/codes/${codeId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * 코드 활성화/비활성화
+   * PATCH /v1/management/codes/codes/{codeId}/activation?isActive={isActive}
+   */
+  async toggleCodeActivation(codeId: number, isActive: boolean) {
+    return this.request<Code>(
+      `/v1/management/codes/codes/${codeId}/activation?isActive=${isActive}`,
+      {
+        method: 'PATCH',
+      }
+    );
+  }
+
+  /**
+   * 템플릿 카테고리 조회
+   * GET /v1/management/codes/template-categories
+   * (TEMPLATE_CATEGORY 그룹의 활성화된 코드)
+   */
+  async getTemplateCategories() {
+    return this.request<Code[]>('/v1/management/codes/template-categories');
   }
 }
 
