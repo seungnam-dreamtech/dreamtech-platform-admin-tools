@@ -748,20 +748,41 @@ export const RouteFormModal: React.FC<RouteFormModalProps> = ({
       onClose={handleModalClose}
       maxWidth="md"
       fullWidth
+      PaperProps={{
+        sx: {
+          height: '80vh',
+          maxHeight: '700px',
+        }
+      }}
     >
       <DialogTitle>
         {mode === 'create' ? '새 라우트 추가' : '라우트 수정'}
       </DialogTitle>
-      <DialogContent>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs value={currentStep} onChange={(_, newValue) => setCurrentStep(newValue)}>
-            {tabLabels.map((label, index) => (
-              <Tab key={index} label={label} />
-            ))}
-          </Tabs>
-        </Box>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', p: 0 }}>
+        <Tabs
+          value={currentStep}
+          onChange={(_, newValue) => setCurrentStep(newValue)}
+          sx={{
+            flexShrink: 0,
+            borderBottom: 1,
+            borderColor: 'divider',
+            px: 3,
+            pt: 2
+          }}
+        >
+          {tabLabels.map((label, index) => (
+            <Tab key={index} label={label} />
+          ))}
+        </Tabs>
 
-        <Box sx={{ mt: 2 }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            px: 3,
+            py: 2
+          }}
+        >
           {currentStep === 0 && (
             <RouteBasicInfoForm
               value={basicInfo}
@@ -781,16 +802,17 @@ export const RouteFormModal: React.FC<RouteFormModalProps> = ({
           {currentStep === 3 && renderReview()}
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleModalClose}>취소</Button>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={handleModalClose} size="large">취소</Button>
         {currentStep > 0 && (
-          <Button onClick={handlePrevious}>이전</Button>
+          <Button onClick={handlePrevious} size="large">이전</Button>
         )}
         {currentStep < 3 ? (
-          <Button variant="contained" onClick={handleNext}>다음</Button>
+          <Button variant="contained" size="large" onClick={handleNext}>다음</Button>
         ) : (
           <Button
             variant="contained"
+            size="large"
             startIcon={<CheckCircleIcon />}
             onClick={handleSave}
             disabled={mode === 'edit' && !hasChanges || saving}
