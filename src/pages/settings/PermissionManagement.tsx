@@ -59,7 +59,7 @@ export default function PermissionManagement() {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | undefined>(
     undefined
   );
-  const [viewMode, setViewMode] = useState<'table' | 'grouped'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grouped'>('grouped');
 
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -178,9 +178,9 @@ export default function PermissionManagement() {
   // 카테고리 목록 추출
   const categories = Array.from(new Set(permissions.map(p => p.category).filter(Boolean)));
 
-  // 서비스별 그룹화 데이터
+  // 서비스별 그룹화 데이터 (필터링된 권한 사용)
   const groupedByService = services.map(service => {
-    const servicePermissions = permissions.filter(p => p.service_id === service.service_id);
+    const servicePermissions = filteredPermissions.filter(p => p.service_id === service.service_id);
     const activeCount = servicePermissions.filter(p => p.is_active).length;
     return {
       service,
@@ -189,7 +189,7 @@ export default function PermissionManagement() {
     };
   });
 
-  // DataGrid 컬럼 정의
+  // DataGrid 컬럼 정의 (테이블 뷰용)
   const columns: GridColDef[] = [
     {
       field: 'service_id',
@@ -312,6 +312,117 @@ export default function PermissionManagement() {
         <Typography variant="caption" color="textSecondary">
           {params.row.updated_by || '-'}
         </Typography>
+      ),
+    },
+    {
+      field: 'actions',
+      headerName: '작업',
+      flex: 0.4,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title="수정">
+            <IconButton size="small" onClick={() => handleOpenModal(params.row)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={params.row.is_system_permission ? '시스템 권한은 삭제할 수 없습니다' : '삭제'}>
+            <span>
+              <IconButton
+                size="small"
+                color="error"
+                disabled={params.row.is_system_permission}
+                onClick={() => {
+                  setPermissionToDelete(params.row);
+                  setDeleteDialogOpen(true);
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
+      ),
+    },
+  ];
+
+  // 그룹 뷰용 컬럼 정의 (서비스 컬럼 제외)
+  const groupedColumns: GridColDef[] = [
+    {
+      field: 'permission_string',
+      headerName: '권한 문자열',
+      flex: 1.3,
+      minWidth: 220,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Chip
+          label={params.row.permission_string}
+          variant="outlined"
+          size="small"
+          sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+        />
+      ),
+    },
+    {
+      field: 'display_name',
+      headerName: '표시명',
+      flex: 1.1,
+      minWidth: 180,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.display_name}
+        </Typography>
+      ),
+    },
+    {
+      field: 'category',
+      headerName: '카테고리',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Chip label={params.row.category} size="small" variant="outlined" />
+      ),
+    },
+    {
+      field: 'description',
+      headerName: '설명',
+      flex: 1.2,
+      minWidth: 200,
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.description || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'is_system_permission',
+      headerName: '시스템',
+      flex: 0.3,
+      minWidth: 70,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) =>
+        params.row.is_system_permission ? (
+          <Tooltip title="시스템 권한 (삭제 불가)">
+            <SecurityIcon color="warning" fontSize="small" />
+          </Tooltip>
+        ) : null,
+    },
+    {
+      field: 'is_active',
+      headerName: '활성',
+      flex: 0.3,
+      minWidth: 70,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
+        <Switch
+          checked={params.row.is_active}
+          onChange={() => handleToggleActive(params.row)}
+          size="small"
+        />
       ),
     },
     {
@@ -481,41 +592,106 @@ export default function PermissionManagement() {
 
       {/* 그룹 뷰 */}
       {viewMode === 'grouped' && (
-        <Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {groupedByService.map(({ service, permissions: servicePermissions, activeCount }) => (
-            <Accordion key={service.service_id} defaultExpanded={servicePermissions.length > 0}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Accordion
+              key={service.service_id}
+              defaultExpanded={servicePermissions.length > 0}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                '&:before': {
+                  display: 'none',
+                },
+                boxShadow: 1,
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  backgroundColor: 'grey.50',
+                  '&:hover': {
+                    backgroundColor: 'grey.100',
+                  },
+                }}
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                  <AppsIcon color="primary" />
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {service.service_name || service.service_id}
-                  </Typography>
-                  <Badge badgeContent={servicePermissions.length} color="primary" />
-                  <Typography variant="body2" color="textSecondary">
-                    활성: {activeCount}
-                  </Typography>
+                  <AppsIcon color="primary" fontSize="medium" />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {service.service_id}
+                    </Typography>
+                    {service.description && (
+                      <Typography variant="caption" color="textSecondary">
+                        {service.description}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Chip
+                      label={`전체 ${servicePermissions.length}개`}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                    <Chip
+                      label={`활성 ${activeCount}개`}
+                      size="small"
+                      color="success"
+                      variant="outlined"
+                    />
+                  </Box>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
-                <Box sx={{ height: 400, width: '100%' }}>
-                  <DataGrid
-                    rows={servicePermissions}
-                    columns={columns}
-                    getRowId={(row) => row.id}
-                    pageSizeOptions={[5, 10, 25]}
-                    initialState={{
-                      pagination: { paginationModel: { pageSize: 5 } },
-                    }}
-                    disableRowSelectionOnClick
-                    sx={{
-                      '& .MuiDataGrid-cell': {
-                        display: 'flex !important',
-                        alignItems: 'center !important',
-                        padding: '0 16px !important',
-                      },
-                    }}
-                  />
-                </Box>
+              <AccordionDetails sx={{ p: 0 }}>
+                {servicePermissions.length > 0 ? (
+                  <Box sx={{
+                    height: Math.min(400, servicePermissions.length * 52 + 100),
+                    minHeight: 300,
+                    width: '100%'
+                  }}>
+                    <DataGrid
+                      rows={servicePermissions}
+                      columns={groupedColumns}
+                      getRowId={(row) => row.id}
+                      pageSizeOptions={[5, 10, 25, 50]}
+                      initialState={{
+                        pagination: { paginationModel: { pageSize: 10 } },
+                      }}
+                      disableRowSelectionOnClick
+                      sx={{
+                        border: 'none',
+                        '& .MuiDataGrid-cell': {
+                          display: 'flex !important',
+                          alignItems: 'center !important',
+                          padding: '0 16px !important',
+                        },
+                        '& .MuiDataGrid-columnHeaders': {
+                          backgroundColor: 'grey.100',
+                        },
+                      }}
+                    />
+                  </Box>
+                ) : (
+                  <Box sx={{
+                    p: 4,
+                    textAlign: 'center',
+                    color: 'text.secondary',
+                  }}>
+                    <Typography variant="body2">
+                      이 서비스에 등록된 권한이 없습니다.
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={() => handleOpenModal()}
+                      sx={{ mt: 2 }}
+                    >
+                      권한 추가
+                    </Button>
+                  </Box>
+                )}
               </AccordionDetails>
             </Accordion>
           ))}
