@@ -599,3 +599,96 @@ export interface PermissionUpdateRequest {
   description?: string;
   category?: string;
 }
+
+// ============================================
+// 공통 코드 관리 (Common Code Management)
+// ============================================
+
+/**
+ * 코드 그룹 응답
+ * API Response: GET /v1/management/codes/groups
+ */
+export interface CodeGroup {
+  group_id: string;                 // Primary Key
+  group_name: string;               // 그룹명
+  description: string;              // 설명
+  display_order: number;            // 표시 순서
+  is_system_managed: boolean;       // 시스템 관리 여부
+  is_active: boolean;               // 활성화 여부
+  code_count: number;               // 코드 개수
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
+
+/**
+ * 코드 응답
+ * API Response: GET /v1/management/codes/groups/{groupId}/codes
+ */
+export interface Code {
+  code_id: number;                  // Primary Key (auto-generated)
+  group_id: string;                 // Foreign Key
+  code_value: string;               // 코드 값
+  code_name: string;                // 코드 표시명
+  description: string;              // 설명
+  display_order: number;            // 표시 순서
+  parent_code_id?: number;          // 상위 코드 ID (계층 구조)
+  is_default: boolean;              // 기본값 여부
+  is_active: boolean;               // 활성화 여부
+  extended_attributes?: string;     // 확장 속성 (JSON)
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
+
+/**
+ * 코드 그룹 생성 요청
+ * API Request: POST /v1/management/codes/groups
+ */
+export interface CreateCodeGroupRequest {
+  group_id: string;
+  group_name: string;
+  description?: string;
+  display_order?: number;
+  is_system_managed?: boolean;
+  is_active?: boolean;
+}
+
+/**
+ * 코드 그룹 수정 요청
+ * API Request: PUT /v1/management/codes/groups/{groupId}
+ */
+export interface UpdateCodeGroupRequest {
+  group_name?: string;
+  description?: string;
+  display_order?: number;
+}
+
+/**
+ * 코드 생성 요청
+ * API Request: POST /v1/management/codes/groups/{groupId}/codes
+ */
+export interface CreateCodeRequest {
+  code_value: string;
+  code_name: string;
+  description?: string;
+  display_order?: number;
+  parent_code_id?: number;
+  is_default?: boolean;
+  is_active?: boolean;
+  extended_attributes?: string;
+}
+
+/**
+ * 코드 수정 요청
+ * API Request: PUT /v1/management/codes/codes/{codeId}
+ */
+export interface UpdateCodeRequest {
+  code_name?: string;
+  description?: string;
+  display_order?: number;
+  is_default?: boolean;
+  extended_attributes?: string;
+}

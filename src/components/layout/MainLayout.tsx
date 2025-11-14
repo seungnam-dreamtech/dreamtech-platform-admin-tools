@@ -129,6 +129,11 @@ const MainLayout: React.FC = () => {
           icon: null,
           label: '권한 템플릿',
         },
+        {
+          key: '/system/codes',
+          icon: null,
+          label: '공통 코드',
+        },
       ],
     },
     {

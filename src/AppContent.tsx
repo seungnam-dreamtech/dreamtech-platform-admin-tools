@@ -15,6 +15,7 @@ import PermissionManagement from './pages/settings/PermissionManagement';
 import RoleManagement from './pages/settings/RoleManagement';
 import UserTypes from './pages/settings/UserTypes';
 import AuthorityTemplates from './pages/settings/AuthorityTemplates';
+import CommonCodes from './pages/settings/CommonCodes';
 
 // AppContent component that handles authentication-based routing
 // 인증 기반 라우팅을 처리하는 AppContent 컴포넌트
@@ -58,6 +59,7 @@ const AppContent: React.FC = () => {
           {/* 시스템 설정 */}
           <Route path="system/services" element={<PlatformServices />} />
           <Route path="system/user-types" element={<UserTypes />} />
+          <Route path="system/codes" element={<CommonCodes />} />
 
           {/* 레거시 경로 리다이렉트 (하위 호환성) */}
           <Route path={ROUTES.SETTINGS.slice(1)} element={<PlatformServices />} />
@@ -66,6 +68,7 @@ const AppContent: React.FC = () => {
           <Route path="settings/roles" element={<RoleManagement />} />
           <Route path="settings/user-types" element={<UserTypes />} />
           <Route path="settings/templates" element={<AuthorityTemplates />} />
+          <Route path="settings/codes" element={<CommonCodes />} />
         </Route>
       ) : (
         <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
