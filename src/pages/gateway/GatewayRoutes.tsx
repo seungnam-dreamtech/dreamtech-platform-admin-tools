@@ -704,10 +704,10 @@ const GatewayRoutes: React.FC = () => {
       {/* 헤더 */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
-          <Typography variant="h6" component="span" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h5" fontWeight={600}>
             API Gateway 라우트 ({filteredRoutes.length}개)
           </Typography>
-          <Typography variant="body2" component="span" sx={{ ml: 1, color: 'text.secondary' }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
             {routes.length}개 라우트 | 활성 {activeRoutes}개 | 서비스 {servicesCount}개
           </Typography>
         </Box>
