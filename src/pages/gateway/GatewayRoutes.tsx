@@ -470,31 +470,39 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'id',
       headerName: 'Route ID',
-      flex: 1,
-      minWidth: 150,
+      flex: 0.8,
+      minWidth: 140,
       renderCell: (params) => (
-        <Box
-          component="code"
+        <Typography
+          variant="body2"
           sx={{
             fontSize: '12px',
-            background: '#f5f5f5',
-            padding: '3px 8px',
-            borderRadius: '4px',
+            fontFamily: 'monospace',
             fontWeight: 500,
+            color: 'text.primary',
           }}
         >
           {params.value}
-        </Box>
+        </Typography>
       ),
     },
     {
       field: 'uri',
       headerName: 'Service URI',
-      flex: 1.5,
-      minWidth: 200,
+      flex: 2,
+      minWidth: 220,
       renderCell: (params) => (
         <Tooltip title={params.value}>
-          <Typography variant="body2" sx={{ fontSize: '12px', color: 'primary.main' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '12px',
+              color: 'primary.main',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {params.value}
           </Typography>
         </Tooltip>
@@ -503,8 +511,8 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'path',
       headerName: 'Path',
-      flex: 1.3,
-      minWidth: 180,
+      flex: 2.5,
+      minWidth: 220,
       renderCell: (params) => {
         const paths = params.row.conditions.path || [];
 
@@ -513,21 +521,18 @@ const GatewayRoutes: React.FC = () => {
         return (
           <Box>
             {paths.slice(0, 1).map((path: string, index: number) => (
-              <Box
+              <Typography
                 key={index}
+                variant="body2"
                 sx={{
                   fontSize: '12px',
                   fontFamily: 'Monaco, Consolas, monospace',
-                  background: '#f5f5f5',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid #d9d9d9',
-                  marginBottom: '2px',
                   color: 'primary.main',
+                  fontWeight: 500,
                 }}
               >
                 {path}
-              </Box>
+              </Typography>
             ))}
             {paths.length > 1 && (
               <Tooltip
