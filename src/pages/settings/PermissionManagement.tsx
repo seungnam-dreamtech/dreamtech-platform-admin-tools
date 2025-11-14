@@ -63,7 +63,6 @@ export default function PermissionManagement() {
 
   // 그룹 뷰에서 선택된 서비스
   const [selectedServiceInGroupView, setSelectedServiceInGroupView] = useState<string | null>(null);
-  const [serviceSearchKeyword, setServiceSearchKeyword] = useState('');
 
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -197,15 +196,20 @@ export default function PermissionManagement() {
   const categories = Array.from(new Set(permissions.map(p => p.category).filter(Boolean)));
 
   // 서비스별 그룹화 데이터 (필터링된 권한 사용)
-  const groupedByService = services.map(service => {
-    const servicePermissions = filteredPermissions.filter(p => p.service_id === service.service_id);
-    const activeCount = servicePermissions.filter(p => p.is_active).length;
-    return {
-      service,
-      permissions: servicePermissions,
-      activeCount,
-    };
-  });
+  const groupedByService = services
+    .filter(service =>
+      // 상단 서비스 필터가 있으면 해당 서비스만 표시
+      !selectedServiceFilter || service.service_id === selectedServiceFilter
+    )
+    .map(service => {
+      const servicePermissions = filteredPermissions.filter(p => p.service_id === service.service_id);
+      const activeCount = servicePermissions.filter(p => p.is_active).length;
+      return {
+        service,
+        permissions: servicePermissions,
+        activeCount,
+      };
+    });
 
   // DataGrid 컬럼 정의 (테이블 뷰용)
   const columns: GridColDef[] = [
@@ -624,35 +628,9 @@ export default function PermissionManagement() {
               backgroundColor: 'background.paper',
             }}
           >
-            {/* 서비스 검색 */}
-            <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-              <TextField
-                placeholder="서비스 검색"
-                value={serviceSearchKeyword}
-                onChange={(e) => setServiceSearchKeyword(e.target.value)}
-                size="small"
-                fullWidth
-                slotProps={{
-                  input: {
-                    endAdornment: serviceSearchKeyword && (
-                      <IconButton size="small" onClick={() => setServiceSearchKeyword('')}>
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    ),
-                  },
-                }}
-              />
-            </Box>
-
             {/* 서비스 목록 */}
             <Box sx={{ flex: 1, overflow: 'auto' }}>
-              {groupedByService
-                .filter(({ service }) =>
-                  !serviceSearchKeyword ||
-                  service.service_id.toLowerCase().includes(serviceSearchKeyword.toLowerCase()) ||
-                  service.description?.toLowerCase().includes(serviceSearchKeyword.toLowerCase())
-                )
-                .map(({ service, permissions: servicePermissions, activeCount }) => (
+              {groupedByService.map(({ service, permissions: servicePermissions, activeCount }) => (
                   <Box
                     key={service.service_id}
                     onClick={() => setSelectedServiceInGroupView(service.service_id)}
@@ -779,28 +757,18 @@ export default function PermissionManagement() {
                         backgroundColor: 'grey.50',
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <AppsIcon color="primary" fontSize="large" />
-                          <Box>
-                            <Typography variant="h6" fontWeight={700}>
-                              {service.service_id}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <AppsIcon color="primary" fontSize="large" />
+                        <Box>
+                          <Typography variant="h6" fontWeight={700}>
+                            {service.service_id}
+                          </Typography>
+                          {service.description && (
+                            <Typography variant="body2" color="textSecondary">
+                              {service.description}
                             </Typography>
-                            {service.description && (
-                              <Typography variant="body2" color="textSecondary">
-                                {service.description}
-                              </Typography>
-                            )}
-                          </Box>
+                          )}
                         </Box>
-                        <Button
-                          variant="contained"
-                          startIcon={<AddIcon />}
-                          onClick={() => handleOpenModal()}
-                          size="small"
-                        >
-                          권한 추가
-                        </Button>
                       </Box>
                     </Box>
 
@@ -833,23 +801,14 @@ export default function PermissionManagement() {
                           sx={{
                             height: '100%',
                             display: 'flex',
-                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: 'text.secondary',
                           }}
                         >
-                          <Typography variant="body1" gutterBottom>
+                          <Typography variant="body1">
                             이 서비스에 등록된 권한이 없습니다.
                           </Typography>
-                          <Button
-                            variant="outlined"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenModal()}
-                            sx={{ mt: 2 }}
-                          >
-                            권한 추가
-                          </Button>
                         </Box>
                       )}
                     </Box>
