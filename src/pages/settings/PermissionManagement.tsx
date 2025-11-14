@@ -61,6 +61,10 @@ export default function PermissionManagement() {
   );
   const [viewMode, setViewMode] = useState<'table' | 'grouped'>('grouped');
 
+  // 그룹 뷰에서 선택된 서비스
+  const [selectedServiceInGroupView, setSelectedServiceInGroupView] = useState<string | null>(null);
+  const [serviceSearchKeyword, setServiceSearchKeyword] = useState('');
+
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPermission, setEditingPermission] = useState<PermissionDefinition | null>(null);
@@ -114,6 +118,20 @@ export default function PermissionManagement() {
     fetchPermissions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchKeyword, selectedServiceFilter, selectedCategoryFilter]);
+
+  // 그룹 뷰에서 첫 번째 서비스를 자동 선택
+  useEffect(() => {
+    if (viewMode === 'grouped' && services.length > 0 && !selectedServiceInGroupView) {
+      const servicesWithPermissions = services.filter(s =>
+        filteredPermissions.some(p => p.service_id === s.service_id)
+      );
+      if (servicesWithPermissions.length > 0) {
+        setSelectedServiceInGroupView(servicesWithPermissions[0].service_id);
+      } else if (services.length > 0) {
+        setSelectedServiceInGroupView(services[0].service_id);
+      }
+    }
+  }, [viewMode, services, filteredPermissions, selectedServiceInGroupView]);
 
   // 모달 열기
   const handleOpenModal = (permission?: PermissionDefinition) => {
@@ -590,111 +608,268 @@ export default function PermissionManagement() {
         </Box>
       )}
 
-      {/* 그룹 뷰 */}
+      {/* 그룹 뷰 - 좌우 분할 레이아웃 */}
       {viewMode === 'grouped' && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {groupedByService.map(({ service, permissions: servicePermissions, activeCount }) => (
-            <Accordion
-              key={service.service_id}
-              defaultExpanded={servicePermissions.length > 0}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                '&:before': {
-                  display: 'none',
-                },
-                boxShadow: 1,
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                sx={{
-                  backgroundColor: 'grey.50',
-                  '&:hover': {
-                    backgroundColor: 'grey.100',
+        <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 320px)', minHeight: 500 }}>
+          {/* 좌측: 서비스 목록 */}
+          <Box
+            sx={{
+              width: 320,
+              flexShrink: 0,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'background.paper',
+            }}
+          >
+            {/* 서비스 검색 */}
+            <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+              <TextField
+                placeholder="서비스 검색"
+                value={serviceSearchKeyword}
+                onChange={(e) => setServiceSearchKeyword(e.target.value)}
+                size="small"
+                fullWidth
+                slotProps={{
+                  input: {
+                    endAdornment: serviceSearchKeyword && (
+                      <IconButton size="small" onClick={() => setServiceSearchKeyword('')}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    ),
                   },
                 }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                  <AppsIcon color="primary" fontSize="medium" />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      {service.service_id}
-                    </Typography>
-                    {service.description && (
-                      <Typography variant="caption" color="textSecondary">
-                        {service.description}
-                      </Typography>
-                    )}
+              />
+            </Box>
+
+            {/* 서비스 목록 */}
+            <Box sx={{ flex: 1, overflow: 'auto' }}>
+              {groupedByService
+                .filter(({ service }) =>
+                  !serviceSearchKeyword ||
+                  service.service_id.toLowerCase().includes(serviceSearchKeyword.toLowerCase()) ||
+                  service.description?.toLowerCase().includes(serviceSearchKeyword.toLowerCase())
+                )
+                .map(({ service, permissions: servicePermissions, activeCount }) => (
+                  <Box
+                    key={service.service_id}
+                    onClick={() => setSelectedServiceInGroupView(service.service_id)}
+                    sx={{
+                      p: 2,
+                      cursor: 'pointer',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      backgroundColor:
+                        selectedServiceInGroupView === service.service_id
+                          ? 'primary.main'
+                          : 'transparent',
+                      color:
+                        selectedServiceInGroupView === service.service_id
+                          ? 'primary.contrastText'
+                          : 'text.primary',
+                      '&:hover': {
+                        backgroundColor:
+                          selectedServiceInGroupView === service.service_id
+                            ? 'primary.dark'
+                            : 'action.hover',
+                      },
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                      <AppsIcon
+                        fontSize="small"
+                        sx={{
+                          mt: 0.3,
+                          color:
+                            selectedServiceInGroupView === service.service_id
+                              ? 'inherit'
+                              : 'primary.main',
+                        }}
+                      />
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="subtitle2" fontWeight={600} noWrap>
+                          {service.service_id}
+                        </Typography>
+                        {service.description && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              mt: 0.5,
+                              opacity: selectedServiceInGroupView === service.service_id ? 0.9 : 0.7,
+                            }}
+                            noWrap
+                          >
+                            {service.description}
+                          </Typography>
+                        )}
+                        <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                          <Chip
+                            label={`${servicePermissions.length}개`}
+                            size="small"
+                            sx={{
+                              height: 20,
+                              fontSize: '0.7rem',
+                              backgroundColor:
+                                selectedServiceInGroupView === service.service_id
+                                  ? 'rgba(255,255,255,0.2)'
+                                  : 'action.selected',
+                              color: 'inherit',
+                            }}
+                          />
+                          {activeCount > 0 && (
+                            <Chip
+                              label={`활성 ${activeCount}`}
+                              size="small"
+                              sx={{
+                                height: 20,
+                                fontSize: '0.7rem',
+                                backgroundColor:
+                                  selectedServiceInGroupView === service.service_id
+                                    ? 'rgba(76,175,80,0.3)'
+                                    : 'success.lighter',
+                                color:
+                                  selectedServiceInGroupView === service.service_id
+                                    ? 'inherit'
+                                    : 'success.dark',
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Chip
-                      label={`전체 ${servicePermissions.length}개`}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={`활성 ${activeCount}개`}
-                      size="small"
-                      color="success"
-                      variant="outlined"
-                    />
-                  </Box>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 0 }}>
-                {servicePermissions.length > 0 ? (
-                  <Box sx={{
-                    height: Math.min(400, servicePermissions.length * 52 + 100),
-                    minHeight: 300,
-                    width: '100%'
-                  }}>
-                    <DataGrid
-                      rows={servicePermissions}
-                      columns={groupedColumns}
-                      getRowId={(row) => row.id}
-                      pageSizeOptions={[5, 10, 25, 50]}
-                      initialState={{
-                        pagination: { paginationModel: { pageSize: 10 } },
-                      }}
-                      disableRowSelectionOnClick
+                ))}
+            </Box>
+          </Box>
+
+          {/* 우측: 선택된 서비스의 권한 상세 */}
+          <Box
+            sx={{
+              flex: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: 'background.paper',
+              overflow: 'hidden',
+            }}
+          >
+            {selectedServiceInGroupView ? (
+              (() => {
+                const selectedGroup = groupedByService.find(
+                  (g) => g.service.service_id === selectedServiceInGroupView
+                );
+                if (!selectedGroup) return null;
+
+                const { service, permissions: servicePermissions } = selectedGroup;
+
+                return (
+                  <>
+                    {/* 헤더 */}
+                    <Box
                       sx={{
-                        border: 'none',
-                        '& .MuiDataGrid-cell': {
-                          display: 'flex !important',
-                          alignItems: 'center !important',
-                          padding: '0 16px !important',
-                        },
-                        '& .MuiDataGrid-columnHeaders': {
-                          backgroundColor: 'grey.100',
-                        },
+                        p: 2,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        backgroundColor: 'grey.50',
                       }}
-                    />
-                  </Box>
-                ) : (
-                  <Box sx={{
-                    p: 4,
-                    textAlign: 'center',
-                    color: 'text.secondary',
-                  }}>
-                    <Typography variant="body2">
-                      이 서비스에 등록된 권한이 없습니다.
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<AddIcon />}
-                      onClick={() => handleOpenModal()}
-                      sx={{ mt: 2 }}
                     >
-                      권한 추가
-                    </Button>
-                  </Box>
-                )}
-              </AccordionDetails>
-            </Accordion>
-          ))}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <AppsIcon color="primary" fontSize="large" />
+                          <Box>
+                            <Typography variant="h6" fontWeight={700}>
+                              {service.service_id}
+                            </Typography>
+                            {service.description && (
+                              <Typography variant="body2" color="textSecondary">
+                                {service.description}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                        <Button
+                          variant="contained"
+                          startIcon={<AddIcon />}
+                          onClick={() => handleOpenModal()}
+                          size="small"
+                        >
+                          권한 추가
+                        </Button>
+                      </Box>
+                    </Box>
+
+                    {/* 권한 그리드 */}
+                    <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                      {servicePermissions.length > 0 ? (
+                        <DataGrid
+                          rows={servicePermissions}
+                          columns={groupedColumns}
+                          getRowId={(row) => row.id}
+                          pageSizeOptions={[10, 25, 50, 100]}
+                          initialState={{
+                            pagination: { paginationModel: { pageSize: 25 } },
+                          }}
+                          disableRowSelectionOnClick
+                          sx={{
+                            border: 'none',
+                            '& .MuiDataGrid-cell': {
+                              display: 'flex !important',
+                              alignItems: 'center !important',
+                              padding: '0 16px !important',
+                            },
+                            '& .MuiDataGrid-columnHeaders': {
+                              backgroundColor: 'grey.100',
+                            },
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'text.secondary',
+                          }}
+                        >
+                          <Typography variant="body1" gutterBottom>
+                            이 서비스에 등록된 권한이 없습니다.
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            startIcon={<AddIcon />}
+                            onClick={() => handleOpenModal()}
+                            sx={{ mt: 2 }}
+                          >
+                            권한 추가
+                          </Button>
+                        </Box>
+                      )}
+                    </Box>
+                  </>
+                );
+              })()
+            ) : (
+              <Box
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                }}
+              >
+                <Typography variant="body1">좌측에서 서비스를 선택하세요</Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
       )}
       </Box>
