@@ -336,11 +336,12 @@ export default function PermissionFormModal({
           )}
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleCancel}>취소</Button>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={handleCancel} size="large">취소</Button>
         <Button
           onClick={handleSave}
           variant="contained"
+          size="large"
           disabled={isSaveButtonDisabled || loading}
         >
           저장

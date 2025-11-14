@@ -286,9 +286,9 @@ export function PlatformRoleFormModal({ open, onCancel, onSave, role }: Platform
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel}>취소</Button>
-        <Button onClick={handleSave} variant="contained" disabled={loading}>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={onCancel} size="large">취소</Button>
+        <Button onClick={handleSave} variant="contained" size="large" disabled={loading}>
           {isEditing ? '수정' : '추가'}
         </Button>
       </DialogActions>
