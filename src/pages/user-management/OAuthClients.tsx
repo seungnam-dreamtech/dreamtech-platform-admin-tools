@@ -627,73 +627,75 @@ export default function OAuthClients() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            OAuth 클라이언트 ({filteredClients.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            OAuth2/OpenID Connect 클라이언트 관리
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchClients} disabled={loading}>
-            새로고침
-          </Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal()}>
-            클라이언트 추가
-          </Button>
-        </Box>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          OAuth 클라이언트 ({filteredClients.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          OAuth2/OpenID Connect 클라이언트 관리
+        </Typography>
       </Box>
 
-      {/* 검색 및 필터 */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 200 }} size="small">
-          <InputLabel>클라이언트 타입</InputLabel>
-          <Select
-            value={filterClientType}
-            onChange={(e) => setFilterClientType(e.target.value as ClientType | 'ALL')}
-            label="클라이언트 타입"
-          >
-            <MenuItem value="ALL">전체 타입</MenuItem>
-            {CLIENT_TYPE_OPTIONS.map(opt => (
-              <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl sx={{ minWidth: 150 }} size="small">
-          <InputLabel>상태</InputLabel>
-          <Select
-            value={filterEnabled}
-            onChange={(e) => setFilterEnabled(e.target.value as 'ALL' | 'enabled' | 'disabled')}
-            label="상태"
-          >
-            <MenuItem value="ALL">전체 상태</MenuItem>
-            <MenuItem value="enabled">활성</MenuItem>
-            <MenuItem value="disabled">비활성</MenuItem>
-          </Select>
-        </FormControl>
-        <TextField
-          placeholder="클라이언트명, Client ID로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ flex: 1, maxWidth: 400 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 필터/검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel>클라이언트 타입</InputLabel>
+              <Select
+                value={filterClientType}
+                onChange={(e) => setFilterClientType(e.target.value as ClientType | 'ALL')}
+                label="클라이언트 타입"
+              >
+                <MenuItem value="ALL">전체 타입</MenuItem>
+                {CLIENT_TYPE_OPTIONS.map(opt => (
+                  <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: 150 }} size="small">
+              <InputLabel>상태</InputLabel>
+              <Select
+                value={filterEnabled}
+                onChange={(e) => setFilterEnabled(e.target.value as 'ALL' | 'enabled' | 'disabled')}
+                label="상태"
+              >
+                <MenuItem value="ALL">전체 상태</MenuItem>
+                <MenuItem value="enabled">활성</MenuItem>
+                <MenuItem value="disabled">비활성</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              placeholder="클라이언트명, Client ID로 검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              size="small"
+              sx={{ width: 300 }}
+              slotProps={{
+                input: {
+                  endAdornment: searchKeyword && (
+                    <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                },
+              }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchClients} disabled={loading}>
+              새로고침
+            </Button>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal()}>
+              클라이언트 추가
+            </Button>
+          </Box>
+        </Box>
 
-      {/* 테이블 */}
-      <Box sx={{ height: 700, width: '100%' }}>
+        {/* 테이블 */}
+        <Box sx={{ height: 700, width: '100%' }}>
         <DataGrid
           rows={filteredClients}
           columns={columns}
@@ -718,6 +720,7 @@ export default function OAuthClients() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* OAuth 클라이언트 추가/수정 모달 */}

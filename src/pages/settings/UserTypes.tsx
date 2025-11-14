@@ -284,64 +284,64 @@ export default function UserTypes() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            사용자 유형 ({filteredUserTypes.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            사용자 유형과 기본 역할 매핑 관리
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={fetchUserTypes}
-            disabled={loading}
-          >
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedUserType(null);
-              setModalOpen(true);
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          사용자 유형 ({filteredUserTypes.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          사용자 유형과 기본 역할 매핑 관리
+        </Typography>
+      </Box>
+
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder="유형명 또는 설명으로 검색"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            size="small"
+            sx={{ width: 400 }}
+            slotProps={{
+              input: {
+                endAdornment: searchKeyword && (
+                  <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                ),
+              },
             }}
-          >
-            사용자 유형 추가
-          </Button>
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={fetchUserTypes}
+              disabled={loading}
+            >
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedUserType(null);
+                setModalOpen(true);
+              }}
+            >
+              사용자 유형 추가
+            </Button>
+          </Box>
         </Box>
-      </Box>
 
-      {/* 검색 */}
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          placeholder="유형명 또는 설명으로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ width: 400 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
-
-      {/* 테이블 */}
-      <Box sx={{
-        height: 'calc(100vh - 280px)',
-        width: '100%',
-        minHeight: 400,
-      }}>
+        {/* 테이블 */}
+        <Box sx={{
+          height: 'calc(100vh - 280px)',
+          width: '100%',
+          minHeight: 400,
+        }}>
         <DataGrid
           rows={filteredUserTypes}
           columns={columns}
@@ -371,6 +371,7 @@ export default function UserTypes() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* 사용자 유형 추가/수정 모달 */}

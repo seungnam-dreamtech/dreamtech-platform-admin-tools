@@ -701,100 +701,102 @@ const GatewayRoutes: React.FC = () => {
 
   return (
     <Stack spacing={3} sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            API Gateway 라우트 ({filteredRoutes.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-            {routes.length}개 라우트 | 활성 {activeRoutes}개 | 서비스 {servicesCount}개
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={refreshRoutes}
-            disabled={loading}
-          >
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setEditingRoute(undefined);
-              setRouteFormModalVisible(true);
-            }}
-          >
-            라우트 추가
-          </Button>
-        </Stack>
+      {/* 페이지 헤더 */}
+      <Box>
+        <Typography variant="h5" fontWeight={700}>
+          API Gateway 라우트 ({filteredRoutes.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          {routes.length}개 라우트 | 활성 {activeRoutes}개 | 서비스 {servicesCount}개
+        </Typography>
       </Box>
 
-      {/* 에러 표시 */}
-      {error && (
-        <Alert
-          severity="error"
-          onClose={() => setError(null)}
-          action={
-            <Button size="small" onClick={loadRoutes}>
-              다시 시도
-            </Button>
-          }
-        >
-          <Typography variant="body2" fontWeight="bold">데이터 로드 오류</Typography>
-          <Typography variant="body2">{error}</Typography>
-        </Alert>
-      )}
-
-      {/* 필터 및 검색 */}
-      <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
-        <FormControl sx={{ width: 250 }}>
-          <InputLabel>서비스 필터</InputLabel>
-          <Select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
-            label="서비스 필터"
-            startAdornment={
-              <InputAdornment position="start">
-                <FilterListIcon fontSize="small" />
-              </InputAdornment>
+      {/* 컨텐츠 영역 */}
+      <Stack spacing={2}>
+        {/* 에러 표시 */}
+        {error && (
+          <Alert
+            severity="error"
+            onClose={() => setError(null)}
+            action={
+              <Button size="small" onClick={loadRoutes}>
+                다시 시도
+              </Button>
             }
           >
-            <MenuItem value="all">전체 서비스 ({routesWithMetrics.length})</MenuItem>
-            {Object.keys(serviceGroups).map(service => (
-              <MenuItem key={service} value={service}>
-                {service} ({serviceGroups[service].length})
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          placeholder="Route ID, URI, Path로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          sx={{ flex: 1, maxWidth: 500 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            endAdornment: searchKeyword && (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Stack>
+            <Typography variant="body2" fontWeight="bold">데이터 로드 오류</Typography>
+            <Typography variant="body2">{error}</Typography>
+          </Alert>
+        )}
 
-      {/* 테이블 */}
-      <Box sx={{ height: 600, width: '100%' }}>
+        {/* 필터/검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Stack direction="row" spacing={2}>
+            <FormControl sx={{ width: 250 }}>
+              <InputLabel>서비스 필터</InputLabel>
+              <Select
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+                label="서비스 필터"
+                startAdornment={
+                  <InputAdornment position="start">
+                    <FilterListIcon fontSize="small" />
+                  </InputAdornment>
+                }
+              >
+                <MenuItem value="all">전체 서비스 ({routesWithMetrics.length})</MenuItem>
+                {Object.keys(serviceGroups).map(service => (
+                  <MenuItem key={service} value={service}>
+                    {service} ({serviceGroups[service].length})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              placeholder="Route ID, URI, Path로 검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              sx={{ width: 400 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchKeyword && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={refreshRoutes}
+              disabled={loading}
+            >
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingRoute(undefined);
+                setRouteFormModalVisible(true);
+              }}
+            >
+              라우트 추가
+            </Button>
+          </Stack>
+        </Box>
+
+        {/* 테이블 */}
+        <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={filteredRoutes}
           columns={columns}
@@ -820,7 +822,8 @@ const GatewayRoutes: React.FC = () => {
             },
           }}
         />
-      </Box>
+        </Box>
+      </Stack>
 
       {/* 라우트 추가/수정 모달 */}
       <RouteFormModal

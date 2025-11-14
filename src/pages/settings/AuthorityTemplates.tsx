@@ -342,74 +342,76 @@ export default function AuthorityTemplates() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            권한 템플릿 ({filteredTemplates.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            User Type별 사전 정의된 권한 세트 관리 | 전체: {stats.total}개 | 기본 템플릿: {stats.withDefault}개
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchTemplates} disabled={loading}>
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedTemplate(null);
-              setModalOpen(true);
-            }}
-          >
-            템플릿 추가
-          </Button>
-        </Box>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          권한 템플릿 ({filteredTemplates.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          User Type별 사전 정의된 권한 세트 관리 | 전체: {stats.total}개 | 기본 템플릿: {stats.withDefault}개
+        </Typography>
       </Box>
 
-      {/* 검색 및 필터 */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 200 }} size="small">
-          <InputLabel>User Type</InputLabel>
-          <Select
-            value={filterUserType}
-            onChange={(e) => setFilterUserType(e.target.value)}
-            label="User Type"
-          >
-            <MenuItem value="ALL">전체 User Type</MenuItem>
-            {userTypes.map(type => (
-              <MenuItem key={type.type_id} value={type.type_id}>
-                {type.display_name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          placeholder="템플릿명 또는 설명으로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ flex: 1, maxWidth: 450 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색/필터 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel>User Type</InputLabel>
+              <Select
+                value={filterUserType}
+                onChange={(e) => setFilterUserType(e.target.value)}
+                label="User Type"
+              >
+                <MenuItem value="ALL">전체 User Type</MenuItem>
+                {userTypes.map(type => (
+                  <MenuItem key={type.type_id} value={type.type_id}>
+                    {type.display_name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              placeholder="템플릿명 또는 설명으로 검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              size="small"
+              sx={{ width: 300 }}
+              slotProps={{
+                input: {
+                  endAdornment: searchKeyword && (
+                    <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                },
+              }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchTemplates} disabled={loading}>
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedTemplate(null);
+                setModalOpen(true);
+              }}
+            >
+              템플릿 추가
+            </Button>
+          </Box>
+        </Box>
 
-      {/* DataGrid */}
-      <Box sx={{
-        height: 'calc(100vh - 280px)',
-        width: '100%',
-        minHeight: 400,
-      }}>
+        {/* DataGrid */}
+        <Box sx={{
+          height: 'calc(100vh - 280px)',
+          width: '100%',
+          minHeight: 400,
+        }}>
         <DataGrid
           rows={filteredTemplates}
           columns={columns}
@@ -439,6 +441,7 @@ export default function AuthorityTemplates() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* 템플릿 추가/수정 모달 */}

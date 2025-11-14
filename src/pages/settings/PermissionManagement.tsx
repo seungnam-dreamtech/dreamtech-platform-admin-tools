@@ -351,100 +351,102 @@ export default function PermissionManagement() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            권한 정의 관리 ({filteredPermissions.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            서비스별 권한을 정의하고 관리합니다 | 활성: {permissions.filter(p => p.is_active).length}개 | 비활성: {permissions.filter(p => !p.is_active).length}개
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(_, newMode) => newMode && setViewMode(newMode)}
-            size="small"
-          >
-            <ToggleButton value="table">
-              <Tooltip title="테이블 뷰">
-                <ViewListIcon fontSize="small" />
-              </Tooltip>
-            </ToggleButton>
-            <ToggleButton value="grouped">
-              <Tooltip title="그룹 뷰">
-                <ViewModuleIcon fontSize="small" />
-              </Tooltip>
-            </ToggleButton>
-          </ToggleButtonGroup>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={fetchPermissions}
-            disabled={loading}
-          >
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenModal()}
-          >
-            권한 추가
-          </Button>
-        </Box>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          권한 정의 관리 ({filteredPermissions.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          서비스별 권한을 정의하고 관리합니다 | 활성: {permissions.filter(p => p.is_active).length}개 | 비활성: {permissions.filter(p => !p.is_active).length}개
+        </Typography>
       </Box>
 
-      {/* 필터 */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 180 }} size="small">
-          <InputLabel>서비스 필터</InputLabel>
-          <Select
-            value={selectedServiceFilter || ''}
-            onChange={(e) => setSelectedServiceFilter(e.target.value || undefined)}
-            label="서비스 필터"
-          >
-            <MenuItem value="">전체 서비스</MenuItem>
-            {services.map(service => (
-              <MenuItem key={service.service_id} value={service.service_id}>
-                {service.service_name || service.service_id}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl sx={{ minWidth: 180 }} size="small">
-          <InputLabel>카테고리 필터</InputLabel>
-          <Select
-            value={selectedCategoryFilter || ''}
-            onChange={(e) => setSelectedCategoryFilter(e.target.value || undefined)}
-            label="카테고리 필터"
-          >
-            <MenuItem value="">전체 카테고리</MenuItem>
-            {categories.map(category => (
-              <MenuItem key={category} value={category}>
-                {category}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          placeholder="권한명, 리소스, 액션으로 검색"
-          value={searchKeyword}
-          onChange={e => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ flex: 1, maxWidth: 450 }}
-        />
-      </Box>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 필터/검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControl sx={{ minWidth: 180 }} size="small">
+              <InputLabel>서비스 필터</InputLabel>
+              <Select
+                value={selectedServiceFilter || ''}
+                onChange={(e) => setSelectedServiceFilter(e.target.value || undefined)}
+                label="서비스 필터"
+              >
+                <MenuItem value="">전체 서비스</MenuItem>
+                {services.map(service => (
+                  <MenuItem key={service.service_id} value={service.service_id}>
+                    {service.service_name || service.service_id}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: 180 }} size="small">
+              <InputLabel>카테고리 필터</InputLabel>
+              <Select
+                value={selectedCategoryFilter || ''}
+                onChange={(e) => setSelectedCategoryFilter(e.target.value || undefined)}
+                label="카테고리 필터"
+              >
+                <MenuItem value="">전체 카테고리</MenuItem>
+                {categories.map(category => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              placeholder="권한명, 리소스, 액션으로 검색"
+              value={searchKeyword}
+              onChange={e => setSearchKeyword(e.target.value)}
+              size="small"
+              sx={{ width: 300 }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(_, newMode) => newMode && setViewMode(newMode)}
+              size="small"
+            >
+              <ToggleButton value="table">
+                <Tooltip title="테이블 뷰">
+                  <ViewListIcon fontSize="small" />
+                </Tooltip>
+              </ToggleButton>
+              <ToggleButton value="grouped">
+                <Tooltip title="그룹 뷰">
+                  <ViewModuleIcon fontSize="small" />
+                </Tooltip>
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={fetchPermissions}
+              disabled={loading}
+            >
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenModal()}
+            >
+              권한 추가
+            </Button>
+          </Box>
+        </Box>
 
-      {/* 테이블 뷰 */}
-      {viewMode === 'table' && (
-        <Box sx={{
-          height: 'calc(100vh - 280px)',
-          width: '100%',
-          minHeight: 400,
-        }}>
+        {/* 테이블 뷰 */}
+        {viewMode === 'table' && (
+          <Box sx={{
+            height: 'calc(100vh - 280px)',
+            width: '100%',
+            minHeight: 400,
+          }}>
           <DataGrid
             rows={filteredPermissions}
             columns={columns}
@@ -519,6 +521,7 @@ export default function PermissionManagement() {
           ))}
         </Box>
       )}
+      </Box>
 
       {/* 모달 */}
       <PermissionFormModal
