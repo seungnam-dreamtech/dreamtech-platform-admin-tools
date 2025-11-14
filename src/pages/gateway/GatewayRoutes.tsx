@@ -470,15 +470,16 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'id',
       headerName: 'Route ID',
-      width: 180,
+      flex: 1,
+      minWidth: 150,
       renderCell: (params) => (
         <Box
           component="code"
           sx={{
-            fontSize: '11px',
+            fontSize: '12px',
             background: '#f5f5f5',
-            padding: '2px 6px',
-            borderRadius: '3px',
+            padding: '3px 8px',
+            borderRadius: '4px',
             fontWeight: 500,
           }}
         >
@@ -489,10 +490,11 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'uri',
       headerName: 'Service URI',
-      width: 250,
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params) => (
         <Tooltip title={params.value}>
-          <Typography variant="body2" sx={{ fontSize: '11px', color: 'primary.main' }}>
+          <Typography variant="body2" sx={{ fontSize: '12px', color: 'primary.main' }}>
             {params.value}
           </Typography>
         </Tooltip>
@@ -501,7 +503,8 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'path',
       headerName: 'Path',
-      width: 220,
+      flex: 1.3,
+      minWidth: 180,
       renderCell: (params) => {
         const paths = params.row.conditions.path || [];
 
@@ -547,7 +550,7 @@ const GatewayRoutes: React.FC = () => {
               >
                 <Typography
                   sx={{
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: '#666',
                     cursor: 'pointer',
                   }}
@@ -563,7 +566,8 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'method',
       headerName: 'Method',
-      width: 120,
+      flex: 0.8,
+      minWidth: 120,
       renderCell: (params) => {
         const methods = params.row.conditions.method || [];
 
@@ -587,7 +591,7 @@ const GatewayRoutes: React.FC = () => {
                   label={method}
                   color={color}
                   size="small"
-                  sx={{ fontSize: '10px', fontWeight: 'bold', height: '20px' }}
+                  sx={{ fontSize: '11px', fontWeight: 'bold', height: '22px' }}
                 />
               );
             })}
@@ -598,7 +602,10 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'order',
       headerName: 'Priority',
-      width: 80,
+      flex: 0.5,
+      minWidth: 90,
+      align: 'center',
+      headerAlign: 'center',
       sortable: true,
       renderCell: (params) => {
         const order = params.value as number;
@@ -613,45 +620,47 @@ const GatewayRoutes: React.FC = () => {
         }
 
         return (
-          <Box sx={{ textAlign: 'center' }}>
-            <Chip
-              label={order}
-              color={color}
-              size="small"
-              sx={{
-                fontSize: '11px',
-                fontWeight: 'bold',
-                fontFamily: 'monospace',
-                minWidth: '36px',
-              }}
-            />
-          </Box>
+          <Chip
+            label={order}
+            color={color}
+            size="small"
+            sx={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              fontFamily: 'monospace',
+              minWidth: '40px',
+            }}
+          />
         );
       },
     },
     {
       field: 'enabled',
       headerName: 'Status',
-      width: 80,
+      flex: 0.5,
+      minWidth: 90,
+      align: 'center',
+      headerAlign: 'center',
       sortable: true,
       renderCell: (params) => (
-        <Box sx={{ textAlign: 'center' }}>
-          <Chip
-            label={params.value ? 'Active' : 'Inactive'}
-            color={params.value ? 'success' : 'error'}
-            size="small"
-            sx={{
-              fontSize: '10px',
-              fontWeight: 'bold',
-            }}
-          />
-        </Box>
+        <Chip
+          label={params.value ? 'Active' : 'Inactive'}
+          color={params.value ? 'success' : 'error'}
+          size="small"
+          sx={{
+            fontSize: '11px',
+            fontWeight: 'bold',
+          }}
+        />
       ),
     },
     {
       field: 'actions',
       headerName: '작업',
-      width: 120,
+      flex: 0.6,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={0.5}>
