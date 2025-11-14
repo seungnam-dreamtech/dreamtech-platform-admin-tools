@@ -389,85 +389,87 @@ export default function PlatformUsers() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            플랫폼 사용자 ({filteredUsers.length}명)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            플랫폼에 등록된 모든 사용자 관리 | 활성: {stats.active}명 | 비활성: {stats.inactive}명 | 정지: {stats.suspended}명
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchUsers} disabled={loading}>
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedUser(null);
-              setModalOpen(true);
-            }}
-          >
-            사용자 추가
-          </Button>
-        </Box>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          플랫폼 사용자 ({filteredUsers.length}명)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          플랫폼에 등록된 모든 사용자 관리 | 활성: {stats.active}명 | 비활성: {stats.inactive}명 | 정지: {stats.suspended}명
+        </Typography>
       </Box>
 
-      {/* 검색 및 필터 */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 200 }} size="small" disabled={loadingUserTypes}>
-          <InputLabel>User Type</InputLabel>
-          <Select
-            value={filterUserType}
-            onChange={(e) => setFilterUserType(e.target.value as UserType | 'ALL')}
-            label="User Type"
-          >
-            <MenuItem value="ALL">전체 User Type</MenuItem>
-            {userTypeOptions.map(type => (
-              <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl sx={{ minWidth: 150 }} size="small">
-          <InputLabel>상태</InputLabel>
-          <Select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as 'ALL' | 'active' | 'inactive' | 'suspended')}
-            label="상태"
-          >
-            <MenuItem value="ALL">전체 상태</MenuItem>
-            {USER_STATUS_OPTIONS.map(status => (
-              <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          placeholder="사용자ID, 이름, 이메일, 연락처로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ flex: 1, maxWidth: 450 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 필터/검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControl sx={{ minWidth: 200 }} size="small" disabled={loadingUserTypes}>
+              <InputLabel>User Type</InputLabel>
+              <Select
+                value={filterUserType}
+                onChange={(e) => setFilterUserType(e.target.value as UserType | 'ALL')}
+                label="User Type"
+              >
+                <MenuItem value="ALL">전체 User Type</MenuItem>
+                {userTypeOptions.map(type => (
+                  <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: 150 }} size="small">
+              <InputLabel>상태</InputLabel>
+              <Select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as 'ALL' | 'active' | 'inactive' | 'suspended')}
+                label="상태"
+              >
+                <MenuItem value="ALL">전체 상태</MenuItem>
+                {USER_STATUS_OPTIONS.map(status => (
+                  <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              placeholder="사용자ID, 이름, 이메일, 연락처로 검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              size="small"
+              sx={{ width: 350 }}
+              slotProps={{
+                input: {
+                  endAdornment: searchKeyword && (
+                    <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                },
+              }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchUsers} disabled={loading}>
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedUser(null);
+                setModalOpen(true);
+              }}
+            >
+              사용자 추가
+            </Button>
+          </Box>
+        </Box>
 
-      {/* 테이블 */}
-      <Box sx={{
-        height: 'calc(100vh - 280px)',
-        width: '100%',
-        minHeight: 400,
-      }}>
+        {/* 테이블 */}
+        <Box sx={{
+          height: 'calc(100vh - 280px)',
+          width: '100%',
+          minHeight: 400,
+        }}>
         <DataGrid
           rows={filteredUsers}
           columns={columns}
@@ -496,6 +498,7 @@ export default function PlatformUsers() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* 사용자 상세/추가/수정 모달 */}

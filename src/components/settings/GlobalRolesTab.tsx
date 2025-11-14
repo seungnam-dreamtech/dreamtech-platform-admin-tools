@@ -388,55 +388,55 @@ export default function GlobalRolesTab() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            글로벌 역할 ({filteredRoles.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            플랫폼 전체에 적용되는 역할
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchRoles} disabled={loading}>
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedRole(null);
-              setModalOpen(true);
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          글로벌 역할 ({filteredRoles.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          플랫폼 전체에 적용되는 역할
+        </Typography>
+      </Box>
+
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder="Role ID, 표시명 또는 설명으로 검색"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            size="small"
+            sx={{ width: 400 }}
+            slotProps={{
+              input: {
+                endAdornment: searchKeyword && (
+                  <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ),
+              },
             }}
-          >
-            역할 추가
-          </Button>
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchRoles} disabled={loading}>
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedRole(null);
+                setModalOpen(true);
+              }}
+            >
+              역할 추가
+            </Button>
+          </Box>
         </Box>
-      </Box>
 
-      {/* 검색 */}
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          placeholder="Role ID, 표시명 또는 설명으로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ width: 400 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
-
-      {/* 테이블 */}
-      <Box sx={{ height: 600, width: '100%' }}>
+        {/* 테이블 */}
+        <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={filteredRoles}
           columns={columns}
@@ -462,6 +462,7 @@ export default function GlobalRolesTab() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* 역할 추가/수정 모달 */}

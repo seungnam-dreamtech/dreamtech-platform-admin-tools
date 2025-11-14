@@ -209,60 +209,60 @@ export default function PlatformServices() {
 
   return (
     <Box sx={{ width: '100%', height: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            플랫폼 서비스 ({filteredServices.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-            플랫폼의 마이크로서비스 스코프 관리
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={fetchServices}
-            disabled={loading}
-          >
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedService(null);
-              setModalOpen(true);
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          플랫폼 서비스 ({filteredServices.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          플랫폼의 마이크로서비스 스코프 관리
+        </Typography>
+      </Box>
+
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder="서비스명 또는 설명으로 검색"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            size="small"
+            sx={{ width: 400 }}
+            slotProps={{
+              input: {
+                endAdornment: searchKeyword && (
+                  <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
+                ),
+              },
             }}
-          >
-            서비스 추가
-          </Button>
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={fetchServices}
+              disabled={loading}
+            >
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedService(null);
+                setModalOpen(true);
+              }}
+            >
+              서비스 추가
+            </Button>
+          </Box>
         </Box>
-      </Box>
 
-      {/* 검색 */}
-      <Box sx={{ mb: 2 }}>
-        <TextField
-          placeholder="서비스명 또는 설명으로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ width: 400 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
-
-      {/* 테이블 */}
-      <Box sx={{ height: 600, width: '100%' }}>
+        {/* 테이블 */}
+        <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={filteredServices}
           columns={columns}
@@ -288,6 +288,7 @@ export default function PlatformServices() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* 서비스 추가/수정 모달 */}

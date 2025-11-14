@@ -373,70 +373,72 @@ export default function ServiceRolesTab() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      {/* 헤더 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            서비스 역할 ({filteredRoles.length}개)
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            특정 서비스에만 적용되는 역할
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchRoles} disabled={loading}>
-            새로고침
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedRole(null);
-              setModalOpen(true);
-            }}
-          >
-            역할 추가
-          </Button>
-        </Box>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          서비스 역할 ({filteredRoles.length}개)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          특정 서비스에만 적용되는 역할
+        </Typography>
       </Box>
 
-      {/* 필터 및 검색 */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 250 }} size="small">
-          <InputLabel>서비스 필터</InputLabel>
-          <Select
-            value={selectedServiceFilter || 'all'}
-            onChange={(e) => setSelectedServiceFilter(e.target.value === 'all' ? '' : e.target.value)}
-            label="서비스 필터"
-          >
-            <MenuItem value="all">전체 서비스</MenuItem>
-            {services.map((s) => (
-              <MenuItem key={s.service_id} value={s.service_id}>
-                {s.service_id} ({s.description})
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          placeholder="Role Name, 표시명 또는 설명으로 검색"
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          size="small"
-          sx={{ flex: 1, maxWidth: 400 }}
-          slotProps={{
-            input: {
-              endAdornment: searchKeyword && (
-                <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ),
-            },
-          }}
-        />
-      </Box>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 필터/검색 및 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControl sx={{ minWidth: 250 }} size="small">
+              <InputLabel>서비스 필터</InputLabel>
+              <Select
+                value={selectedServiceFilter || 'all'}
+                onChange={(e) => setSelectedServiceFilter(e.target.value === 'all' ? '' : e.target.value)}
+                label="서비스 필터"
+              >
+                <MenuItem value="all">전체 서비스</MenuItem>
+                {services.map((s) => (
+                  <MenuItem key={s.service_id} value={s.service_id}>
+                    {s.service_id} ({s.description})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              placeholder="Role Name, 표시명 또는 설명으로 검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              size="small"
+              sx={{ width: 300 }}
+              slotProps={{
+                input: {
+                  endAdornment: searchKeyword && (
+                    <IconButton size="small" onClick={() => setSearchKeyword('')}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                },
+              }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchRoles} disabled={loading}>
+              새로고침
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setSelectedRole(null);
+                setModalOpen(true);
+              }}
+            >
+              역할 추가
+            </Button>
+          </Box>
+        </Box>
 
-      {/* 테이블 */}
-      <Box sx={{ height: 600, width: '100%' }}>
+        {/* 테이블 */}
+        <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={filteredRoles}
           columns={columns}
@@ -462,6 +464,7 @@ export default function ServiceRolesTab() {
             },
           }}
         />
+        </Box>
       </Box>
 
       {/* 역할 추가/수정 모달 */}
