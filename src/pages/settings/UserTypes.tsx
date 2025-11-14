@@ -359,8 +359,9 @@ export default function UserTypes() {
           }}
           sx={{
             '& .MuiDataGrid-cell': {
-              display: 'flex',
-              alignItems: 'center',
+              display: 'flex !important',
+              alignItems: 'center !important',
+              padding: '0 16px !important',
             },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
