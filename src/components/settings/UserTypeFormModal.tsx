@@ -293,11 +293,12 @@ export function UserTypeFormModal({ open, onCancel, onSave, userType }: UserType
           )}
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel}>취소</Button>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={onCancel} size="large">취소</Button>
         <Button
           onClick={handleSave}
           variant="contained"
+          size="large"
           disabled={isSaveButtonDisabled || loading}
         >
           {isEditing ? '수정' : '추가'}

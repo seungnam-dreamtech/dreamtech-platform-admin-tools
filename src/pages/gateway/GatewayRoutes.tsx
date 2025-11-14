@@ -470,29 +470,39 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'id',
       headerName: 'Route ID',
-      width: 180,
+      flex: 0.8,
+      minWidth: 140,
       renderCell: (params) => (
-        <Box
-          component="code"
+        <Typography
+          variant="body2"
           sx={{
-            fontSize: '11px',
-            background: '#f5f5f5',
-            padding: '2px 6px',
-            borderRadius: '3px',
+            fontSize: '12px',
+            fontFamily: 'monospace',
             fontWeight: 500,
+            color: 'text.primary',
           }}
         >
           {params.value}
-        </Box>
+        </Typography>
       ),
     },
     {
       field: 'uri',
       headerName: 'Service URI',
-      width: 250,
+      flex: 2,
+      minWidth: 220,
       renderCell: (params) => (
         <Tooltip title={params.value}>
-          <Typography variant="body2" sx={{ fontSize: '11px', color: 'primary.main' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: '12px',
+              color: 'primary.main',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {params.value}
           </Typography>
         </Tooltip>
@@ -501,7 +511,8 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'path',
       headerName: 'Path',
-      width: 220,
+      flex: 2.5,
+      minWidth: 220,
       renderCell: (params) => {
         const paths = params.row.conditions.path || [];
 
@@ -510,21 +521,18 @@ const GatewayRoutes: React.FC = () => {
         return (
           <Box>
             {paths.slice(0, 1).map((path: string, index: number) => (
-              <Box
+              <Typography
                 key={index}
+                variant="body2"
                 sx={{
                   fontSize: '12px',
                   fontFamily: 'Monaco, Consolas, monospace',
-                  background: '#f5f5f5',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid #d9d9d9',
-                  marginBottom: '2px',
                   color: 'primary.main',
+                  fontWeight: 500,
                 }}
               >
                 {path}
-              </Box>
+              </Typography>
             ))}
             {paths.length > 1 && (
               <Tooltip
@@ -547,7 +555,7 @@ const GatewayRoutes: React.FC = () => {
               >
                 <Typography
                   sx={{
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: '#666',
                     cursor: 'pointer',
                   }}
@@ -563,7 +571,8 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'method',
       headerName: 'Method',
-      width: 120,
+      flex: 0.8,
+      minWidth: 120,
       renderCell: (params) => {
         const methods = params.row.conditions.method || [];
 
@@ -587,7 +596,7 @@ const GatewayRoutes: React.FC = () => {
                   label={method}
                   color={color}
                   size="small"
-                  sx={{ fontSize: '10px', fontWeight: 'bold', height: '20px' }}
+                  sx={{ fontSize: '11px', fontWeight: 'bold', height: '22px' }}
                 />
               );
             })}
@@ -598,7 +607,10 @@ const GatewayRoutes: React.FC = () => {
     {
       field: 'order',
       headerName: 'Priority',
-      width: 80,
+      flex: 0.5,
+      minWidth: 90,
+      align: 'center',
+      headerAlign: 'center',
       sortable: true,
       renderCell: (params) => {
         const order = params.value as number;
@@ -613,45 +625,47 @@ const GatewayRoutes: React.FC = () => {
         }
 
         return (
-          <Box sx={{ textAlign: 'center' }}>
-            <Chip
-              label={order}
-              color={color}
-              size="small"
-              sx={{
-                fontSize: '11px',
-                fontWeight: 'bold',
-                fontFamily: 'monospace',
-                minWidth: '36px',
-              }}
-            />
-          </Box>
+          <Chip
+            label={order}
+            color={color}
+            size="small"
+            sx={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              fontFamily: 'monospace',
+              minWidth: '40px',
+            }}
+          />
         );
       },
     },
     {
       field: 'enabled',
       headerName: 'Status',
-      width: 80,
+      flex: 0.5,
+      minWidth: 90,
+      align: 'center',
+      headerAlign: 'center',
       sortable: true,
       renderCell: (params) => (
-        <Box sx={{ textAlign: 'center' }}>
-          <Chip
-            label={params.value ? 'Active' : 'Inactive'}
-            color={params.value ? 'success' : 'error'}
-            size="small"
-            sx={{
-              fontSize: '10px',
-              fontWeight: 'bold',
-            }}
-          />
-        </Box>
+        <Chip
+          label={params.value ? 'Active' : 'Inactive'}
+          color={params.value ? 'success' : 'error'}
+          size="small"
+          sx={{
+            fontSize: '11px',
+            fontWeight: 'bold',
+          }}
+        />
       ),
     },
     {
       field: 'actions',
       headerName: '작업',
-      width: 120,
+      flex: 0.6,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
       sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={0.5}>
