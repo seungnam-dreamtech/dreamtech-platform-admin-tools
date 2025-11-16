@@ -235,12 +235,23 @@ export default function PermissionManagement() {
       flex: 1.2,
       minWidth: 200,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Chip
-          label={params.row.permission_string}
-          variant="outlined"
-          size="small"
-          sx={{ fontFamily: 'monospace' }}
-        />
+        <Tooltip title={params.row.permission_string} placement="top">
+          <Typography
+            variant="body2"
+            sx={{
+              fontFamily: 'monospace',
+              fontWeight: 600,
+              fontSize: '13px',
+              color: 'primary.main',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              width: '100%',
+            }}
+          >
+            {params.row.permission_string}
+          </Typography>
+        </Tooltip>
       ),
     },
     {
@@ -379,12 +390,23 @@ export default function PermissionManagement() {
       flex: 1.3,
       minWidth: 220,
       renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Chip
-          label={params.row.permission_string}
-          variant="outlined"
-          size="small"
-          sx={{ fontFamily: 'monospace', fontWeight: 600 }}
-        />
+        <Tooltip title={params.row.permission_string} placement="top">
+          <Typography
+            variant="body2"
+            sx={{
+              fontFamily: 'monospace',
+              fontWeight: 600,
+              fontSize: '13px',
+              color: 'primary.main',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              width: '100%',
+            }}
+          >
+            {params.row.permission_string}
+          </Typography>
+        </Tooltip>
       ),
     },
     {
