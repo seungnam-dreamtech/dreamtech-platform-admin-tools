@@ -410,43 +410,54 @@ export default function CommonCodes() {
   );
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        공통 코드 관리
-      </Typography>
+    <Box sx={{ width: '100%' }}>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          공통 코드 관리
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          인증/인가 영역 공통 코드 및 코드 그룹 관리
+        </Typography>
+      </Box>
 
-      <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 200px)' }}>
+      {/* 컨텐츠 영역 */}
+      <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 280px)', minHeight: 600 }}>
         {/* 좌측: 코드 그룹 목록 */}
         <Box sx={{ width: '40%', minWidth: 400 }}>
           <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                <TextField
-                  size="small"
-                  placeholder="그룹 검색"
-                  value={groupSearchText}
-                  onChange={(e) => setGroupSearchText(e.target.value)}
-                  sx={{ flexGrow: 1 }}
-                />
-                <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={loadCodeGroups}
-                >
-                  새로고침
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    setEditingGroup(null);
-                    setGroupModalOpen(true);
-                  }}
-                >
-                  그룹 추가
-                </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">코드 그룹 ({filteredGroups.length}개)</Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RefreshIcon />}
+                    onClick={loadCodeGroups}
+                  >
+                    새로고침
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setEditingGroup(null);
+                      setGroupModalOpen(true);
+                    }}
+                  >
+                    그룹 추가
+                  </Button>
+                </Box>
               </Box>
-              <Typography variant="h6">코드 그룹</Typography>
+              <TextField
+                size="small"
+                placeholder="그룹 ID 또는 그룹명으로 검색"
+                value={groupSearchText}
+                onChange={(e) => setGroupSearchText(e.target.value)}
+                fullWidth
+              />
             </Box>
 
             <Box sx={{ flexGrow: 1 }}>
@@ -479,39 +490,44 @@ export default function CommonCodes() {
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
               {selectedGroup ? (
                 <>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <TextField
-                      size="small"
-                      placeholder="코드 검색"
-                      value={codeSearchText}
-                      onChange={(e) => setCodeSearchText(e.target.value)}
-                      sx={{ flexGrow: 1 }}
-                    />
-                    <Button
-                      variant="outlined"
-                      startIcon={<RefreshIcon />}
-                      onClick={() => loadCodes(selectedGroup.group_id)}
-                    >
-                      새로고침
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => {
-                        setEditingCode(null);
-                        setCodeModalOpen(true);
-                      }}
-                    >
-                      코드 추가
-                    </Button>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="h6">
+                        {selectedGroup.group_name} 코드 ({filteredCodes.length}개)
+                      </Typography>
+                      {selectedGroup.is_system_managed && (
+                        <Chip label="시스템 관리" color="warning" size="small" />
+                      )}
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<RefreshIcon />}
+                        onClick={() => loadCodes(selectedGroup.group_id)}
+                      >
+                        새로고침
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<AddIcon />}
+                        onClick={() => {
+                          setEditingCode(null);
+                          setCodeModalOpen(true);
+                        }}
+                      >
+                        코드 추가
+                      </Button>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h6">코드 목록</Typography>
-                    <Chip label={selectedGroup.group_name} color="primary" size="small" />
-                    {selectedGroup.is_system_managed && (
-                      <Chip label="시스템 관리" color="warning" size="small" />
-                    )}
-                  </Box>
+                  <TextField
+                    size="small"
+                    placeholder="코드 값 또는 코드명으로 검색"
+                    value={codeSearchText}
+                    onChange={(e) => setCodeSearchText(e.target.value)}
+                    fullWidth
+                  />
                 </>
               ) : (
                 <Typography variant="h6">코드 목록</Typography>
