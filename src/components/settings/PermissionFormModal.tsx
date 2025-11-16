@@ -15,7 +15,7 @@ import {
   Alert,
   Box,
 } from '@mui/material';
-import type { PermissionDefinition, ServiceScope } from '../../types/user-management';
+import type { PermissionDefinition, ServiceScope, Code } from '../../types/user-management';
 import { userManagementService } from '../../services/userManagementService';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
@@ -61,15 +61,17 @@ export default function PermissionFormModal({
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<ServiceScope[]>([]);
+  const [categories, setCategories] = useState<Code[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
   const snackbar = useSnackbar();
   const isEditing = !!permission;
 
-  // 서비스 목록 로드
+  // 서비스 목록 및 카테고리 목록 로드
   useEffect(() => {
     if (open) {
       loadServices();
+      loadCategories();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -114,6 +116,16 @@ export default function PermissionFormModal({
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const data = await userManagementService.getCodesByGroup('PERMISSIONS_CATEGORY', true);
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      snackbar.error('카테고리 목록을 불러오는데 실패했습니다');
+    }
+  };
+
   const handleFieldChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -152,7 +164,7 @@ export default function PermissionFormModal({
     }
 
     if (!formData.category.trim()) {
-      newErrors.category = '카테고리를 입력해주세요';
+      newErrors.category = '카테고리를 선택해주세요';
     }
 
     setErrors(newErrors);
@@ -305,19 +317,28 @@ export default function PermissionFormModal({
           />
 
           {/* 카테고리 */}
-          <TextField
-            label="카테고리"
-            value={formData.category}
-            onChange={(e) => handleFieldChange('category', e.target.value)}
-            error={!!errors.category}
-            helperText={
-              errors.category || '권한을 그룹화할 카테고리 (예: 사용자 관리, 병원 관리)'
-            }
-            placeholder="예: 사용자 관리, 병원 관리"
-            fullWidth
-            required
-            inputProps={{ maxLength: 50 }}
-          />
+          <FormControl fullWidth required error={!!errors.category}>
+            <InputLabel>카테고리</InputLabel>
+            <Select
+              value={formData.category}
+              onChange={(e) => handleFieldChange('category', e.target.value)}
+              label="카테고리"
+            >
+              {categories.map((category) => (
+                <MenuItem key={category.code_id} value={category.code_value}>
+                  {category.code_name}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.category && (
+              <Box sx={{ color: 'error.main', fontSize: '0.75rem', mt: 0.5 }}>
+                {errors.category}
+              </Box>
+            )}
+            <Box sx={{ fontSize: '12px', color: 'text.secondary', mt: 0.5 }}>
+              권한을 그룹화할 카테고리를 선택합니다
+            </Box>
+          </FormControl>
 
           {/* 안내 메시지 */}
           {isEditing ? (
