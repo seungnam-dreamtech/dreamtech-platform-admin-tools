@@ -230,29 +230,36 @@ export default function PermissionManagement() {
       },
     },
     {
-      field: 'permission_string',
+      field: 'permission_key',
       headerName: '권한 문자열',
       flex: 1.2,
       minWidth: 200,
-      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Tooltip title={params.row.permission_string} placement="top">
-          <Typography
-            variant="body2"
-            sx={{
-              fontFamily: 'monospace',
-              fontWeight: 600,
-              fontSize: '13px',
-              color: 'primary.main',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              width: '100%',
-            }}
-          >
-            {params.row.permission_string}
-          </Typography>
-        </Tooltip>
-      ),
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => {
+        // permission_key 또는 resource:action 조합 사용
+        const permissionStr = params.row.permission_key ||
+                             params.row.permission_string ||
+                             `${params.row.resource}:${params.row.action}`;
+
+        return (
+          <Tooltip title={permissionStr} placement="top">
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: 'monospace',
+                fontWeight: 600,
+                fontSize: '13px',
+                color: 'primary.main',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                width: '100%',
+              }}
+            >
+              {permissionStr}
+            </Typography>
+          </Tooltip>
+        );
+      },
     },
     {
       field: 'display_name',
@@ -385,29 +392,36 @@ export default function PermissionManagement() {
   // 그룹 뷰용 컬럼 정의 (서비스 컬럼 제외)
   const groupedColumns: GridColDef[] = [
     {
-      field: 'permission_string',
+      field: 'permission_key',
       headerName: '권한 문자열',
       flex: 1.3,
       minWidth: 220,
-      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => (
-        <Tooltip title={params.row.permission_string} placement="top">
-          <Typography
-            variant="body2"
-            sx={{
-              fontFamily: 'monospace',
-              fontWeight: 600,
-              fontSize: '13px',
-              color: 'primary.main',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              width: '100%',
-            }}
-          >
-            {params.row.permission_string}
-          </Typography>
-        </Tooltip>
-      ),
+      renderCell: (params: GridRenderCellParams<PermissionDefinition>) => {
+        // permission_key 또는 resource:action 조합 사용
+        const permissionStr = params.row.permission_key ||
+                             params.row.permission_string ||
+                             `${params.row.resource}:${params.row.action}`;
+
+        return (
+          <Tooltip title={permissionStr} placement="top">
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: 'monospace',
+                fontWeight: 600,
+                fontSize: '13px',
+                color: 'primary.main',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                width: '100%',
+              }}
+            >
+              {permissionStr}
+            </Typography>
+          </Tooltip>
+        );
+      },
     },
     {
       field: 'display_name',
@@ -874,7 +888,7 @@ export default function PermissionManagement() {
         <DialogTitle>권한 삭제</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            "{permissionToDelete?.permission_string}" 권한을 삭제하시겠습니까?
+            "{permissionToDelete?.permission_key || permissionToDelete?.permission_string}" 권한을 삭제하시겠습니까?
             <br />
             이 작업은 취소할 수 없습니다.
           </DialogContentText>

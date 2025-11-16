@@ -543,7 +543,8 @@ export interface PermissionDefinition {
   service_id: string;                   // 서비스 ID
   resource: string;                     // 리소스 (예: user, hospital)
   action: string;                       // 액션 (예: read, write, manage)
-  permission_string: string;            // 권한 문자열 (예: user:manage)
+  permission_key: string;               // 권한 키 (예: user:manage)
+  permission_string?: string;           // 권한 문자열 (deprecated, permission_key 사용)
   display_name: string;                 // 표시명
   description: string;                  // 설명
   category: string;                     // 카테고리 (예: 사용자 관리, 병원 관리)
