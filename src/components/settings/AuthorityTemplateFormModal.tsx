@@ -105,7 +105,6 @@ export function AuthorityTemplateFormModal({
   // API 데이터
   const [availableGlobalRoles, setAvailableGlobalRoles] = useState<GlobalRole[]>([]);
   const [availableServiceRoles, setAvailableServiceRoles] = useState<ServiceRoleDefinition[]>([]);
-  const [userTypes, setUserTypes] = useState<UserTypeDefinition[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 연결된 User Types (역조회)
@@ -129,7 +128,6 @@ export function AuthorityTemplateFormModal({
 
       setAvailableGlobalRoles(globalRolesData);
       setAvailableServiceRoles(serviceRolesData);
-      setUserTypes(userTypesData);
 
       // 템플릿 데이터 로드
       if (template) {
