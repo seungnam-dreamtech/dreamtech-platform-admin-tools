@@ -832,7 +832,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: 'calc(90vh - 500px)',
+                  maxHeight: '300px',
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
@@ -1010,7 +1010,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: 'calc(90vh - 500px)',
+                  maxHeight: '300px',
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
@@ -1136,7 +1136,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: 'calc(90vh - 500px)',
+                  maxHeight: '300px',
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
