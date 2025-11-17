@@ -17,7 +17,6 @@ import {
   InputAdornment,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Delete as DeleteIcon,
   Refresh as RefreshIcon,
   Search as SearchIcon,

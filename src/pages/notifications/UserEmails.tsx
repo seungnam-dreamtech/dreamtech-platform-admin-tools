@@ -15,7 +15,6 @@ import {
   CardContent,
   InputAdornment,
   Alert,
-  Grid,
   Divider,
 } from '@mui/material';
 import {
@@ -210,26 +209,28 @@ export default function UserEmails() {
 
                 <Divider sx={{ mb: 2 }} />
 
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      이메일 ID
-                    </Typography>
-                    <Typography variant="body1" fontWeight={500}>
-                      {emailData.email_id}
-                    </Typography>
-                  </Grid>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ flex: '1 1 200px' }}>
+                      <Typography variant="caption" color="text.secondary">
+                        이메일 ID
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {emailData.email_id}
+                      </Typography>
+                    </Box>
 
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      사용자 ID
-                    </Typography>
-                    <Typography variant="body1" fontWeight={500}>
-                      {emailData.user_id}
-                    </Typography>
-                  </Grid>
+                    <Box sx={{ flex: '1 1 200px' }}>
+                      <Typography variant="caption" color="text.secondary">
+                        사용자 ID
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {emailData.user_id}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-                  <Grid item xs={12}>
+                  <Box>
                     <Typography variant="caption" color="text.secondary">
                       이메일 주소
                     </Typography>
@@ -247,28 +248,30 @@ export default function UserEmails() {
                         {emailData.email}
                       </Typography>
                     )}
-                  </Grid>
+                  </Box>
 
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      마지막 사용
-                    </Typography>
-                    <Typography variant="body2">
-                      {emailData.last_used_at
-                        ? new Date(emailData.last_used_at).toLocaleString('ko-KR')
-                        : '-'}
-                    </Typography>
-                  </Grid>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ flex: '1 1 200px' }}>
+                      <Typography variant="caption" color="text.secondary">
+                        마지막 사용
+                      </Typography>
+                      <Typography variant="body2">
+                        {emailData.last_used_at
+                          ? new Date(emailData.last_used_at).toLocaleString('ko-KR')
+                          : '-'}
+                      </Typography>
+                    </Box>
 
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      등록일시
-                    </Typography>
-                    <Typography variant="body2">
-                      {new Date(emailData.created_at).toLocaleString('ko-KR')}
-                    </Typography>
-                  </Grid>
-                </Grid>
+                    <Box sx={{ flex: '1 1 200px' }}>
+                      <Typography variant="caption" color="text.secondary">
+                        등록일시
+                      </Typography>
+                      <Typography variant="body2">
+                        {new Date(emailData.created_at).toLocaleString('ko-KR')}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
 
                 <Box sx={{ mt: 3, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                   {editMode ? (
