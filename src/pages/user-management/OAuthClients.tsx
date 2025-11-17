@@ -110,7 +110,6 @@ export default function OAuthClients() {
 
   // 동적 모달 크기 상태
   const [modalHeight, setModalHeight] = useState<number>(800);
-  const [accordionMaxHeight, setAccordionMaxHeight] = useState<number>(300);
 
   // 모달이 열릴 때 화면 크기에 따라 모달 크기 계산
   useEffect(() => {
@@ -131,12 +130,6 @@ export default function OAuthClients() {
 
       // 모달 높이 설정
       setModalHeight(calculatedModalHeight);
-
-      // 아코디언 높이 계산: 모달 높이 - (DialogTitle + Alert + 기본정보 + DialogActions + padding)
-      // DialogTitle: ~100px, Alert: ~60px, 기본정보: ~250px, Accordion headers: ~150px, DialogActions: ~70px, padding: ~20px
-      // 총 약 650px를 제외
-      const calculatedAccordionHeight = Math.max(calculatedModalHeight - 650, 150);
-      setAccordionMaxHeight(calculatedAccordionHeight);
     }
   }, [modalOpen]);
 
@@ -855,7 +848,24 @@ export default function OAuthClients() {
           </Box>
 
           {/* Accordion 섹션들 (flex 영역 - 남은 공간 차지) */}
-          <Box sx={{ flex: 1, px: 2, pb: 2, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{
+            flex: 1,
+            px: 2,
+            pb: 2,
+            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              backgroundColor: 'rgba(0,0,0,0.3)',
+            },
+          }}>
             <Accordion
               expanded={expandedAccordion === 'oauth2'}
               onChange={() => setExpandedAccordion(expandedAccordion === 'oauth2' ? false : 'oauth2')}
@@ -863,22 +873,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>OAuth2 설정</Typography>
               </AccordionSummary>
-              <AccordionDetails
-                sx={{
-                  maxHeight: `${accordionMaxHeight}px`,
-                  overflowY: 'auto',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0,0,0,0.2)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                  },
-                }}
-              >
+              <AccordionDetails>
                 <Stack spacing={3}>
                   {/* Redirect URIs */}
                   <Box>
@@ -1041,22 +1036,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>토큰 설정</Typography>
               </AccordionSummary>
-              <AccordionDetails
-                sx={{
-                  maxHeight: `${accordionMaxHeight}px`,
-                  overflowY: 'auto',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0,0,0,0.2)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                  },
-                }}
-              >
+              <AccordionDetails>
                 <Stack spacing={3}>
                   {/* Access Token TTL */}
                   <Box>
@@ -1167,22 +1147,7 @@ export default function OAuthClients() {
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>허용된 User Type 관리</Typography>
               </AccordionSummary>
-              <AccordionDetails
-                sx={{
-                  maxHeight: `${accordionMaxHeight}px`,
-                  overflowY: 'auto',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'rgba(0,0,0,0.2)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb:hover': {
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                  },
-                }}
-              >
+              <AccordionDetails>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                     이 클라이언트를 통해 회원가입 시 생성 가능한 사용자 유형을 설정합니다
