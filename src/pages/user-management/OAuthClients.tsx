@@ -108,6 +108,37 @@ export default function OAuthClients() {
   // Accordion 확장 상태
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>('oauth2');
 
+  // 동적 모달 크기 상태
+  const [modalHeight, setModalHeight] = useState<number>(800);
+  const [accordionMaxHeight, setAccordionMaxHeight] = useState<number>(300);
+
+  // 모달이 열릴 때 화면 크기에 따라 모달 크기 계산
+  useEffect(() => {
+    if (modalOpen) {
+      const screenHeight = window.innerHeight;
+
+      // 화면 높이에 따른 모달 높이 결정
+      let calculatedModalHeight: number;
+      if (screenHeight >= 1080) {
+        calculatedModalHeight = 900;
+      } else if (screenHeight >= 900) {
+        calculatedModalHeight = Math.min(screenHeight * 0.85, 800);
+      } else if (screenHeight >= 768) {
+        calculatedModalHeight = Math.min(screenHeight * 0.8, 700);
+      } else {
+        calculatedModalHeight = Math.min(screenHeight * 0.75, 600);
+      }
+
+      // 모달 높이 설정
+      setModalHeight(calculatedModalHeight);
+
+      // 아코디언 높이 계산: 모달 높이 - (헤더 + Alert + 기본정보 + padding + 여유공간)
+      // 약 500px 정도를 제외한 나머지 공간을 아코디언에 할당
+      const calculatedAccordionHeight = Math.max(calculatedModalHeight - 500, 200);
+      setAccordionMaxHeight(calculatedAccordionHeight);
+    }
+  }, [modalOpen]);
+
   // Redirect URI 추가
   const handleAddRedirectUri = () => {
     setFormData({ ...formData, redirectUris: [...formData.redirectUris, ''] });
@@ -735,8 +766,8 @@ export default function OAuthClients() {
         scroll="paper"
         PaperProps={{
           sx: {
-            maxHeight: '90vh',
-            height: '90vh',
+            maxHeight: `${modalHeight}px`,
+            height: `${modalHeight}px`,
           },
         }}
       >
@@ -832,7 +863,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: '300px',
+                  maxHeight: `${accordionMaxHeight}px`,
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
@@ -1010,7 +1041,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: '300px',
+                  maxHeight: `${accordionMaxHeight}px`,
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
@@ -1136,7 +1167,7 @@ export default function OAuthClients() {
               </AccordionSummary>
               <AccordionDetails
                 sx={{
-                  maxHeight: '300px',
+                  maxHeight: `${accordionMaxHeight}px`,
                   overflowY: 'auto',
                   '&::-webkit-scrollbar': {
                     width: '8px',
