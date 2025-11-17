@@ -70,9 +70,8 @@ function TabPanel(props: TabPanelProps) {
       id={`oauth-tabpanel-${index}`}
       aria-labelledby={`oauth-tab-${index}`}
       {...other}
-      style={{ height: '100%' }}
     >
-      {value === index && <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>{children}</Box>}
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
     </div>
   );
 }
@@ -452,17 +451,17 @@ export default function OAuthClients() {
     {
       field: 'client',
       headerName: '클라이언트 정보',
-      flex: 1.5,
-      minWidth: 200,
+      flex: 2.0,
+      minWidth: 220,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => (
-        <Box>
+        <Box sx={{ py: 0.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <ApiIcon fontSize="small" color="primary" />
             <Typography variant="body2" fontWeight={500}>
               {params.row.client_name}
             </Typography>
           </Box>
-          <Typography variant="caption" color="textSecondary">
+          <Typography variant="caption" color="textSecondary" sx={{ ml: 3 }}>
             {params.row.client_id}
           </Typography>
         </Box>
@@ -471,8 +470,8 @@ export default function OAuthClients() {
     {
       field: 'client_type',
       headerName: '타입',
-      flex: 0.8,
-      minWidth: 100,
+      flex: 1.0,
+      minWidth: 120,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
         if (!params.row.client_type) return <Chip label="-" size="small" />;
         const typeOption = CLIENT_TYPE_OPTIONS.find(t => t.value === params.row.client_type);
