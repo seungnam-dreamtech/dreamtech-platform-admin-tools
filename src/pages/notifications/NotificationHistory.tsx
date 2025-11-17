@@ -323,7 +323,7 @@ export default function NotificationHistory() {
           </Box>
         )}
 
-        {/* 테이블 */}
+        {/* 테이블 또는 안내 메시지 */}
         {searchedUserId ? (
           <Box sx={{ height: 600, width: '100%' }}>
             <DataGrid
@@ -349,6 +349,9 @@ export default function NotificationHistory() {
                 '& .MuiDataGrid-row:hover': {
                   backgroundColor: 'action.hover',
                 },
+              }}
+              localeText={{
+                noRowsLabel: '알림 전송 이력이 없습니다',
               }}
             />
           </Box>
