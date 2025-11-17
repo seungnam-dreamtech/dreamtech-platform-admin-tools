@@ -777,7 +777,7 @@ export default function OAuthClients() {
           setModalOpen(false);
           setSelectedClient(null);
         }}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
         scroll="paper"
         PaperProps={{
