@@ -830,8 +830,8 @@ export default function OAuthClients() {
             <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
               기본 정보
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Grid container spacing={2.5}>
+              <Grid item xs={12} md={5}>
                 <TextField
                   label="Client ID"
                   value={formData.clientId}
@@ -843,7 +843,7 @@ export default function OAuthClients() {
                   required={!selectedClient}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={7}>
                 <TextField
                   label="클라이언트 이름"
                   value={formData.clientName}
@@ -854,7 +854,7 @@ export default function OAuthClients() {
                   required
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
                   <InputLabel>클라이언트 타입</InputLabel>
                   <Select
@@ -876,11 +876,11 @@ export default function OAuthClients() {
           </Box>
 
           {/* Tabs 섹션 (flex 영역 - 남은 공간 차지) */}
-          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
             <Tabs
               value={selectedTab}
               onChange={(e, newValue) => setSelectedTab(newValue)}
-              sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
+              sx={{ borderBottom: 1, borderColor: 'divider', px: 2, flexShrink: 0 }}
             >
               <Tab label="OAuth2 설정" />
               <Tab label="토큰 설정" />
@@ -889,6 +889,7 @@ export default function OAuthClients() {
             <Box sx={{
               flex: 1,
               overflow: 'auto',
+              minHeight: 0,
               '&::-webkit-scrollbar': {
                 width: '8px',
               },
