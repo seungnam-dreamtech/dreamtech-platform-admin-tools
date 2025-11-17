@@ -451,17 +451,17 @@ export default function OAuthClients() {
     {
       field: 'client',
       headerName: '클라이언트 정보',
-      flex: 2.0,
-      minWidth: 220,
+      flex: 1.5,
+      minWidth: 200,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => (
-        <Box sx={{ py: 0.5 }}>
+        <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <ApiIcon fontSize="small" color="primary" />
             <Typography variant="body2" fontWeight={500}>
               {params.row.client_name}
             </Typography>
           </Box>
-          <Typography variant="caption" color="textSecondary" sx={{ ml: 3 }}>
+          <Typography variant="caption" color="textSecondary">
             {params.row.client_id}
           </Typography>
         </Box>
@@ -470,8 +470,8 @@ export default function OAuthClients() {
     {
       field: 'client_type',
       headerName: '타입',
-      flex: 1.0,
-      minWidth: 120,
+      flex: 0.8,
+      minWidth: 100,
       renderCell: (params: GridRenderCellParams<OAuthClient>) => {
         if (!params.row.client_type) return <Chip label="-" size="small" />;
         const typeOption = CLIENT_TYPE_OPTIONS.find(t => t.value === params.row.client_type);
@@ -826,11 +826,11 @@ export default function OAuthClients() {
           </Alert>
 
           {/* 기본 정보 (고정 영역) */}
-          <Box sx={{ px: 2, py: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Box sx={{ px: 3, py: 2.5 }}>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
               기본 정보
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <TextField
                   label="Client ID"
@@ -854,7 +854,7 @@ export default function OAuthClients() {
                   required
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
                   <InputLabel>클라이언트 타입</InputLabel>
                   <Select
