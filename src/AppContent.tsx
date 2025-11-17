@@ -18,6 +18,9 @@ import AuthorityTemplates from './pages/settings/AuthorityTemplates';
 import CommonCodes from './pages/settings/CommonCodes';
 import Tasks from './pages/scheduler/Tasks';
 import Schedules from './pages/scheduler/Schedules';
+import PushTokens from './pages/notifications/PushTokens';
+import UserEmails from './pages/notifications/UserEmails';
+import NotificationHistory from './pages/notifications/NotificationHistory';
 
 // AppContent component that handles authentication-based routing
 // 인증 기반 라우팅을 처리하는 AppContent 컴포넌트
@@ -50,13 +53,15 @@ const AppContent: React.FC = () => {
           <Route path={ROUTES.USERS.slice(1)} element={<PlatformUsers />} />
           <Route path="users/oauth-clients" element={<OAuthClients />} />
           <Route path={ROUTES.SERVICES.slice(1)} element={<GatewayRoutes />} />
-
           {/* 스케쥴러 관리 */}
           <Route path="scheduler/tasks" element={<Tasks />} />
           <Route path="scheduler/schedules" element={<Schedules />} />
           <Route path={ROUTES.SCHEDULER.slice(1)} element={<Tasks />} />
-
-          <Route path={ROUTES.NOTIFICATIONS.slice(1)} element={<div>알림 관리 페이지 (구현 예정)</div>} />
+          {/* 알림 서비스 */}
+          <Route path="notifications/push-tokens" element={<PushTokens />} />
+          <Route path="notifications/emails" element={<UserEmails />} />
+          <Route path="notifications/history" element={<NotificationHistory />} />
+          <Route path={ROUTES.NOTIFICATIONS.slice(1)} element={<NotificationHistory />} />
           <Route path={ROUTES.MONITORING.slice(1)} element={<div>모니터링 페이지 (구현 예정)</div>} />
           {/* 권한 & 역할 관리 */}
           <Route path="access/permissions" element={<PermissionManagement />} />

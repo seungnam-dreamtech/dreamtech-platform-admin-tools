@@ -154,9 +154,26 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: ROUTES.NOTIFICATIONS,
+      key: 'notifications',
       icon: <NotificationsIcon />,
       label: '알림 서비스',
+      children: [
+        {
+          key: '/notifications/push-tokens',
+          icon: null,
+          label: '푸시 토큰 관리',
+        },
+        {
+          key: '/notifications/emails',
+          icon: null,
+          label: '이메일 관리',
+        },
+        {
+          key: '/notifications/history',
+          icon: null,
+          label: '알림 이력',
+        },
+      ],
     },
     {
       key: ROUTES.MONITORING,

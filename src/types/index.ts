@@ -57,3 +57,6 @@ export interface NotificationTemplate {
   template: string;
   variables: string[];
 }
+
+// Export notification service types
+export * from './notification';
