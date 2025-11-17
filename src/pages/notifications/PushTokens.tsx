@@ -1,6 +1,6 @@
 // 푸시 토큰 관리 페이지
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -12,14 +12,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Card,
-  CardContent,
-  InputAdornment,
 } from '@mui/material';
 import {
-  Delete as DeleteIcon,
-  Refresh as RefreshIcon,
   Search as SearchIcon,
+  Refresh as RefreshIcon,
+  Delete as DeleteIcon,
+  Clear as ClearIcon,
   Smartphone as SmartphoneIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
@@ -113,11 +111,6 @@ export default function PushTokens() {
     }
   };
 
-  // 플랫폼 타입 아이콘
-  const getPlatformIcon = (platform: PlatformType) => {
-    return <SmartphoneIcon fontSize="small" />;
-  };
-
   // DataGrid 컬럼 정의
   const columns: GridColDef[] = [
     {
@@ -136,9 +129,11 @@ export default function PushTokens() {
       headerName: '플랫폼',
       flex: 0.5,
       minWidth: 130,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
         <Chip
-          icon={getPlatformIcon(params.row.platform_type)}
+          icon={<SmartphoneIcon />}
           label={params.row.platform_type}
           color={getPlatformColor(params.row.platform_type)}
           size="small"
@@ -151,7 +146,7 @@ export default function PushTokens() {
       flex: 0.8,
       minWidth: 180,
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
-        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+        <Typography variant="body2" color="textSecondary" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
           {params.row.device_id}
         </Typography>
       ),
@@ -171,7 +166,7 @@ export default function PushTokens() {
       flex: 0.5,
       minWidth: 120,
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
-        <Typography variant="body2">{params.row.app_version || '-'}</Typography>
+        <Typography variant="body2" color="textSecondary">{params.row.app_version || '-'}</Typography>
       ),
     },
     {
@@ -179,6 +174,8 @@ export default function PushTokens() {
       headerName: '활성 상태',
       flex: 0.5,
       minWidth: 110,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
         <Chip
           label={params.row.is_active ? '활성' : '비활성'}
@@ -193,7 +190,7 @@ export default function PushTokens() {
       flex: 0.8,
       minWidth: 160,
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {params.row.last_used_at
             ? new Date(params.row.last_used_at).toLocaleString('ko-KR')
             : '-'}
@@ -206,7 +203,7 @@ export default function PushTokens() {
       flex: 0.8,
       minWidth: 160,
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {new Date(params.row.created_at).toLocaleString('ko-KR')}
         </Typography>
       ),
@@ -216,57 +213,63 @@ export default function PushTokens() {
       headerName: '작업',
       flex: 0.4,
       minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
       sortable: false,
       renderCell: (params: GridRenderCellParams<TokenResponse>) => (
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => confirmDelete(params.row.token_id)}
-            disabled={!params.row.is_active}
-            title="토큰 비활성화"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <IconButton
+          size="small"
+          color="error"
+          onClick={() => confirmDelete(params.row.token_id)}
+          disabled={!params.row.is_active}
+          title="토큰 비활성화"
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
       ),
     },
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* 헤더 */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" fontWeight={600}>
-          푸시 토큰 관리
+    <Box sx={{ width: '100%', height: '100%' }}>
+      {/* 페이지 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={700}>
+          푸시 토큰 관리 {searchedUserId && `(${activeTokenCount}개 활성)`}
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          사용자별 푸시 알림 토큰 관리
         </Typography>
       </Box>
 
-      {/* 검색 영역 */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
-              label="사용자 ID"
-              placeholder="조회할 사용자 ID를 입력하세요"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              onKeyPress={handleKeyPress}
-              size="small"
-              sx={{ flex: 1, maxWidth: 400 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색 영역 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder="사용자 ID를 입력하세요"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            onKeyPress={handleKeyPress}
+            size="small"
+            sx={{ width: 400 }}
+            slotProps={{
+              input: {
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
+                endAdornment: userId && (
+                  <IconButton size="small" onClick={() => setUserId('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
                 ),
-              }}
-            />
+              },
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="contained"
               startIcon={<SearchIcon />}
               onClick={handleSearch}
-              disabled={loading}
+              disabled={loading || !userId.trim()}
             >
               조회
             </Button>
@@ -281,57 +284,52 @@ export default function PushTokens() {
               </Button>
             )}
           </Box>
+        </Box>
 
-          {searchedUserId && (
-            <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-              <Chip
-                label={`조회 사용자: ${searchedUserId}`}
-                color="primary"
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                label={`활성 토큰: ${activeTokenCount}개`}
-                color="success"
-                variant="outlined"
-                size="small"
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+        {/* 현재 조회 정보 */}
+        {searchedUserId && (
+          <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+            <Chip label={`조회 사용자: ${searchedUserId}`} color="primary" variant="outlined" size="small" />
+            <Chip label={`전체: ${tokens.length}개`} variant="outlined" size="small" />
+          </Box>
+        )}
 
-      {/* 토큰 목록 테이블 */}
-      <Card>
-        <CardContent>
+        {/* 테이블 */}
+        <Box sx={{ height: 600, width: '100%' }}>
           <DataGrid
             rows={tokens}
             columns={columns}
             getRowId={(row) => row.token_id}
             loading={loading}
+            pageSizeOptions={[10, 25, 50]}
             initialState={{
-              pagination: {
-                paginationModel: { pageSize: 10, page: 0 },
-              },
+              pagination: { paginationModel: { pageSize: 10 } },
+              sorting: { sortModel: [{ field: 'created_at', sort: 'desc' }] },
             }}
-            pageSizeOptions={[10, 25, 50, 100]}
             disableRowSelectionOnClick
-            autoHeight
             sx={{
               '& .MuiDataGrid-cell': {
-                py: 1,
+                display: 'flex !important',
+                alignItems: 'center !important',
+                padding: '0 16px !important',
+              },
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
               },
             }}
           />
-        </CardContent>
-      </Card>
+        </Box>
+      </Box>
 
       {/* 삭제 확인 다이얼로그 */}
       <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
         <DialogTitle>푸시 토큰 비활성화</DialogTitle>
         <DialogContent>
           <Typography>이 푸시 토큰을 비활성화하시겠습니까?</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
             비활성화된 토큰은 푸시 알림을 받을 수 없습니다.
           </Typography>
         </DialogContent>

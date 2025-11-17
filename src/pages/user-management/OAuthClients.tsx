@@ -25,7 +25,6 @@ import {
   FormHelperText,
   Tabs,
   Tab,
-  Grid,
   Stack,
 } from '@mui/material';
 import {
@@ -777,7 +776,7 @@ export default function OAuthClients() {
           setModalOpen(false);
           setSelectedClient(null);
         }}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
         scroll="paper"
         PaperProps={{
