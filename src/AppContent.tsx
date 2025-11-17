@@ -16,6 +16,8 @@ import RoleManagement from './pages/settings/RoleManagement';
 import UserTypes from './pages/settings/UserTypes';
 import AuthorityTemplates from './pages/settings/AuthorityTemplates';
 import CommonCodes from './pages/settings/CommonCodes';
+import Tasks from './pages/scheduler/Tasks';
+import Schedules from './pages/scheduler/Schedules';
 
 // AppContent component that handles authentication-based routing
 // 인증 기반 라우팅을 처리하는 AppContent 컴포넌트
@@ -48,7 +50,12 @@ const AppContent: React.FC = () => {
           <Route path={ROUTES.USERS.slice(1)} element={<PlatformUsers />} />
           <Route path="users/oauth-clients" element={<OAuthClients />} />
           <Route path={ROUTES.SERVICES.slice(1)} element={<GatewayRoutes />} />
-          <Route path={ROUTES.SCHEDULER.slice(1)} element={<div>스케줄링 페이지 (구현 예정)</div>} />
+
+          {/* 스케쥴러 관리 */}
+          <Route path="scheduler/tasks" element={<Tasks />} />
+          <Route path="scheduler/schedules" element={<Schedules />} />
+          <Route path={ROUTES.SCHEDULER.slice(1)} element={<Tasks />} />
+
           <Route path={ROUTES.NOTIFICATIONS.slice(1)} element={<div>알림 관리 페이지 (구현 예정)</div>} />
           <Route path={ROUTES.MONITORING.slice(1)} element={<div>모니터링 페이지 (구현 예정)</div>} />
           {/* 권한 & 역할 관리 */}
