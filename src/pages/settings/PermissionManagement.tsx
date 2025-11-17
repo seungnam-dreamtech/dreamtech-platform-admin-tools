@@ -8,7 +8,6 @@ import {
   Chip,
   Switch,
   Tooltip,
-  Badge,
   IconButton,
   Dialog,
   DialogTitle,
@@ -19,9 +18,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Typography,
   ToggleButton,
   ToggleButtonGroup,
@@ -35,7 +31,6 @@ import {
   ViewModule as ViewModuleIcon,
   Security as SecurityIcon,
   Apps as AppsIcon,
-  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';

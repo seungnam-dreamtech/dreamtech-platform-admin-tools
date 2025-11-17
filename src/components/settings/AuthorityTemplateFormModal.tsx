@@ -23,12 +23,9 @@ import {
   ListItemIcon,
   Checkbox,
   Paper,
-  IconButton,
-  Tooltip,
+  ListItemButton,
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import type {
@@ -188,7 +185,7 @@ export function AuthorityTemplateFormModal({
           {
             role_id: role.role_id,
             display_name: role.display_name,
-            description: role.description,
+            description: role.description || undefined,
           },
         ],
       }));
@@ -428,9 +425,8 @@ export function AuthorityTemplateFormModal({
                           (r) => r.role_id === role.role_id
                         );
                         return (
-                          <ListItem
+                          <ListItemButton
                             key={role.role_id}
-                            button
                             onClick={() => handleToggleGlobalRole(role)}
                             sx={{
                               bgcolor: isSelected ? 'action.selected' : 'transparent',
@@ -455,7 +451,7 @@ export function AuthorityTemplateFormModal({
                             {role.is_system_role && (
                               <Chip label="SYSTEM" color="error" size="small" />
                             )}
-                          </ListItem>
+                          </ListItemButton>
                         );
                       })}
                   </List>
@@ -530,9 +526,8 @@ export function AuthorityTemplateFormModal({
                                 r.service_id === role.service_id && r.role_name === role.role_name
                             );
                             return (
-                              <ListItem
+                              <ListItemButton
                                 key={`${role.service_id}:${role.role_name}`}
-                                button
                                 onClick={() => handleToggleServiceRole(role)}
                                 sx={{
                                   bgcolor: isSelected ? 'action.selected' : 'transparent',
@@ -557,7 +552,7 @@ export function AuthorityTemplateFormModal({
                                 {role.is_system_role && (
                                   <Chip label="SYSTEM" color="error" size="small" />
                                 )}
-                              </ListItem>
+                              </ListItemButton>
                             );
                           })}
                         </List>
