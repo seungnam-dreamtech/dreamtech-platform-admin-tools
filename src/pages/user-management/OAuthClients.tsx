@@ -23,9 +23,9 @@ import {
   Autocomplete,
   FormControlLabel,
   FormHelperText,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Tabs,
+  Tab,
+  Grid,
   Stack,
 } from '@mui/material';
 import {
@@ -36,7 +36,6 @@ import {
   ContentCopy as CopyIcon,
   Api as ApiIcon,
   Clear as ClearIcon,
-  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
@@ -53,6 +52,30 @@ import { useSnackbar } from '../../contexts/SnackbarContext';
 
 // 토큰 TTL 타입 정의
 type TokenUnit = 'M' | 'H' | 'D';
+
+// TabPanel 인터페이스
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`oauth-tabpanel-${index}`}
+      aria-labelledby={`oauth-tab-${index}`}
+      {...other}
+      style={{ height: '100%' }}
+    >
+      {value === index && <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>{children}</Box>}
+    </div>
+  );
+}
 
 // TTL 파싱 함수: "1H" -> { value: 1, unit: 'H' }
 const parseTokenTTL = (ttl: string): { value: number; unit: TokenUnit } => {
@@ -105,8 +128,8 @@ export default function OAuthClients() {
   // 폼 에러 상태
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Accordion 확장 상태
-  const [expandedAccordion, setExpandedAccordion] = useState<string | false>('oauth2');
+  // Tab 선택 상태
+  const [selectedTab, setSelectedTab] = useState<number>(0);
 
   // 동적 모달 크기 상태
   const [modalHeight, setModalHeight] = useState<number>(800);
@@ -420,7 +443,7 @@ export default function OAuthClients() {
       });
     }
     setFormErrors({});
-    setExpandedAccordion('oauth2'); // 기본적으로 OAuth2 설정 아코디언 열기
+    setSelectedTab(0); // 기본적으로 첫 번째 탭 선택
     setModalOpen(true);
   };
 
@@ -808,72 +831,77 @@ export default function OAuthClients() {
             <Typography variant="h6" gutterBottom>
               기본 정보
             </Typography>
-            <Stack spacing={2}>
-              <TextField
-                label="Client ID"
-                value={formData.clientId}
-                onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                disabled={!!selectedClient}
-                error={!!formErrors.clientId}
-                helperText={formErrors.clientId || '예: healthcare-web-app'}
-                fullWidth
-                required={!selectedClient}
-              />
-              <TextField
-                label="클라이언트 이름"
-                value={formData.clientName}
-                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                error={!!formErrors.clientName}
-                helperText={formErrors.clientName || '예: Healthcare Web Application'}
-                fullWidth
-                required
-              />
-              <FormControl fullWidth>
-                <InputLabel>클라이언트 타입</InputLabel>
-                <Select
-                  value={formData.clientType}
-                  onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
-                  label="클라이언트 타입"
-                >
-                  <MenuItem value="">
-                    <em>선택 안함</em>
-                  </MenuItem>
-                  {CLIENT_TYPE_OPTIONS.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                  ))}
-                </Select>
-                <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
-              </FormControl>
-            </Stack>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Client ID"
+                  value={formData.clientId}
+                  onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                  disabled={!!selectedClient}
+                  error={!!formErrors.clientId}
+                  helperText={formErrors.clientId || '예: healthcare-web-app'}
+                  fullWidth
+                  required={!selectedClient}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="클라이언트 이름"
+                  value={formData.clientName}
+                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                  error={!!formErrors.clientName}
+                  helperText={formErrors.clientName || '예: Healthcare Web Application'}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>클라이언트 타입</InputLabel>
+                  <Select
+                    value={formData.clientType}
+                    onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
+                    label="클라이언트 타입"
+                  >
+                    <MenuItem value="">
+                      <em>선택 안함</em>
+                    </MenuItem>
+                    {CLIENT_TYPE_OPTIONS.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </Select>
+                  <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
           </Box>
 
-          {/* Accordion 섹션들 (flex 영역 - 남은 공간 차지) */}
-          <Box sx={{
-            flex: 1,
-            px: 2,
-            pb: 2,
-            overflow: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(0,0,0,0.2)',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              backgroundColor: 'rgba(0,0,0,0.3)',
-            },
-          }}>
-            <Accordion
-              expanded={expandedAccordion === 'oauth2'}
-              onChange={() => setExpandedAccordion(expandedAccordion === 'oauth2' ? false : 'oauth2')}
+          {/* Tabs 섹션 (flex 영역 - 남은 공간 차지) */}
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Tabs
+              value={selectedTab}
+              onChange={(e, newValue) => setSelectedTab(newValue)}
+              sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>OAuth2 설정</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
+              <Tab label="OAuth2 설정" />
+              <Tab label="토큰 설정" />
+              <Tab label="사용자 타입" />
+            </Tabs>
+            <Box sx={{
+              flex: 1,
+              overflow: 'auto',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0,0,0,0.2)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                backgroundColor: 'rgba(0,0,0,0.3)',
+              },
+            }}>
+              <TabPanel value={selectedTab} index={0}>
                 <Stack spacing={3}>
                   {/* Redirect URIs */}
                   <Box>
@@ -1025,18 +1053,9 @@ export default function OAuthClients() {
                     )}
                   </FormControl>
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+              </TabPanel>
 
-            {/* 토큰 설정 */}
-            <Accordion
-              expanded={expandedAccordion === 'token'}
-              onChange={() => setExpandedAccordion(expandedAccordion === 'token' ? false : 'token')}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>토큰 설정</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
+              <TabPanel value={selectedTab} index={1}>
                 <Stack spacing={3}>
                   {/* Access Token TTL */}
                   <Box>
@@ -1136,18 +1155,9 @@ export default function OAuthClients() {
                     <FormHelperText>Refresh Token을 재사용할지 여부</FormHelperText>
                   </Box>
                 </Stack>
-              </AccordionDetails>
-            </Accordion>
+              </TabPanel>
 
-            {/* User Type 관리 */}
-            <Accordion
-              expanded={expandedAccordion === 'usertype'}
-              onChange={() => setExpandedAccordion(expandedAccordion === 'usertype' ? false : 'usertype')}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>허용된 User Type 관리</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
+              <TabPanel value={selectedTab} index={2}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom display="block">
                     이 클라이언트를 통해 회원가입 시 생성 가능한 사용자 유형을 설정합니다
@@ -1160,8 +1170,8 @@ export default function OAuthClients() {
                     />
                   </Box>
                 </Box>
-              </AccordionDetails>
-            </Accordion>
+              </TabPanel>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
