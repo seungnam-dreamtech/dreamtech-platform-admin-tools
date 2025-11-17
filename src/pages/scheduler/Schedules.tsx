@@ -1,25 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Input, message, Modal, Tag, Typography, Select } from 'antd';
+import { useState, useEffect } from 'react';
 import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-} from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Search as SearchIcon,
+  Schedule as ScheduleIcon,
+} from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
 import type { Task, Schedule, ScheduleType } from '../../types/scheduler';
 import { schedulerService } from '../../services/schedulerService';
 import { ScheduleFormModal } from '../../components/scheduler/ScheduleFormModal';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 
-const { Title, Text } = Typography;
-const { confirm } = Modal;
-const { Option } = Select;
-
-const Schedules: React.FC = () => {
+export default function Schedules() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredSchedules, setFilteredSchedules] = useState<Schedule[]>([]);
@@ -28,6 +41,9 @@ const Schedules: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<ScheduleType | 'ALL'>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | undefined>();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState<Schedule | null>(null);
+  const snackbar = useSnackbar();
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -76,7 +92,7 @@ const Schedules: React.FC = () => {
       setFilteredSchedules(schedulesWithTask);
     } catch (error: any) {
       console.error('Failed to load schedules:', error);
-      message.error('스케쥴 목록 조회에 실패했습니다');
+      snackbar.error('스케쥴 목록 조회에 실패했습니다');
     } finally {
       setLoading(false);
     }
@@ -92,34 +108,25 @@ const Schedules: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleDelete = (schedule: Schedule) => {
-    confirm({
-      title: '스케쥴 삭제',
-      icon: <ExclamationCircleOutlined />,
-      content: (
-        <>
-          <p>
-            스케쥴 <Text strong>{schedule.name}</Text>을(를) 삭제하시겠습니까?
-          </p>
-          <p>
-            <Text type="warning">스케쥴이 즉시 해제되어 더 이상 실행되지 않습니다.</Text>
-          </p>
-        </>
-      ),
-      okText: '삭제',
-      okType: 'danger',
-      cancelText: '취소',
-      onOk: async () => {
-        try {
-          await schedulerService.deleteSchedule(schedule.id);
-          message.success('스케쥴이 삭제되었습니다');
-          loadData();
-        } catch (error: any) {
-          console.error('Failed to delete schedule:', error);
-          message.error(error.message || '스케쥴 삭제에 실패했습니다');
-        }
-      },
-    });
+  const confirmDelete = (schedule: Schedule) => {
+    setScheduleToDelete(schedule);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!scheduleToDelete) return;
+
+    try {
+      await schedulerService.deleteSchedule(scheduleToDelete.id);
+      snackbar.success('스케쥴이 삭제되었습니다');
+      loadData();
+    } catch (error: any) {
+      console.error('Failed to delete schedule:', error);
+      snackbar.error(error.message || '스케쥴 삭제에 실패했습니다');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setScheduleToDelete(null);
+    }
   };
 
   const handleModalSave = () => {
@@ -132,20 +139,11 @@ const Schedules: React.FC = () => {
     setSelectedSchedule(undefined);
   };
 
-  const isScheduleActive = (schedule: Schedule): boolean => {
-    if (schedule.deleted_at) return false;
-    const now = dayjs();
-    const start = dayjs(schedule.start_at);
-    const end = dayjs(schedule.end_at);
-    return now.isAfter(start) && now.isBefore(end);
-  };
-
-  const getScheduleStatus = (schedule: Schedule): {
-    text: string;
-    color: string;
-  } => {
+  const getScheduleStatus = (
+    schedule: Schedule
+  ): { text: string; color: 'default' | 'primary' | 'success' | 'error' | 'info' | 'warning' } => {
     if (schedule.deleted_at) {
-      return { text: '삭제됨', color: 'red' };
+      return { text: '삭제됨', color: 'error' };
     }
 
     const now = dayjs();
@@ -153,183 +151,237 @@ const Schedules: React.FC = () => {
     const end = dayjs(schedule.end_at);
 
     if (now.isBefore(start)) {
-      return { text: '대기중', color: 'blue' };
+      return { text: '대기중', color: 'info' };
     } else if (now.isAfter(end)) {
       return { text: '종료됨', color: 'default' };
     } else {
-      return { text: '실행중', color: 'green' };
+      return { text: '실행중', color: 'success' };
     }
   };
 
-  const columns: ColumnsType<Schedule> = [
+  // DataGrid 컬럼 정의
+  const columns: GridColDef[] = [
     {
-      title: '스케쥴명',
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
-      ellipsis: true,
-      render: (text: string) => <Text strong>{text}</Text>,
-    },
-    {
-      title: '작업 클래스',
-      key: 'task',
-      width: 180,
-      ellipsis: true,
-      render: (_: any, record: Schedule) => (
-        <Text>{record.task?.name || <Text type="secondary">-</Text>}</Text>
+      field: 'name',
+      headerName: '스케쥴명',
+      flex: 1,
+      minWidth: 200,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Typography variant="body2" fontWeight={600}>
+          {params.row.name}
+        </Typography>
       ),
     },
     {
-      title: '타입',
-      dataIndex: 'schedule_type',
-      key: 'schedule_type',
-      width: 100,
-      align: 'center',
-      render: (type: ScheduleType) => (
-        <Tag color={type === 'CRON' ? 'blue' : 'purple'}>{type}</Tag>
+      field: 'task',
+      headerName: '작업 클래스',
+      flex: 1,
+      minWidth: 180,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Typography variant="body2">
+          {params.row.task?.name || '-'}
+        </Typography>
       ),
     },
     {
-      title: '스케쥴 표현식',
-      dataIndex: 'schedule',
-      key: 'schedule',
-      width: 180,
-      ellipsis: true,
-      render: (text?: string) => (text ? <Text code>{text}</Text> : <Text type="secondary">-</Text>),
-    },
-    {
-      title: '그룹',
-      dataIndex: 'schedule_group',
-      key: 'schedule_group',
-      width: 120,
-      ellipsis: true,
-      render: (text?: string) => text || <Text type="secondary">-</Text>,
-    },
-    {
-      title: '실행 기간',
-      key: 'period',
-      width: 200,
-      render: (_: any, record: Schedule) => (
-        <Space direction="vertical" size={0}>
-          <Text style={{ fontSize: 12 }}>
-            시작: {dayjs(record.start_at).format('YYYY-MM-DD HH:mm')}
-          </Text>
-          <Text style={{ fontSize: 12 }}>
-            종료: {dayjs(record.end_at).format('YYYY-MM-DD HH:mm')}
-          </Text>
-        </Space>
+      field: 'schedule_type',
+      headerName: '타입',
+      flex: 0.4,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Chip
+          label={params.row.schedule_type}
+          color={params.row.schedule_type === 'CRON' ? 'primary' : 'secondary'}
+          size="small"
+        />
       ),
     },
     {
-      title: '재시도',
-      dataIndex: 'retry_count',
-      key: 'retry_count',
-      width: 80,
-      align: 'center',
-      render: (count?: number) => count ?? 0,
+      field: 'schedule',
+      headerName: '스케쥴 표현식',
+      flex: 1,
+      minWidth: 180,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Typography
+          variant="body2"
+          sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
+        >
+          {params.row.schedule || '-'}
+        </Typography>
+      ),
     },
     {
-      title: '상태',
-      key: 'status',
-      width: 100,
+      field: 'schedule_group',
+      headerName: '그룹',
+      flex: 0.6,
+      minWidth: 120,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Typography variant="body2" color="textSecondary">
+          {params.row.schedule_group || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'period',
+      headerName: '실행 기간',
+      flex: 1,
+      minWidth: 200,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Box>
+          <Typography variant="caption" display="block">
+            시작: {dayjs(params.row.start_at).format('YYYY-MM-DD HH:mm')}
+          </Typography>
+          <Typography variant="caption" display="block">
+            종료: {dayjs(params.row.end_at).format('YYYY-MM-DD HH:mm')}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      field: 'retry_count',
+      headerName: '재시도',
+      flex: 0.3,
+      minWidth: 80,
       align: 'center',
-      render: (_: any, record: Schedule) => {
-        const status = getScheduleStatus(record);
-        return <Tag color={status.color}>{status.text}</Tag>;
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Typography variant="body2">{params.row.retry_count ?? 0}</Typography>
+      ),
+    },
+    {
+      field: 'status',
+      headerName: '상태',
+      flex: 0.4,
+      minWidth: 100,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params: GridRenderCellParams<Schedule>) => {
+        const status = getScheduleStatus(params.row);
+        return <Chip label={status.text} color={status.color} size="small" />;
       },
     },
     {
-      title: '작업',
-      key: 'actions',
-      width: 150,
+      field: 'actions',
+      headerName: '작업',
+      flex: 0.5,
+      minWidth: 120,
       align: 'center',
-      fixed: 'right',
-      render: (_: any, record: Schedule) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            disabled={!!record.deleted_at}
-          >
-            수정
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-            disabled={!!record.deleted_at}
-          >
-            삭제
-          </Button>
-        </Space>
+      headerAlign: 'center',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<Schedule>) => (
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          <Tooltip title="수정">
+            <span>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => handleEdit(params.row)}
+                disabled={!!params.row.deleted_at}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="삭제">
+            <span>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => confirmDelete(params.row)}
+                disabled={!!params.row.deleted_at}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2}>
-          <ClockCircleOutlined /> 스케쥴 관리
-        </Title>
-        <Text type="secondary">
+    <Box sx={{ p: 3 }}>
+      {/* 헤더 */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <ScheduleIcon color="primary" />
+          <Typography variant="h4">스케쥴 관리</Typography>
+        </Box>
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
           등록된 작업 클래스의 실행 스케쥴을 관리합니다.
-        </Text>
-      </div>
+        </Typography>
+      </Box>
 
-      <div
-        style={{
-          marginBottom: 16,
+      {/* 필터 및 액션 */}
+      <Box
+        sx={{
+          mb: 2,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          gap: 2,
         }}
       >
-        <Space>
-          <Input
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <TextField
             placeholder="스케쥴명, 그룹 검색"
-            prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 250 }}
-            allowClear
+            size="small"
+            sx={{ width: 250 }}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 1 }} />,
+            }}
           />
-          <Select
-            value={typeFilter}
-            onChange={setTypeFilter}
-            style={{ width: 150 }}
-          >
-            <Option value="ALL">전체 타입</Option>
-            <Option value="CRON">CRON</Option>
-            <Option value="EVENT">EVENT</Option>
-          </Select>
-          <Button icon={<ReloadOutlined />} onClick={loadData} loading={loading}>
-            새로고침
-          </Button>
-        </Space>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>타입</InputLabel>
+            <Select
+              value={typeFilter}
+              label="타입"
+              onChange={(e) => setTypeFilter(e.target.value as ScheduleType | 'ALL')}
+            >
+              <MenuItem value="ALL">전체 타입</MenuItem>
+              <MenuItem value="CRON">CRON</MenuItem>
+              <MenuItem value="EVENT">EVENT</MenuItem>
+            </Select>
+          </FormControl>
+          <Tooltip title="새로고침">
+            <IconButton onClick={loadData} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           스케쥴 등록
         </Button>
-      </div>
+      </Box>
 
-      <Table
-        columns={columns}
-        dataSource={filteredSchedules}
-        rowKey="id"
-        loading={loading}
-        scroll={{ x: 1400 }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개`,
-        }}
-      />
+      {/* 테이블 */}
+      <Box sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredSchedules}
+          columns={columns}
+          loading={loading}
+          disableRowSelectionOnClick
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+          }}
+          sx={{
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'action.hover',
+            },
+          }}
+        />
+      </Box>
 
+      {/* 스케쥴 등록/수정 모달 */}
       <ScheduleFormModal
         open={modalOpen}
         onCancel={handleModalCancel}
@@ -337,8 +389,25 @@ const Schedules: React.FC = () => {
         schedule={selectedSchedule}
         tasks={tasks}
       />
-    </div>
-  );
-};
 
-export default Schedules;
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>스케쥴 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>
+            스케쥴 <strong>{scheduleToDelete?.name}</strong>을(를) 삭제하시겠습니까?
+          </Typography>
+          <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>
+            ⚠️ 스케쥴이 즉시 해제되어 더 이상 실행되지 않습니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>취소</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
