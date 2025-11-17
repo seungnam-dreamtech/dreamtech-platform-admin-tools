@@ -159,6 +159,11 @@ const MainLayout: React.FC = () => {
       label: '알림 서비스',
       children: [
         {
+          key: '/notifications/send',
+          icon: null,
+          label: '알림 전송',
+        },
+        {
           key: '/notifications/push-tokens',
           icon: null,
           label: '푸시 토큰 관리',
