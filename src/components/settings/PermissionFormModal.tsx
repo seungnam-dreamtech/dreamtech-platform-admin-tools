@@ -182,7 +182,7 @@ export default function PermissionFormModal({
       if (isEditing && permission) {
         // 수정 모드: API 요구사항에 따라 전체 필드 전송
         const updateData = {
-          permission_key: permission.permission_key || `${permission.resource}:${permission.action}`,
+          permission_key: permission.permission_key || `${permission.service_id}:${permission.resource}:${permission.action}`,
           display_name: formData.display_name,
           description: formData.description,
           service_id: permission.service_id,
