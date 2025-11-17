@@ -11,10 +11,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Card,
-  CardContent,
-  InputAdornment,
-  Alert,
+  IconButton,
+  Paper,
   Grid,
   Divider,
 } from '@mui/material';
@@ -24,6 +22,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Check as CheckIcon,
+  Clear as ClearIcon,
+  InfoOutlined,
 } from '@mui/icons-material';
 import { notificationService } from '../../services/notificationService';
 import type { EmailResponse, EmailRegistrationRequest } from '../../types/notification';
@@ -58,6 +58,8 @@ export default function UserEmails() {
       snackbar.error('이메일 정보 조회에 실패했습니다');
       console.error('Failed to fetch user email:', error);
       setEmailData(null);
+      setSearchedUserId(targetUserId);
+      setNewEmail('');
     } finally {
       setLoading(false);
     }
@@ -136,67 +138,64 @@ export default function UserEmails() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* 헤더 */}
+    <Box sx={{ width: '100%', height: '100%' }}>
+      {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={600}>
+        <Typography variant="h5" fontWeight={700}>
           이메일 관리
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          사용자별 알림 수신 이메일을 관리합니다. 사용자당 1개의 이메일만 등록 가능합니다.
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          사용자별 알림 수신 이메일 관리 (사용자당 1개)
         </Typography>
       </Box>
 
-      {/* 검색 영역 */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
-              label="사용자 ID"
-              placeholder="조회할 사용자 ID를 입력하세요"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              onKeyPress={handleKeyPress}
-              size="small"
-              sx={{ flex: 1, maxWidth: 400 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색 영역 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder="사용자 ID를 입력하세요"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            onKeyPress={handleKeyPress}
+            size="small"
+            sx={{ width: 400 }}
+            slotProps={{
+              input: {
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
+                endAdornment: userId && (
+                  <IconButton size="small" onClick={() => setUserId('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
                 ),
-              }}
-            />
+              },
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="contained"
               startIcon={<SearchIcon />}
               onClick={handleSearch}
-              disabled={loading}
+              disabled={loading || !userId.trim()}
             >
               조회
             </Button>
           </Box>
+        </Box>
 
-          {searchedUserId && (
-            <Box sx={{ mt: 2 }}>
-              <Chip
-                label={`조회 사용자: ${searchedUserId}`}
-                color="primary"
-                variant="outlined"
-                size="small"
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+        {/* 현재 조회 정보 */}
+        {searchedUserId && (
+          <Box sx={{ mb: 2 }}>
+            <Chip label={`조회 사용자: ${searchedUserId}`} color="primary" variant="outlined" size="small" />
+          </Box>
+        )}
 
-      {/* 이메일 정보 카드 */}
-      {searchedUserId && (
-        <Card>
-          <CardContent>
+        {/* 이메일 정보 카드 */}
+        {searchedUserId && (
+          <Paper sx={{ p: 3 }}>
             {emailData ? (
               <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EmailIcon />
                     등록된 이메일
@@ -208,11 +207,11 @@ export default function UserEmails() {
                   />
                 </Box>
 
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 3 }} />
 
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="textSecondary">
                       이메일 ID
                     </Typography>
                     <Typography variant="body1" fontWeight={500}>
@@ -221,7 +220,7 @@ export default function UserEmails() {
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="textSecondary">
                       사용자 ID
                     </Typography>
                     <Typography variant="body1" fontWeight={500}>
@@ -230,7 +229,7 @@ export default function UserEmails() {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="textSecondary">
                       이메일 주소
                     </Typography>
                     {editMode ? (
@@ -250,7 +249,7 @@ export default function UserEmails() {
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="textSecondary">
                       마지막 사용
                     </Typography>
                     <Typography variant="body2">
@@ -261,7 +260,7 @@ export default function UserEmails() {
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="textSecondary">
                       등록일시
                     </Typography>
                     <Typography variant="body2">
@@ -309,12 +308,12 @@ export default function UserEmails() {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Box sx={{ textAlign: 'center', py: 6 }}>
                 <EmailIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>
+                <Typography variant="h6" color="textSecondary" gutterBottom>
                   등록된 이메일이 없습니다
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
                   새 이메일을 등록하시겠습니까?
                 </Typography>
 
@@ -325,13 +324,6 @@ export default function UserEmails() {
                   onChange={(e) => setNewEmail(e.target.value)}
                   size="small"
                   sx={{ width: 300, mb: 2 }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon />
-                      </InputAdornment>
-                    ),
-                  }}
                 />
 
                 <Box>
@@ -346,23 +338,28 @@ export default function UserEmails() {
                 </Box>
               </Box>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </Paper>
+        )}
 
-      {/* 안내 메시지 */}
-      {!searchedUserId && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          사용자 ID를 입력하여 이메일 정보를 조회하세요.
-        </Alert>
-      )}
+        {/* 안내 메시지 */}
+        {!searchedUserId && (
+          <Paper sx={{ p: 3, bgcolor: 'info.lighter', border: '1px solid', borderColor: 'info.main' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <InfoOutlined color="info" />
+              <Typography variant="body2" color="info.dark">
+                사용자 ID를 입력하여 이메일 정보를 조회하세요.
+              </Typography>
+            </Box>
+          </Paper>
+        )}
+      </Box>
 
       {/* 삭제 확인 다이얼로그 */}
       <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
         <DialogTitle>이메일 비활성화</DialogTitle>
         <DialogContent>
           <Typography>이 이메일을 비활성화하시겠습니까?</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
             비활성화된 이메일은 알림을 받을 수 없습니다.
           </Typography>
         </DialogContent>
