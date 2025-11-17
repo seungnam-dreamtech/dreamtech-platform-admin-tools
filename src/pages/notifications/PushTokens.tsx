@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Paper,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -19,6 +20,7 @@ import {
   Delete as DeleteIcon,
   Clear as ClearIcon,
   Smartphone as SmartphoneIcon,
+  InfoOutlined,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
@@ -294,34 +296,48 @@ export default function PushTokens() {
           </Box>
         )}
 
-        {/* 테이블 */}
-        <Box sx={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={tokens}
-            columns={columns}
-            getRowId={(row) => row.token_id}
-            loading={loading}
-            pageSizeOptions={[10, 25, 50]}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
-              sorting: { sortModel: [{ field: 'created_at', sort: 'desc' }] },
-            }}
-            disableRowSelectionOnClick
-            sx={{
-              '& .MuiDataGrid-cell': {
-                display: 'flex !important',
-                alignItems: 'center !important',
-                padding: '0 16px !important',
-              },
-              '& .MuiDataGrid-cell:focus': {
-                outline: 'none',
-              },
-              '& .MuiDataGrid-row:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-          />
-        </Box>
+        {/* 테이블 또는 안내 메시지 */}
+        {searchedUserId ? (
+          <Box sx={{ height: 600, width: '100%' }}>
+            <DataGrid
+              rows={tokens}
+              columns={columns}
+              getRowId={(row) => row.token_id}
+              loading={loading}
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'created_at', sort: 'desc' }] },
+              }}
+              disableRowSelectionOnClick
+              sx={{
+                '& .MuiDataGrid-cell': {
+                  display: 'flex !important',
+                  alignItems: 'center !important',
+                  padding: '0 16px !important',
+                },
+                '& .MuiDataGrid-cell:focus': {
+                  outline: 'none',
+                },
+                '& .MuiDataGrid-row:hover': {
+                  backgroundColor: 'action.hover',
+                },
+              }}
+              localeText={{
+                noRowsLabel: '등록된 푸시 토큰이 없습니다',
+              }}
+            />
+          </Box>
+        ) : (
+          <Paper sx={{ p: 3, bgcolor: 'info.lighter', border: '1px solid', borderColor: 'info.main' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <InfoOutlined color="info" />
+              <Typography variant="body2" color="info.dark">
+                사용자 ID를 입력하여 푸시 토큰을 조회하세요.
+              </Typography>
+            </Box>
+          </Paper>
+        )}
       </Box>
 
       {/* 삭제 확인 다이얼로그 */}
