@@ -180,9 +180,21 @@ export default function PermissionFormModal({
 
     try {
       if (isEditing && permission) {
+        // permission_key 생성 (모두 소문자로 변환)
+        const generatedKey = `${permission.service_id}:${permission.resource}:${permission.action}`.toLowerCase();
+
+        // 디버깅 로그
+        console.log('Permission Update Debug:', {
+          original_permission_key: permission.permission_key,
+          service_id: permission.service_id,
+          resource: permission.resource,
+          action: permission.action,
+          generated_key: generatedKey,
+        });
+
         // 수정 모드: API 요구사항에 따라 전체 필드 전송
         const updateData = {
-          permission_key: permission.permission_key || `${permission.service_id}:${permission.resource}:${permission.action}`,
+          permission_key: generatedKey,
           display_name: formData.display_name,
           description: formData.description,
           service_id: permission.service_id,
@@ -190,6 +202,8 @@ export default function PermissionFormModal({
           action: permission.action,
           category: formData.category,
         };
+
+        console.log('Update Request Data:', updateData);
 
         const updated = await userManagementService.updatePermission(permission.id, updateData);
 
