@@ -854,7 +854,7 @@ export default function OAuthClients() {
                   required
                 />
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel>클라이언트 타입</InputLabel>
                   <Select
