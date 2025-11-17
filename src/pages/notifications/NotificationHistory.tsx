@@ -7,19 +7,19 @@ import {
   TextField,
   Typography,
   Chip,
-  Card,
-  CardContent,
-  InputAdornment,
+  IconButton,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Alert,
+  Paper,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Refresh as RefreshIcon,
+  Clear as ClearIcon,
   History as HistoryIcon,
+  InfoOutlined,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
@@ -158,7 +158,7 @@ export default function NotificationHistory() {
       flex: 1,
       minWidth: 200,
       renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
-        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+        <Typography variant="body2" color="textSecondary" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
           {params.row.request_id}
         </Typography>
       ),
@@ -169,7 +169,7 @@ export default function NotificationHistory() {
       flex: 0.8,
       minWidth: 180,
       renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
-        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+        <Typography variant="body2" color="textSecondary" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
           {params.row.message_id}
         </Typography>
       ),
@@ -179,6 +179,8 @@ export default function NotificationHistory() {
       headerName: '알림 타입',
       flex: 0.6,
       minWidth: 130,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
         <Chip
           label={getTypeLabel(params.row.notification_type)}
@@ -192,6 +194,8 @@ export default function NotificationHistory() {
       headerName: '전송 상태',
       flex: 0.6,
       minWidth: 130,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
         <Chip
           label={getStatusLabel(params.row.status)}
@@ -206,7 +210,7 @@ export default function NotificationHistory() {
       flex: 0.8,
       minWidth: 160,
       renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {new Date(params.row.created_at).toLocaleString('ko-KR')}
         </Typography>
       ),
@@ -217,7 +221,7 @@ export default function NotificationHistory() {
       flex: 0.8,
       minWidth: 160,
       renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {new Date(params.row.updated_at).toLocaleString('ko-KR')}
         </Typography>
       ),
@@ -225,43 +229,46 @@ export default function NotificationHistory() {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* 헤더 */}
+    <Box sx={{ width: '100%', height: '100%' }}>
+      {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="h5" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <HistoryIcon />
-          알림 이력 조회
+          알림 이력 조회 {searchedUserId && `(${filteredHistories.length}건)`}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          사용자별 푸시 알림 및 이메일 전송 이력을 조회합니다.
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
+          사용자별 푸시 알림 및 이메일 전송 이력 조회
         </Typography>
       </Box>
 
-      {/* 검색 영역 */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-            <TextField
-              label="사용자 ID"
-              placeholder="조회할 사용자 ID를 입력하세요"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              onKeyPress={handleKeyPress}
-              size="small"
-              sx={{ flex: 1, maxWidth: 400 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
+      {/* 컨텐츠 영역 */}
+      <Box>
+        {/* 검색 영역 */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <TextField
+            placeholder="사용자 ID를 입력하세요"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            onKeyPress={handleKeyPress}
+            size="small"
+            sx={{ width: 400 }}
+            slotProps={{
+              input: {
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
+                endAdornment: userId && (
+                  <IconButton size="small" onClick={() => setUserId('')}>
+                    <ClearIcon fontSize="small" />
+                  </IconButton>
                 ),
-              }}
-            />
+              },
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               variant="contained"
               startIcon={<SearchIcon />}
               onClick={handleSearch}
-              disabled={loading}
+              disabled={loading || !userId.trim()}
             >
               조회
             </Button>
@@ -276,40 +283,16 @@ export default function NotificationHistory() {
               </Button>
             )}
           </Box>
+        </Box>
 
-          {searchedUserId && (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Chip
-                label={`조회 사용자: ${searchedUserId}`}
-                color="primary"
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                label={`전체: ${histories.length}건`}
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                label={`필터링 결과: ${filteredHistories.length}건`}
-                color="secondary"
-                variant="outlined"
-                size="small"
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+        {/* 현재 조회 정보 및 필터 */}
+        {searchedUserId && (
+          <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Chip label={`조회 사용자: ${searchedUserId}`} color="primary" variant="outlined" size="small" />
+            <Chip label={`전체: ${histories.length}건`} variant="outlined" size="small" />
 
-      {/* 필터 영역 */}
-      {searchedUserId && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="subtitle2" gutterBottom>
-              필터
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl size="small" sx={{ minWidth: 180 }}>
+            <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+              <FormControl size="small" sx={{ minWidth: 150 }}>
                 <InputLabel>알림 타입</InputLabel>
                 <Select
                   value={typeFilter}
@@ -323,7 +306,7 @@ export default function NotificationHistory() {
                 </Select>
               </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 180 }}>
+              <FormControl size="small" sx={{ minWidth: 150 }}>
                 <InputLabel>전송 상태</InputLabel>
                 <Select
                   value={statusFilter}
@@ -337,43 +320,49 @@ export default function NotificationHistory() {
                 </Select>
               </FormControl>
             </Box>
-          </CardContent>
-        </Card>
-      )}
+          </Box>
+        )}
 
-      {/* 이력 목록 테이블 */}
-      {searchedUserId ? (
-        <Card>
-          <CardContent>
+        {/* 테이블 */}
+        {searchedUserId ? (
+          <Box sx={{ height: 600, width: '100%' }}>
             <DataGrid
               rows={filteredHistories}
               columns={columns}
               getRowId={(row) => row.request_id}
               loading={loading}
+              pageSizeOptions={[10, 25, 50]}
               initialState={{
-                pagination: {
-                  paginationModel: { pageSize: 10, page: 0 },
-                },
-                sorting: {
-                  sortModel: [{ field: 'created_at', sort: 'desc' }],
-                },
+                pagination: { paginationModel: { pageSize: 10 } },
+                sorting: { sortModel: [{ field: 'created_at', sort: 'desc' }] },
               }}
-              pageSizeOptions={[10, 25, 50, 100]}
               disableRowSelectionOnClick
-              autoHeight
               sx={{
                 '& .MuiDataGrid-cell': {
-                  py: 1,
+                  display: 'flex !important',
+                  alignItems: 'center !important',
+                  padding: '0 16px !important',
+                },
+                '& .MuiDataGrid-cell:focus': {
+                  outline: 'none',
+                },
+                '& .MuiDataGrid-row:hover': {
+                  backgroundColor: 'action.hover',
                 },
               }}
             />
-          </CardContent>
-        </Card>
-      ) : (
-        <Alert severity="info">
-          사용자 ID를 입력하여 알림 이력을 조회하세요.
-        </Alert>
-      )}
+          </Box>
+        ) : (
+          <Paper sx={{ p: 3, bgcolor: 'info.lighter', border: '1px solid', borderColor: 'info.main' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <InfoOutlined color="info" />
+              <Typography variant="body2" color="info.dark">
+                사용자 ID를 입력하여 알림 이력을 조회하세요.
+              </Typography>
+            </Box>
+          </Paper>
+        )}
+      </Box>
     </Box>
   );
 }
