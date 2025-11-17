@@ -25,7 +25,6 @@ import {
   FormHelperText,
   Tabs,
   Tab,
-  Grid,
   Stack,
 } from '@mui/material';
 import {
@@ -830,49 +829,49 @@ export default function OAuthClients() {
             <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
               기본 정보
             </Typography>
-            <Grid container spacing={2.5}>
-              <Grid item xs={12} md={5}>
-                <TextField
-                  label="Client ID"
-                  value={formData.clientId}
-                  onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                  disabled={!!selectedClient}
-                  error={!!formErrors.clientId}
-                  helperText={formErrors.clientId || '예: healthcare-web-app'}
-                  fullWidth
-                  required={!selectedClient}
-                />
-              </Grid>
-              <Grid item xs={12} md={7}>
-                <TextField
-                  label="클라이언트 이름"
-                  value={formData.clientName}
-                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                  error={!!formErrors.clientName}
-                  helperText={formErrors.clientName || '예: Healthcare Web Application'}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>클라이언트 타입</InputLabel>
-                  <Select
-                    value={formData.clientType}
-                    onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
-                    label="클라이언트 타입"
-                  >
-                    <MenuItem value="">
-                      <em>선택 안함</em>
-                    </MenuItem>
-                    {CLIENT_TYPE_OPTIONS.map(opt => (
-                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                    ))}
-                  </Select>
-                  <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
-                </FormControl>
-              </Grid>
-            </Grid>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+              <Box sx={{ display: 'flex', gap: 2.5, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 300px' }}>
+                  <TextField
+                    label="Client ID"
+                    value={formData.clientId}
+                    onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
+                    disabled={!!selectedClient}
+                    error={!!formErrors.clientId}
+                    helperText={formErrors.clientId || '예: healthcare-web-app'}
+                    fullWidth
+                    required={!selectedClient}
+                  />
+                </Box>
+                <Box sx={{ flex: '1 1 400px' }}>
+                  <TextField
+                    label="클라이언트 이름"
+                    value={formData.clientName}
+                    onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                    error={!!formErrors.clientName}
+                    helperText={formErrors.clientName || '예: Healthcare Web Application'}
+                    fullWidth
+                    required
+                  />
+                </Box>
+              </Box>
+              <FormControl fullWidth>
+                <InputLabel>클라이언트 타입</InputLabel>
+                <Select
+                  value={formData.clientType}
+                  onChange={(e) => setFormData({ ...formData, clientType: e.target.value as ClientType })}
+                  label="클라이언트 타입"
+                >
+                  <MenuItem value="">
+                    <em>선택 안함</em>
+                  </MenuItem>
+                  {CLIENT_TYPE_OPTIONS.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>UI 분류용 (선택사항)</FormHelperText>
+              </FormControl>
+            </Box>
           </Box>
 
           {/* Tabs 섹션 (flex 영역 - 남은 공간 차지) */}
