@@ -132,9 +132,10 @@ export default function OAuthClients() {
       // 모달 높이 설정
       setModalHeight(calculatedModalHeight);
 
-      // 아코디언 높이 계산: 모달 높이 - (헤더 + Alert + 기본정보 + padding + 여유공간)
-      // 약 500px 정도를 제외한 나머지 공간을 아코디언에 할당
-      const calculatedAccordionHeight = Math.max(calculatedModalHeight - 500, 200);
+      // 아코디언 높이 계산: 모달 높이 - (DialogTitle + Alert + 기본정보 + DialogActions + padding)
+      // DialogTitle: ~100px, Alert: ~60px, 기본정보: ~250px, Accordion headers: ~150px, DialogActions: ~70px, padding: ~20px
+      // 총 약 650px를 제외
+      const calculatedAccordionHeight = Math.max(calculatedModalHeight - 650, 150);
       setAccordionMaxHeight(calculatedAccordionHeight);
     }
   }, [modalOpen]);
@@ -801,7 +802,8 @@ export default function OAuthClients() {
             display: 'flex',
             flexDirection: 'column',
             p: 0,
-            overflow: 'hidden',  // 전체 스크롤 제거
+            overflow: 'hidden',
+            flex: 1,  // DialogContent가 남은 공간 차지
           }}
         >
           <Alert severity="info" sx={{ m: 2, mb: 0 }}>
@@ -853,7 +855,7 @@ export default function OAuthClients() {
           </Box>
 
           {/* Accordion 섹션들 (flex 영역 - 남은 공간 차지) */}
-          <Box sx={{ flex: 1, px: 2, pb: 2, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, px: 2, pb: 2, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
             <Accordion
               expanded={expandedAccordion === 'oauth2'}
               onChange={() => setExpandedAccordion(expandedAccordion === 'oauth2' ? false : 'oauth2')}
