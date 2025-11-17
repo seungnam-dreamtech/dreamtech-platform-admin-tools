@@ -137,9 +137,21 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: ROUTES.SCHEDULER,
+      key: 'scheduler',
       icon: <ScheduleIcon />,
       label: '스케줄러',
+      children: [
+        {
+          key: '/scheduler/tasks',
+          icon: null,
+          label: '작업 클래스',
+        },
+        {
+          key: '/scheduler/schedules',
+          icon: null,
+          label: '스케쥴 관리',
+        },
+      ],
     },
     {
       key: 'notifications',
