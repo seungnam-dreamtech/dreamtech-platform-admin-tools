@@ -180,10 +180,14 @@ export default function PermissionFormModal({
 
     try {
       if (isEditing && permission) {
-        // 수정 모드: display_name, description, category만 수정 가능
+        // 수정 모드: API 요구사항에 따라 전체 필드 전송
         const updateData = {
+          permission_key: permission.permission_key || `${permission.resource}:${permission.action}`,
           display_name: formData.display_name,
           description: formData.description,
+          service_id: permission.service_id,
+          resource: permission.resource,
+          action: permission.action,
           category: formData.category,
         };
 
