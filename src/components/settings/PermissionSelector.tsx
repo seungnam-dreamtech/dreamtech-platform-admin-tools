@@ -96,8 +96,8 @@ export default function PermissionSelector({
         const filteredPermissions = keyword
           ? permissions.filter(
               (perm) =>
-                perm.permission_string.toLowerCase().includes(lowerKeyword) ||
-                perm.display_name.toLowerCase().includes(lowerKeyword) ||
+                perm.permission_string?.toLowerCase().includes(lowerKeyword) ||
+                perm.display_name?.toLowerCase().includes(lowerKeyword) ||
                 (perm.description?.toLowerCase().includes(lowerKeyword) ?? false)
             )
           : permissions;
@@ -109,8 +109,8 @@ export default function PermissionSelector({
 
         // 권한 노드들
         const permissionItems: TreeViewBaseItem[] = filteredPermissions.map((perm) => ({
-          id: perm.permission_string,
-          label: `${perm.permission_string} - ${perm.display_name}${
+          id: perm.permission_string || 'unknown',
+          label: `${perm.permission_string || 'unknown'} - ${perm.display_name || ''}${
             perm.is_system_permission ? ' [SYSTEM]' : ''
           }${!perm.is_active ? ' [비활성]' : ''}`,
           disabled: !perm.is_active || disabled,

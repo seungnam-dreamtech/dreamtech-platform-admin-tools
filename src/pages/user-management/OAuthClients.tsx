@@ -878,7 +878,7 @@ export default function OAuthClients() {
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
             <Tabs
               value={selectedTab}
-              onChange={(e, newValue) => setSelectedTab(newValue)}
+              onChange={(_, newValue) => setSelectedTab(newValue)}
               sx={{ borderBottom: 1, borderColor: 'divider', px: 2, flexShrink: 0 }}
             >
               <Tab label="OAuth2 설정" />

@@ -133,7 +133,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
           name: formData.name,
           description: formData.description,
           task_class_name: formData.task_class_name,
-          creator_id: user?.id || 'unknown',
+          creator_id: user?.profile?.sub || 'system',
         };
 
         const createdTask = await schedulerService.createTask(createData);
