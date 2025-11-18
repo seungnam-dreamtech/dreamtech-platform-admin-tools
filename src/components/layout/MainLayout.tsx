@@ -181,9 +181,16 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
-      key: ROUTES.MONITORING,
+      key: 'monitoring',
       icon: <MonitorIcon />,
       label: '모니터링',
+      children: [
+        {
+          key: '/audit/logs',
+          icon: null,
+          label: '감사 로그',
+        },
+      ],
     },
   ];
 

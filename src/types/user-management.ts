@@ -700,3 +700,246 @@ export interface UpdateCodeRequest {
   is_default?: boolean;
   extended_attributes?: string;
 }
+
+// ============================================
+// 감사 로그 관리 (Audit Log Management)
+// ============================================
+
+/**
+ * 감사 이벤트 타입
+ */
+export type AuditEventType =
+  | 'LOGIN_SUCCESS'
+  | 'LOGIN_FAILURE'
+  | 'LOGOUT'
+  | 'MFA_ENABLED'
+  | 'MFA_DISABLED'
+  | 'PASSWORD_CHANGED'
+  | 'PASSWORD_RESET_REQUESTED'
+  | 'ACCOUNT_LOCKED'
+  | 'ACCOUNT_UNLOCKED'
+  | 'SESSION_CREATED'
+  | 'SESSION_TERMINATED'
+  | 'SESSION_EXPIRED'
+  | 'PERMISSION_GRANTED'
+  | 'PERMISSION_REVOKED'
+  | 'ROLE_ASSIGNED'
+  | 'ROLE_REMOVED'
+  | 'TEMPLATE_APPLIED'
+  | 'TEMPLATE_REMOVED'
+  | 'SERVICE_REGISTERED'
+  | 'SERVICE_UNREGISTERED'
+  | 'SERVICE_ACTIVATED'
+  | 'SERVICE_DEACTIVATED'
+  | 'DYNAMIC_GRANT_APPLIED'
+  | 'DYNAMIC_GRANT_REVOKED'
+  | 'DYNAMIC_GRANT_EXPIRED'
+  | 'USER_CREATED'
+  | 'USER_UPDATED'
+  | 'USER_DELETED'
+  | 'USER_ENABLED'
+  | 'USER_DISABLED'
+  | 'PROFILE_UPDATED'
+  | 'USER_TYPE_CHANGED'
+  | 'ACCESS_TOKEN_ISSUED'
+  | 'REFRESH_TOKEN_ISSUED'
+  | 'ID_TOKEN_ISSUED'
+  | 'TOKEN_REFRESHED'
+  | 'TOKEN_REVOKED'
+  | 'ALL_TOKENS_REVOKED'
+  | 'TOKEN_BLACKLISTED'
+  | 'SYSTEM_CONFIG_CHANGED'
+  | 'SECURITY_POLICY_UPDATED'
+  | 'BACKUP_CREATED'
+  | 'ARCHIVE_EXECUTED'
+  | 'DATA_MIGRATION'
+  | 'CLIENT_REGISTERED'
+  | 'CLIENT_UPDATED'
+  | 'CLIENT_DELETED';
+
+/**
+ * 액터 타입
+ */
+export type ActorType = 'USER' | 'ADMIN' | 'SYSTEM' | 'SERVICE' | 'CLIENT' | 'ANONYMOUS';
+
+/**
+ * 대상 타입
+ */
+export type TargetType =
+  | 'USER'
+  | 'ROLE'
+  | 'PERMISSION'
+  | 'TEMPLATE'
+  | 'SESSION'
+  | 'TOKEN'
+  | 'SERVICE'
+  | 'CLIENT'
+  | 'SYSTEM_CONFIG'
+  | 'SECURITY_POLICY'
+  | 'USER_PROFILE'
+  | 'USER_TYPE';
+
+/**
+ * 액션 타입
+ */
+export type ActionType =
+  | 'CREATE'
+  | 'READ'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'LOGIN'
+  | 'LOGOUT'
+  | 'GRANT'
+  | 'REVOKE'
+  | 'ENABLE'
+  | 'DISABLE'
+  | 'LOCK'
+  | 'UNLOCK'
+  | 'REFRESH'
+  | 'EXPIRE'
+  | 'APPLY'
+  | 'REMOVE'
+  | 'BACKUP'
+  | 'RESTORE'
+  | 'ARCHIVE';
+
+/**
+ * 이벤트 상태
+ */
+export type EventStatus = 'SUCCESS' | 'FAILURE' | 'PARTIAL' | 'PENDING' | 'CANCELLED';
+
+/**
+ * 보안 레벨
+ */
+export type SecurityLevel = 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
+
+/**
+ * 감사 이벤트
+ * API Response: GET /v1/audit
+ */
+export interface AuditEvent {
+  id: string;
+  event_id: string;
+  event_type: AuditEventType;
+  event_category: string;
+  event_timestamp: string;
+  year: number;
+  month: number;
+
+  // 액터 정보
+  actor_type: ActorType;
+  actor_id: string;
+  actor_username: string;
+  actor_roles?: string;
+
+  // 대상 정보
+  target_type: TargetType;
+  target_id: string;
+  target_username?: string;
+
+  // 액션 및 상태
+  action: ActionType;
+  status: EventStatus;
+  description: string;
+  reason?: string;
+
+  // 변경 내역
+  before_state?: string;
+  after_state?: string;
+  changes_summary?: string;
+
+  // 네트워크 및 디바이스 정보
+  ip_address: string;
+  user_agent?: string;
+  session_id?: string;
+  client_id?: string;
+  device_id?: string;
+
+  // 보안 정보
+  security_level: SecurityLevel;
+  is_security_event: boolean;
+  is_compliance_event: boolean;
+
+  // 자동화 정보
+  is_automated: boolean;
+  automation_source?: string;
+
+  // 추적 정보
+  correlation_id?: string;
+  request_id?: string;
+  trace_id?: string;
+  span_id?: string;
+
+  // 추가 데이터
+  additional_data?: string;
+
+  // 아카이브 정보
+  archived_at?: string;
+  archive_location?: string;
+
+  // 플래그
+  critical_event: boolean;
+  archived: boolean;
+  failure: boolean;
+  success: boolean;
+}
+
+/**
+ * 감사 이벤트 필터
+ * API Request: POST /v1/audit/search
+ */
+export interface AuditEventFilter {
+  event_types?: AuditEventType[];
+  event_category?: string;
+  actor_id?: string;
+  actor_username?: string;
+  actor_type?: ActorType;
+  target_type?: TargetType;
+  target_id?: string;
+  target_username?: string;
+  action?: ActionType;
+  status?: EventStatus;
+  security_levels?: SecurityLevel[];
+  is_security_event?: boolean;
+  is_compliance_event?: boolean;
+  is_automated?: boolean;
+  ip_address?: string;
+  device_id?: string;
+  session_id?: string;
+  client_id?: string;
+  correlation_id?: string;
+  start_time?: string; // ISO-8601 format
+  end_time?: string; // ISO-8601 format
+  year?: number;
+  month?: number;
+  include_archived?: boolean;
+  description_keyword?: string;
+}
+
+/**
+ * 페이징된 감사 이벤트 응답
+ */
+export interface PageAuditEvent {
+  content: AuditEvent[];
+  total_elements: number;
+  total_pages: number;
+  size: number;
+  number: number;
+  number_of_elements: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+/**
+ * 보안 대시보드 데이터
+ * API Response: GET /v1/audit/security/dashboard
+ */
+export interface SecurityDashboardData {
+  security_level_statistics: Record<SecurityLevel, number>;
+  event_type_statistics: Record<string, number>;
+  recent_critical_events: AuditEvent[];
+  recent_failure_events: AuditEvent[];
+  time_range_start: string;
+  time_range_end: string;
+}

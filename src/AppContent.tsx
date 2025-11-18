@@ -22,6 +22,7 @@ import PushTokens from './pages/notifications/PushTokens';
 import UserEmails from './pages/notifications/UserEmails';
 import NotificationHistory from './pages/notifications/NotificationHistory';
 import SendNotification from './pages/notifications/SendNotification';
+import AuditLogs from './pages/audit/AuditLogs';
 
 // AppContent component that handles authentication-based routing
 // 인증 기반 라우팅을 처리하는 AppContent 컴포넌트
@@ -64,6 +65,8 @@ const AppContent: React.FC = () => {
           <Route path="notifications/emails" element={<UserEmails />} />
           <Route path="notifications/history" element={<NotificationHistory />} />
           <Route path={ROUTES.NOTIFICATIONS.slice(1)} element={<SendNotification />} />
+          {/* 모니터링 & 감사 */}
+          <Route path="audit/logs" element={<AuditLogs />} />
           <Route path={ROUTES.MONITORING.slice(1)} element={<div>모니터링 페이지 (구현 예정)</div>} />
           {/* 권한 & 역할 관리 */}
           <Route path="access/permissions" element={<PermissionManagement />} />
