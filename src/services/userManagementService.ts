@@ -1498,6 +1498,358 @@ class UserManagementService {
   async getTemplateCategories() {
     return this.request<Code[]>('/v1/management/codes/template-categories');
   }
+
+  // ==================== 감사 로그 (Audit Logs) ====================
+
+  /**
+   * 모든 활성 감사 이벤트 조회
+   * GET /v1/audit
+   */
+  async getAllAuditEvents(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting all audit events', params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit${query ? `?${query}` : ''}`
+      );
+    } catch (error) {
+      console.error('Failed to get audit events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 감사 이벤트 동적 필터 검색
+   * POST /v1/audit/search
+   */
+  async searchAuditEvents(
+    filter: import('../types/user-management').AuditEventFilter,
+    params?: { page?: number; size?: number }
+  ): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Searching audit events with filter', filter, params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/search${query ? `?${query}` : ''}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(filter),
+        }
+      );
+    } catch (error) {
+      console.error('Failed to search audit events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 감사 이벤트 조회
+   * GET /v1/audit/{eventId}
+   */
+  async getAuditEvent(eventId: string): Promise<import('../types/user-management').AuditEvent> {
+    console.log('🔍 Getting audit event:', eventId);
+
+    try {
+      return this.request<import('../types/user-management').AuditEvent>(`/v1/audit/${eventId}`);
+    } catch (error) {
+      console.error('Failed to get audit event:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 사용자 활동 조회
+   * GET /v1/audit/user/{actorId}
+   */
+  async getUserActivity(
+    actorId: string,
+    params?: { page?: number; size?: number }
+  ): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting user activity:', actorId, params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/user/${actorId}${query ? `?${query}` : ''}`
+      );
+    } catch (error) {
+      console.error('Failed to get user activity:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 오늘의 감사 이벤트 조회
+   * GET /v1/audit/today
+   */
+  async getTodayAuditEvents(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting today audit events', params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/today${query ? `?${query}` : ''}`
+      );
+    } catch (error) {
+      console.error('Failed to get today audit events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 최근 N일 감사 이벤트 조회
+   * GET /v1/audit/recent?days={days}
+   */
+  async getRecentAuditEvents(
+    days: number = 7,
+    params?: { page?: number; size?: number }
+  ): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting recent audit events:', days, params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('days', days.toString());
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/recent?${queryParams.toString()}`
+      );
+    } catch (error) {
+      console.error('Failed to get recent audit events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 기간별 감사 이벤트 조회
+   * GET /v1/audit/range?startTime={startTime}&endTime={endTime}
+   */
+  async getAuditEventsByTimeRange(
+    startTime: string,
+    endTime: string,
+    params?: { page?: number; size?: number }
+  ): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting audit events by time range:', startTime, endTime, params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('startTime', startTime);
+      queryParams.append('endTime', endTime);
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/range?${queryParams.toString()}`
+      );
+    } catch (error) {
+      console.error('Failed to get audit events by time range:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 보안 이벤트 조회
+   * GET /v1/audit/security/events
+   */
+  async getSecurityEvents(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting security events', params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/security/events${query ? `?${query}` : ''}`
+      );
+    } catch (error) {
+      console.error('Failed to get security events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 중요 보안 이벤트 조회 (HIGH, CRITICAL)
+   * GET /v1/audit/security/critical
+   */
+  async getCriticalSecurityEvents(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting critical security events', params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/security/critical${query ? `?${query}` : ''}`
+      );
+    } catch (error) {
+      console.error('Failed to get critical security events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 실패 이벤트 조회
+   * GET /v1/audit/security/failures
+   */
+  async getFailureEvents(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting failure events', params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      const query = queryParams.toString();
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/security/failures${query ? `?${query}` : ''}`
+      );
+    } catch (error) {
+      console.error('Failed to get failure events:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 로그인 실패 이벤트 조회
+   * GET /v1/audit/security/login-failures?hours={hours}
+   */
+  async getLoginFailures(
+    hours: number = 24,
+    params?: { page?: number; size?: number }
+  ): Promise<import('../types/user-management').PageAuditEvent> {
+    console.log('🔍 Getting login failures:', hours, params);
+
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('hours', hours.toString());
+      if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+      if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+      return this.request<import('../types/user-management').PageAuditEvent>(
+        `/v1/audit/security/login-failures?${queryParams.toString()}`
+      );
+    } catch (error) {
+      console.error('Failed to get login failures:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 보안 대시보드 데이터 조회
+   * GET /v1/audit/security/dashboard?hours={hours}
+   */
+  async getSecurityDashboard(
+    hours: number = 24
+  ): Promise<import('../types/user-management').SecurityDashboardData> {
+    console.log('🔍 Getting security dashboard:', hours);
+
+    try {
+      return this.request<import('../types/user-management').SecurityDashboardData>(
+        `/v1/audit/security/dashboard?hours=${hours}`
+      );
+    } catch (error) {
+      console.error('Failed to get security dashboard:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 대상 변경 이력 조회
+   * GET /v1/audit/target/{targetType}/{targetId}/history
+   */
+  async getTargetChangeHistory(
+    targetType: import('../types/user-management').TargetType,
+    targetId: string
+  ): Promise<import('../types/user-management').AuditEvent[]> {
+    console.log('🔍 Getting target change history:', targetType, targetId);
+
+    try {
+      return this.request<import('../types/user-management').AuditEvent[]>(
+        `/v1/audit/target/${targetType}/${targetId}/history`
+      );
+    } catch (error) {
+      console.error('Failed to get target change history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 이벤트 타입별 통계 조회
+   * GET /v1/audit/statistics/event-types?startTime={startTime}&endTime={endTime}
+   */
+  async getEventTypeStatistics(
+    startTime: string,
+    endTime: string
+  ): Promise<Record<string, number>> {
+    console.log('🔍 Getting event type statistics:', startTime, endTime);
+
+    try {
+      return this.request<Record<string, number>>(
+        `/v1/audit/statistics/event-types?startTime=${startTime}&endTime=${endTime}`
+      );
+    } catch (error) {
+      console.error('Failed to get event type statistics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 보안 레벨별 통계 조회
+   * GET /v1/audit/statistics/security-levels?startTime={startTime}&endTime={endTime}
+   */
+  async getSecurityLevelStatistics(
+    startTime: string,
+    endTime: string
+  ): Promise<Record<string, number>> {
+    console.log('🔍 Getting security level statistics:', startTime, endTime);
+
+    try {
+      return this.request<Record<string, number>>(
+        `/v1/audit/statistics/security-levels?startTime=${startTime}&endTime=${endTime}`
+      );
+    } catch (error) {
+      console.error('Failed to get security level statistics:', error);
+      throw error;
+    }
+  }
 }
 
 export const userManagementService = new UserManagementService();
