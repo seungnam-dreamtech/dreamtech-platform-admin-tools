@@ -280,6 +280,50 @@ export default function CommonCodes() {
       ),
     },
     {
+      field: 'created_at',
+      headerName: '생성일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<CodeGroup>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'created_by',
+      headerName: '생성자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<CodeGroup>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_by || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_at',
+      headerName: '수정일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<CodeGroup>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_by',
+      headerName: '수정자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<CodeGroup>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_by || '-'}
+        </Typography>
+      ),
+    },
+    {
       field: 'actions',
       headerName: '액션',
       width: 120,
@@ -357,6 +401,50 @@ export default function CommonCodes() {
           onChange={(e) => handleToggleCodeActivation(params.row.code_id, e.target.checked)}
           size="small"
         />
+      ),
+    },
+    {
+      field: 'created_at',
+      headerName: '생성일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<Code>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_at ? new Date(params.row.created_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'created_by',
+      headerName: '생성자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<Code>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.created_by || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_at',
+      headerName: '수정일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<Code>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_at ? new Date(params.row.updated_at).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updated_by',
+      headerName: '수정자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<Code>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.updated_by || '-'}
+        </Typography>
       ),
     },
     {

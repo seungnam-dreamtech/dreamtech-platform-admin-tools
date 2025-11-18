@@ -41,7 +41,7 @@ export interface UserTypeDefinition {
 export type UserType = string;
 
 /**
- * 플랫폼 사용자 API 응답
+ * 플랫폼 사용자 API 응답 (관리자용)
  * API Response: GET /v1/management/users
  */
 export interface PlatformUserResponse {
@@ -53,7 +53,11 @@ export interface PlatformUserResponse {
   account_non_expired: boolean;
   credentials_non_expired: boolean;
   created_at: string;
+  created_by: string;
   updated_at: string;
+  updated_by: string;
+  deleted_at?: string;
+  deleted_by?: string;
   first_name: string;
   last_name: string;
   full_name: string;
@@ -117,10 +121,13 @@ export interface ServiceScope {
   service_id: string;                   // 서비스 ID (unique)
   service_name?: string;                // 서비스 이름 (UI에서 사용)
   description: string;                  // 서비스 설명
+  display_order?: number;               // 표시 순서
   bit_position: number;                 // 비트 위치 (unique)
   is_active: boolean;                   // 활성 여부
   created_at: string;                   // 생성일시
+  created_by: string;                   // 생성자
   updated_at?: string;                  // 수정일시
+  updated_by?: string;                  // 수정자
   deleted_at?: string;                  // 삭제일시 (소프트 삭제)
 }
 
