@@ -247,16 +247,7 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
             }}
           >
             <Field label="IP 주소" value={event.ip_address} />
-            <Field label="국가 코드" value={event.country_code} />
-          </Box>
-          <Box sx={{ mt: 2 }}>
             <Field label="User Agent" value={event.user_agent} />
-          </Box>
-          <Box sx={{ mt: 2 }}>
-            <Field
-              label="디바이스 정보"
-              value={event.device_info && <JsonDisplay data={event.device_info} />}
-            />
           </Box>
         </InfoBlock>
 
@@ -301,20 +292,11 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
             {event.is_compliance_event && (
               <Chip label="컴플라이언스 이벤트" color="warning" size="small" />
             )}
-            {event.is_sensitive_data && (
-              <Chip label="민감 데이터" color="error" size="small" variant="outlined" />
+            {!event.is_security_event && !event.is_compliance_event && (
+              <Typography variant="body2" color="textSecondary">
+                특별한 분류 없음
+              </Typography>
             )}
-            {event.requires_approval && (
-              <Chip label="승인 필요" color="info" size="small" variant="outlined" />
-            )}
-            {!event.is_security_event &&
-              !event.is_compliance_event &&
-              !event.is_sensitive_data &&
-              !event.requires_approval && (
-                <Typography variant="body2" color="textSecondary">
-                  특별한 분류 없음
-                </Typography>
-              )}
           </Stack>
         </InfoBlock>
 
@@ -331,83 +313,9 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
             <Field label="요청 ID" value={event.request_id} />
             <Field label="상관관계 ID" value={event.correlation_id} />
             <Field label="추적 ID" value={event.trace_id} />
-            <Field label="부모 이벤트 ID" value={event.parent_event_id} />
-            <Field label="루트 이벤트 ID" value={event.root_event_id} />
+            <Field label="Span ID" value={event.span_id} />
           </Box>
         </InfoBlock>
-
-        {/* 에러 정보 */}
-        {event.error_code && (
-          <InfoBlock title="에러 정보">
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                gap: 2,
-              }}
-            >
-              <Field label="에러 코드" value={event.error_code} />
-              <Field label="에러 메시지" value={event.error_message} />
-            </Box>
-            {event.stack_trace && (
-              <Box sx={{ mt: 2 }}>
-                <Field
-                  label="스택 트레이스"
-                  value={
-                    <Box
-                      component="pre"
-                      sx={{
-                        bgcolor: 'grey.900',
-                        color: 'error.light',
-                        p: 1.5,
-                        borderRadius: 1,
-                        overflow: 'auto',
-                        fontSize: '0.7rem',
-                        fontFamily: 'monospace',
-                        maxHeight: 200,
-                      }}
-                    >
-                      {event.stack_trace}
-                    </Box>
-                  }
-                />
-              </Box>
-            )}
-          </InfoBlock>
-        )}
-
-        {/* 승인 정보 */}
-        {event.approved_by && (
-          <InfoBlock title="승인 정보">
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-                gap: 2,
-              }}
-            >
-              <Field label="승인자" value={event.approved_by} />
-              <Field
-                label="승인 시각"
-                value={
-                  event.approved_at &&
-                  format(new Date(event.approved_at), 'PPP p', { locale: ko })
-                }
-              />
-            </Box>
-          </InfoBlock>
-        )}
-
-        {/* 태그 */}
-        {event.tags && event.tags.length > 0 && (
-          <InfoBlock title="태그">
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {event.tags.map((tag, index) => (
-                <Chip key={index} label={tag} size="small" variant="outlined" />
-              ))}
-            </Stack>
-          </InfoBlock>
-        )}
 
         {/* 추가 데이터 */}
         {event.additional_data && (
@@ -425,20 +333,15 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
               gap: 2,
             }}
           >
+            <Field label="아카이브 여부" value={event.archived ? '예' : '아니오'} />
             <Field
-              label="보관 만료일"
+              label="아카이브 일시"
               value={
-                event.retention_until &&
-                format(new Date(event.retention_until), 'PPP', { locale: ko })
+                event.archived_at &&
+                format(new Date(event.archived_at), 'PPP p', { locale: ko })
               }
             />
-            <Field label="아카이브 여부" value={event.is_archived ? '예' : '아니오'} />
-            {event.archived_at && (
-              <Field
-                label="아카이브 일시"
-                value={format(new Date(event.archived_at), 'PPP p', { locale: ko })}
-              />
-            )}
+            <Field label="아카이브 위치" value={event.archive_location} />
           </Box>
         </InfoBlock>
 
@@ -451,15 +354,8 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
               gap: 2,
             }}
           >
-            <Field label="연도/월" value={`${event.year}년 ${event.month}월`} />
-            <Field label="서비스" value={event.service_name} />
-            <Field
-              label="생성일"
-              value={
-                event.created_at && format(new Date(event.created_at), 'PPP p', { locale: ko })
-              }
-            />
-            <Field label="파티션" value={event.partition_key} />
+            <Field label="연도" value={`${event.year}년`} />
+            <Field label="월" value={`${event.month}월`} />
           </Box>
         </InfoBlock>
       </Box>
