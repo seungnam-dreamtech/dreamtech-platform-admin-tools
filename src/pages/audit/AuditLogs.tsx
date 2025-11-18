@@ -17,7 +17,6 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
@@ -330,68 +329,71 @@ export default function AuditLogs() {
         </Box>
 
         {/* 통계 카드 */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TodayIcon color="primary" />
-                  <Box>
-                    <Typography variant="caption" color="textSecondary">
-                      오늘의 이벤트
-                    </Typography>
-                    <Typography variant="h6">-</Typography>
-                  </Box>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(4, 1fr)',
+            },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TodayIcon color="primary" />
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    오늘의 이벤트
+                  </Typography>
+                  <Typography variant="h6">-</Typography>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <SecurityIcon color="warning" />
-                  <Box>
-                    <Typography variant="caption" color="textSecondary">
-                      보안 이벤트
-                    </Typography>
-                    <Typography variant="h6">-</Typography>
-                  </Box>
+              </Box>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SecurityIcon color="warning" />
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    보안 이벤트
+                  </Typography>
+                  <Typography variant="h6">-</Typography>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ErrorIcon color="error" />
-                  <Box>
-                    <Typography variant="caption" color="textSecondary">
-                      실패 이벤트
-                    </Typography>
-                    <Typography variant="h6">-</Typography>
-                  </Box>
+              </Box>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ErrorIcon color="error" />
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    실패 이벤트
+                  </Typography>
+                  <Typography variant="h6">-</Typography>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ErrorIcon sx={{ color: 'error.dark' }} />
-                  <Box>
-                    <Typography variant="caption" color="textSecondary">
-                      중요 이벤트
-                    </Typography>
-                    <Typography variant="h6">-</Typography>
-                  </Box>
+              </Box>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ErrorIcon sx={{ color: 'error.dark' }} />
+                <Box>
+                  <Typography variant="caption" color="textSecondary">
+                    중요 이벤트
+                  </Typography>
+                  <Typography variant="h6">-</Typography>
                 </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
 
         {/* 빠른 필터 및 검색 */}
         <Box sx={{ mb: 2 }}>
