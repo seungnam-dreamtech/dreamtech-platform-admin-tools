@@ -16,8 +16,8 @@ import {
   Drawer,
   Card,
   CardContent,
-  Grid,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
@@ -42,7 +42,7 @@ import type {
   SecurityLevel,
   EventStatus,
 } from '../../types/user-management';
-import { AuditLogDetailDrawer } from '../../components/audit/AuditLogDetailDrawer';
+import AuditLogDetailDrawer from '../../components/audit/AuditLogDetailDrawer';
 import { userManagementService } from '../../services/userManagementService';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
@@ -331,7 +331,7 @@ export default function AuditLogs() {
 
         {/* 통계 카드 */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -346,7 +346,7 @@ export default function AuditLogs() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -361,7 +361,7 @@ export default function AuditLogs() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -376,7 +376,7 @@ export default function AuditLogs() {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -455,13 +455,13 @@ export default function AuditLogs() {
             <DatePicker
               label="시작일"
               value={startDate}
-              onChange={(date) => setStartDate(date)}
+              onChange={(date: Date | null) => setStartDate(date)}
               slotProps={{ textField: { size: 'small', sx: { width: 200 } } }}
             />
             <DatePicker
               label="종료일"
               value={endDate}
-              onChange={(date) => setEndDate(date)}
+              onChange={(date: Date | null) => setEndDate(date)}
               slotProps={{ textField: { size: 'small', sx: { width: 200 } } }}
             />
             <Button variant="outlined" startIcon={<FilterListIcon />} onClick={() => setFilterOpen(true)}>

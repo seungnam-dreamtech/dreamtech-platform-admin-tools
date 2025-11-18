@@ -5,12 +5,11 @@ import {
   Box,
   Typography,
   IconButton,
-  Divider,
   Chip,
-  Grid,
   Paper,
   Stack,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { Close as CloseIcon } from '@mui/icons-material';
 import type { AuditEvent, SecurityLevel, EventStatus } from '../../types/user-management';
 import { format } from 'date-fns';
@@ -167,19 +166,19 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 기본 정보 */}
         <InfoBlock title="이벤트 기본 정보">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="이벤트 타입" value={event.event_type} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="이벤트 카테고리" value={event.event_category} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field
                 label="발생 시각"
                 value={format(new Date(event.event_timestamp), 'PPP p', { locale: ko })}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field
                 label="보안 레벨"
                 value={
@@ -191,7 +190,7 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field
                 label="상태"
                 value={
@@ -203,7 +202,7 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="액션" value={event.action} />
             </Grid>
           </Grid>
@@ -212,13 +211,13 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 행위자 정보 */}
         <InfoBlock title="행위자 (Actor)">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="타입" value={event.actor_type} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="ID" value={event.actor_id} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Field label="사용자명" value={event.actor_username} />
             </Grid>
           </Grid>
@@ -227,10 +226,10 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 대상 정보 */}
         <InfoBlock title="대상 (Target)">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="타입" value={event.target_type} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="ID" value={event.target_id} />
             </Grid>
           </Grid>
@@ -244,16 +243,16 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 네트워크 정보 */}
         <InfoBlock title="네트워크 정보">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="IP 주소" value={event.ip_address} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="국가 코드" value={event.country_code} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Field label="User Agent" value={event.user_agent} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Field
                 label="디바이스 정보"
                 value={event.device_info && <JsonDisplay data={event.device_info} />}
@@ -323,22 +322,22 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 세션 및 추적 정보 */}
         <InfoBlock title="세션 및 추적">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="세션 ID" value={event.session_id} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="요청 ID" value={event.request_id} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="상관관계 ID" value={event.correlation_id} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="추적 ID" value={event.trace_id} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="부모 이벤트 ID" value={event.parent_event_id} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="루트 이벤트 ID" value={event.root_event_id} />
             </Grid>
           </Grid>
@@ -348,14 +347,14 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {event.error_code && (
           <InfoBlock title="에러 정보">
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Field label="에러 코드" value={event.error_code} />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Field label="에러 메시지" value={event.error_message} />
               </Grid>
               {event.stack_trace && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Field
                     label="스택 트레이스"
                     value={
@@ -386,10 +385,10 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {event.approved_by && (
           <InfoBlock title="승인 정보">
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Field label="승인자" value={event.approved_by} />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Field
                   label="승인 시각"
                   value={
@@ -423,7 +422,7 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 보관 정보 */}
         <InfoBlock title="보관 정보">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field
                 label="보관 만료일"
                 value={
@@ -432,11 +431,11 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="아카이브 여부" value={event.is_archived ? '예' : '아니오'} />
             </Grid>
             {event.archived_at && (
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Field
                   label="아카이브 일시"
                   value={format(new Date(event.archived_at), 'PPP p', { locale: ko })}
@@ -449,13 +448,13 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
         {/* 메타데이터 */}
         <InfoBlock title="메타데이터">
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="연도/월" value={`${event.year}년 ${event.month}월`} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="서비스" value={event.service_name} />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field
                 label="생성일"
                 value={
@@ -463,7 +462,7 @@ export default function AuditLogDetailDrawer({ open, onClose, event }: AuditLogD
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Field label="파티션" value={event.partition_key} />
             </Grid>
           </Grid>
