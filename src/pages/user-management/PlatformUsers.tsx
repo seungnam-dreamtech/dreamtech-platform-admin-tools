@@ -318,6 +318,17 @@ export default function PlatformUsers() {
       ),
     },
     {
+      field: 'createdBy',
+      headerName: '생성자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="textSecondary">
+          {(params.row as any).createdBy || '-'}
+        </Typography>
+      ),
+    },
+    {
       field: 'updatedAt',
       headerName: '수정일',
       flex: 0.6,
@@ -325,6 +336,39 @@ export default function PlatformUsers() {
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Typography variant="caption" color="textSecondary">
           {params.row.updatedAt ? new Date(params.row.updatedAt).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'updatedBy',
+      headerName: '수정자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="textSecondary">
+          {(params.row as any).updatedBy || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'deletedAt',
+      headerName: '삭제일',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="error">
+          {(params.row as any).deletedAt ? new Date((params.row as any).deletedAt).toLocaleDateString('ko-KR') : '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'deletedBy',
+      headerName: '삭제자',
+      flex: 0.5,
+      minWidth: 90,
+      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
+        <Typography variant="caption" color="error">
+          {(params.row as any).deletedBy || '-'}
         </Typography>
       ),
     },
