@@ -117,6 +117,7 @@ export function ServiceFormModal({ open, onCancel, onSave, service }: ServiceFor
           bit_position: 0, // 서버에서 자동 할당
           is_active: true, // 기본값
           created_at: new Date().toISOString(),
+          created_by: '', // 서버에서 자동 할당
         };
 
         onSave(serviceData);
