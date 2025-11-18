@@ -851,6 +851,8 @@ export interface AuditEvent {
   // 네트워크 및 디바이스 정보
   ip_address: string;
   user_agent?: string;
+  country_code?: string;
+  device_info?: string | object;
   session_id?: string;
   client_id?: string;
   device_id?: string;
@@ -859,6 +861,8 @@ export interface AuditEvent {
   security_level: SecurityLevel;
   is_security_event: boolean;
   is_compliance_event: boolean;
+  is_sensitive_data?: boolean;
+  requires_approval?: boolean;
 
   // 자동화 정보
   is_automated: boolean;
@@ -869,13 +873,34 @@ export interface AuditEvent {
   request_id?: string;
   trace_id?: string;
   span_id?: string;
+  parent_event_id?: string;
+  root_event_id?: string;
+
+  // 에러 정보
+  error_code?: string;
+  error_message?: string;
+  stack_trace?: string;
+
+  // 승인 정보
+  approved_by?: string;
+  approved_at?: string;
+
+  // 태그 및 메타데이터
+  tags?: string[];
+  service_name?: string;
+  partition_key?: string;
 
   // 추가 데이터
   additional_data?: string;
 
-  // 아카이브 정보
+  // 보관 정보
+  retention_until?: string;
+  is_archived?: boolean;
   archived_at?: string;
   archive_location?: string;
+
+  // 메타데이터
+  created_at?: string;
 
   // 플래그
   critical_event: boolean;
