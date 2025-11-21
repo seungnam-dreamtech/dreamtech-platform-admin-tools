@@ -20,11 +20,11 @@ import {
 import {
   Refresh as RefreshIcon,
   Delete as DeleteIcon,
-  Edit as EditIcon,
   Clear as ClearIcon,
   Smartphone as SmartphoneIcon,
 } from '@mui/icons-material';
-import { DataGrid, GridColDef, GridRenderCellParams, GridPaginationModel } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams, GridPaginationModel } from '@mui/x-data-grid';
 import { notificationService } from '../../services/notificationService';
 import type { TokenManagementResponse, PlatformType } from '../../types/notification';
 import { useSnackbar } from '../../contexts/SnackbarContext';
