@@ -23,11 +23,15 @@ import {
   Edit as EditIcon,
   Clear as ClearIcon,
   Email as EmailIcon,
+  Add as AddIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams, GridPaginationModel } from '@mui/x-data-grid';
 import { notificationService } from '../../services/notificationService';
-import type { EmailManagementResponse, EmailUpdateRequest } from '../../types/notification';
+import type { EmailManagementResponse, EmailUpdateRequest, EmailRegistrationRequest } from '../../types/notification';
+import { userManagementService } from '../../services/userManagementService';
+import type { PlatformUser } from '../../types/user-management';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function UserEmails() {
@@ -51,6 +55,14 @@ export default function UserEmails() {
   // 삭제 다이얼로그
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [emailToDelete, setEmailToDelete] = useState<number | null>(null);
+
+  // 이메일 등록 다이얼로그
+  const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
+  const [registerUserId, setRegisterUserId] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [userInfo, setUserInfo] = useState<PlatformUser | null>(null);
+  const [userInfoLoading, setUserInfoLoading] = useState(false);
+  const [emailEditable, setEmailEditable] = useState(false);
 
   const snackbar = useSnackbar();
 
@@ -143,6 +155,96 @@ export default function UserEmails() {
   const confirmDelete = (emailId: number) => {
     setEmailToDelete(emailId);
     setDeleteConfirmOpen(true);
+  };
+
+  // 이메일 등록 다이얼로그 열기
+  const openRegisterDialog = () => {
+    setRegisterDialogOpen(true);
+    setRegisterUserId('');
+    setRegisterEmail('');
+    setUserInfo(null);
+    setEmailEditable(false);
+  };
+
+  // 사용자 정보 조회
+  const handleFetchUserInfo = async () => {
+    if (!registerUserId.trim()) {
+      snackbar.warning('사용자 ID를 입력해주세요');
+      return;
+    }
+
+    setUserInfoLoading(true);
+    try {
+      const user = await userManagementService.getUser(registerUserId.trim());
+      console.log('👤 User Info fetched:', user);
+      setUserInfo(user);
+
+      // 사용자 정보에 이메일이 있으면 자동으로 채우고 수정 불가
+      if (user.email && user.email.trim()) {
+        setRegisterEmail(user.email);
+        setEmailEditable(false);
+        snackbar.info('사용자 정보에서 이메일을 가져왔습니다');
+      } else {
+        // 이메일이 없으면 수동 입력 가능
+        setRegisterEmail('');
+        setEmailEditable(true);
+        snackbar.warning('사용자 정보에 이메일이 없습니다. 직접 입력해주세요');
+      }
+    } catch (error) {
+      snackbar.error('사용자 정보 조회에 실패했습니다');
+      console.error('Failed to fetch user info:', error);
+      setUserInfo(null);
+      setRegisterEmail('');
+      setEmailEditable(false);
+    } finally {
+      setUserInfoLoading(false);
+    }
+  };
+
+  // 이메일 등록
+  const handleRegisterEmail = async () => {
+    if (!userInfo) {
+      snackbar.warning('먼저 사용자 정보를 조회해주세요');
+      return;
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerEmail)) {
+      snackbar.warning('올바른 이메일 형식이 아닙니다');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 1. 알림 서비스에 이메일 등록
+      const emailData: EmailRegistrationRequest = {
+        email: registerEmail,
+      };
+      await notificationService.registerEmail(registerUserId.trim(), emailData);
+      snackbar.success('이메일이 등록되었습니다');
+
+      // 2. 사용자 정보에 이메일이 없었다면 사용자 정보에도 업데이트
+      if (emailEditable && (!userInfo.email || !userInfo.email.trim())) {
+        try {
+          await userManagementService.updateUser(registerUserId.trim(), {
+            email: registerEmail,
+          });
+          snackbar.success('사용자 정보에 이메일이 저장되었습니다');
+        } catch (error) {
+          console.error('Failed to update user email:', error);
+          snackbar.warning('알림 서비스에는 등록되었으나, 사용자 정보 업데이트에 실패했습니다');
+        }
+      }
+
+      fetchEmails();
+      setRegisterDialogOpen(false);
+    } catch (error) {
+      snackbar.error('이메일 등록에 실패했습니다');
+      console.error('Failed to register email:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 필터 초기화
@@ -315,7 +417,15 @@ export default function UserEmails() {
             </Select>
           </FormControl>
 
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={openRegisterDialog}
+            >
+              이메일 등록
+            </Button>
             <Button variant="contained" onClick={handleSearch} disabled={loading}>
               검색
             </Button>
@@ -425,6 +535,97 @@ export default function UserEmails() {
             variant="contained"
           >
             삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 이메일 등록 다이얼로그 */}
+      <Dialog
+        open={registerDialogOpen}
+        onClose={() => setRegisterDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <AddIcon />
+            이메일 수동 등록
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Typography variant="body2" color="textSecondary" gutterBottom>
+              회원 가입 시 이벤트 실패로 이메일이 등록되지 않은 경우 사용합니다.
+            </Typography>
+
+            {/* 사용자 ID 입력 */}
+            <Box sx={{ mt: 3 }}>
+              <TextField
+                fullWidth
+                label="사용자 ID"
+                value={registerUserId}
+                onChange={(e) => setRegisterUserId(e.target.value)}
+                placeholder="사용자 ID를 입력하세요"
+                disabled={!!userInfo}
+              />
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<SearchIcon />}
+                onClick={handleFetchUserInfo}
+                disabled={!registerUserId.trim() || userInfoLoading || !!userInfo}
+                sx={{ mt: 1 }}
+              >
+                {userInfoLoading ? '조회 중...' : '사용자 정보 조회'}
+              </Button>
+            </Box>
+
+            {/* 사용자 정보 표시 */}
+            {userInfo && (
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  사용자 정보
+                </Typography>
+                <Typography variant="body2">이름: {userInfo.name}</Typography>
+                <Typography variant="body2">
+                  기존 이메일: {userInfo.email || '(없음)'}
+                </Typography>
+                {!userInfo.email && (
+                  <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
+                    ⚠ 사용자 정보에 이메일이 없습니다. 등록 시 사용자 정보에도 저장됩니다.
+                  </Typography>
+                )}
+              </Box>
+            )}
+
+            {/* 이메일 주소 입력 */}
+            {userInfo && (
+              <TextField
+                fullWidth
+                label="이메일 주소"
+                type="email"
+                value={registerEmail}
+                onChange={(e) => setRegisterEmail(e.target.value)}
+                placeholder="example@domain.com"
+                disabled={!emailEditable}
+                sx={{ mt: 2 }}
+                helperText={
+                  !emailEditable
+                    ? '사용자 정보에서 가져온 이메일입니다'
+                    : '사용자 정보에 이메일이 없어 직접 입력 가능합니다'
+                }
+              />
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRegisterDialogOpen(false)}>취소</Button>
+          <Button
+            onClick={handleRegisterEmail}
+            variant="contained"
+            disabled={!userInfo || !registerEmail.trim() || loading}
+          >
+            등록
           </Button>
         </DialogActions>
       </Dialog>
