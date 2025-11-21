@@ -11,6 +11,14 @@ import type {
   EmailSendRequest,
   NotificationHistoryResponse,
   PlatformType,
+  TokenManagementResponse,
+  TokenUpdateRequest,
+  EmailManagementResponse,
+  EmailUpdateRequest,
+  NotificationHistoryManagementResponse,
+  NotificationStatus,
+  NotificationType,
+  PageResponse,
 } from '../types/notification';
 
 import { getAuthHeaders } from '../utils/authUtils';
@@ -320,6 +328,156 @@ class NotificationService {
       }
       throw error;
     }
+  }
+
+  // ==================== Management API - 푸시 토큰 ====================
+
+  /**
+   * 전체 토큰 목록 조회 (페이징, 필터링)
+   */
+  async getAllTokens(params: {
+    userId?: string;
+    platformType?: PlatformType;
+    isActive?: boolean;
+    page?: number;
+    size?: number;
+    sort?: string[];
+  }): Promise<PageResponse<TokenManagementResponse>> {
+    const queryParams = new URLSearchParams();
+
+    if (params.userId) queryParams.append('userId', params.userId);
+    if (params.platformType) queryParams.append('platformType', params.platformType);
+    if (params.isActive !== undefined) queryParams.append('isActive', String(params.isActive));
+    if (params.page !== undefined) queryParams.append('page', String(params.page));
+    if (params.size !== undefined) queryParams.append('size', String(params.size));
+    if (params.sort) {
+      params.sort.forEach(s => queryParams.append('sort', s));
+    }
+
+    return this.request<PageResponse<TokenManagementResponse>>(
+      `/v1/management/tokens?${queryParams.toString()}`
+    );
+  }
+
+  /**
+   * 토큰 상세 조회
+   */
+  async getTokenById(tokenId: number): Promise<TokenManagementResponse> {
+    return this.request<TokenManagementResponse>(`/v1/management/tokens/${tokenId}`);
+  }
+
+  /**
+   * 토큰 수정
+   */
+  async updateToken(tokenId: number, data: TokenUpdateRequest): Promise<TokenManagementResponse> {
+    return this.request<TokenManagementResponse>(`/v1/management/tokens/${tokenId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * 토큰 삭제 (비활성화)
+   */
+  async deleteToken(tokenId: number): Promise<void> {
+    return this.request<void>(`/v1/management/tokens/${tokenId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== Management API - 이메일 ====================
+
+  /**
+   * 전체 이메일 목록 조회 (페이징, 필터링)
+   */
+  async getAllEmails(params: {
+    userId?: string;
+    isActive?: boolean;
+    page?: number;
+    size?: number;
+    sort?: string[];
+  }): Promise<PageResponse<EmailManagementResponse>> {
+    const queryParams = new URLSearchParams();
+
+    if (params.userId) queryParams.append('userId', params.userId);
+    if (params.isActive !== undefined) queryParams.append('isActive', String(params.isActive));
+    if (params.page !== undefined) queryParams.append('page', String(params.page));
+    if (params.size !== undefined) queryParams.append('size', String(params.size));
+    if (params.sort) {
+      params.sort.forEach(s => queryParams.append('sort', s));
+    }
+
+    return this.request<PageResponse<EmailManagementResponse>>(
+      `/v1/management/emails?${queryParams.toString()}`
+    );
+  }
+
+  /**
+   * 이메일 상세 조회 (Management)
+   */
+  async getEmailByIdManagement(emailId: number): Promise<EmailManagementResponse> {
+    return this.request<EmailManagementResponse>(`/v1/management/emails/${emailId}`);
+  }
+
+  /**
+   * 이메일 수정
+   */
+  async updateEmail(emailId: number, data: EmailUpdateRequest): Promise<EmailManagementResponse> {
+    return this.request<EmailManagementResponse>(`/v1/management/emails/${emailId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * 이메일 삭제 (비활성화)
+   */
+  async deleteEmailManagement(emailId: number): Promise<void> {
+    return this.request<void>(`/v1/management/emails/${emailId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== Management API - 알림 이력 ====================
+
+  /**
+   * 전체 알림 이력 조회 (페이징, 필터링)
+   */
+  async getAllNotificationHistories(params: {
+    userId?: string;
+    notificationType?: NotificationType;
+    status?: NotificationStatus;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    size?: number;
+    sort?: string[];
+  }): Promise<PageResponse<NotificationHistoryManagementResponse>> {
+    const queryParams = new URLSearchParams();
+
+    if (params.userId) queryParams.append('userId', params.userId);
+    if (params.notificationType) queryParams.append('notificationType', params.notificationType);
+    if (params.status) queryParams.append('status', params.status);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.page !== undefined) queryParams.append('page', String(params.page));
+    if (params.size !== undefined) queryParams.append('size', String(params.size));
+    if (params.sort) {
+      params.sort.forEach(s => queryParams.append('sort', s));
+    }
+
+    return this.request<PageResponse<NotificationHistoryManagementResponse>>(
+      `/v1/management/notifications/history?${queryParams.toString()}`
+    );
+  }
+
+  /**
+   * 알림 이력 상세 조회
+   */
+  async getNotificationHistoryById(historyId: number): Promise<NotificationHistoryManagementResponse> {
+    return this.request<NotificationHistoryManagementResponse>(
+      `/v1/management/notifications/history/${historyId}`
+    );
   }
 }
 
