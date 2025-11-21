@@ -16,6 +16,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  List,
+  ListItemButton,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -58,7 +62,9 @@ export default function UserEmails() {
 
   // 이메일 등록 다이얼로그
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
-  const [registerUserId, setRegisterUserId] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState<PlatformUser[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [userInfo, setUserInfo] = useState<PlatformUser | null>(null);
   const [userInfoLoading, setUserInfoLoading] = useState(false);
@@ -160,51 +166,88 @@ export default function UserEmails() {
   // 이메일 등록 다이얼로그 열기
   const openRegisterDialog = () => {
     setRegisterDialogOpen(true);
-    setRegisterUserId('');
+    setSearchKeyword('');
+    setSearchResults([]);
+    setSelectedUserId('');
     setRegisterEmail('');
     setUserInfo(null);
     setEmailEditable(false);
   };
 
-  // 사용자 정보 조회
-  const handleFetchUserInfo = async () => {
-    if (!registerUserId.trim()) {
-      snackbar.warning('사용자 ID를 입력해주세요');
+  // 사용자 검색 (ID 또는 이름)
+  const handleSearchUsers = async () => {
+    if (!searchKeyword.trim()) {
+      snackbar.warning('사용자 ID 또는 이름을 입력해주세요');
       return;
     }
 
     setUserInfoLoading(true);
-    try {
-      const user = await userManagementService.getUser(registerUserId.trim());
-      console.log('👤 User Info fetched:', user);
-      setUserInfo(user);
+    setSearchResults([]);
+    setUserInfo(null);
+    setSelectedUserId('');
 
-      // 사용자 정보에 이메일이 있으면 자동으로 채우고 수정 불가
-      if (user.email && user.email.trim()) {
-        setRegisterEmail(user.email);
-        setEmailEditable(false);
-        snackbar.info('사용자 정보에서 이메일을 가져왔습니다');
+    try {
+      // 1. 먼저 정확한 ID로 조회 시도
+      try {
+        const user = await userManagementService.getUser(searchKeyword.trim());
+        console.log('👤 User found by ID:', user);
+        setSearchResults([user]);
+        setSelectedUserId(user.id);
+        handleSelectUser(user);
+        return;
+      } catch (idError) {
+        console.log('User not found by ID, searching by keyword...');
+      }
+
+      // 2. ID로 찾지 못하면 keyword로 검색 (이름, 이메일)
+      const users = await userManagementService.getUsers({ keyword: searchKeyword.trim() });
+      console.log('👥 Users found by keyword:', users);
+
+      if (users.length === 0) {
+        snackbar.warning('검색 결과가 없습니다');
+        setSearchResults([]);
+      } else if (users.length === 1) {
+        // 한 명만 검색되면 자동 선택
+        setSearchResults(users);
+        setSelectedUserId(users[0].id);
+        handleSelectUser(users[0]);
+        snackbar.success('사용자를 찾았습니다');
       } else {
-        // 이메일이 없으면 수동 입력 가능
-        setRegisterEmail('');
-        setEmailEditable(true);
-        snackbar.warning('사용자 정보에 이메일이 없습니다. 직접 입력해주세요');
+        // 여러 명 검색되면 선택 리스트 표시
+        setSearchResults(users);
+        snackbar.info(`${users.length}명의 사용자를 찾았습니다. 선택해주세요`);
       }
     } catch (error) {
-      snackbar.error('사용자 정보 조회에 실패했습니다');
-      console.error('Failed to fetch user info:', error);
-      setUserInfo(null);
-      setRegisterEmail('');
-      setEmailEditable(false);
+      snackbar.error('사용자 검색에 실패했습니다');
+      console.error('Failed to search users:', error);
+      setSearchResults([]);
     } finally {
       setUserInfoLoading(false);
     }
   };
 
+  // 사용자 선택
+  const handleSelectUser = (user: PlatformUser) => {
+    setUserInfo(user);
+    setSelectedUserId(user.id);
+
+    // 사용자 정보에 이메일이 있으면 자동으로 채우고 수정 불가
+    if (user.email && user.email.trim()) {
+      setRegisterEmail(user.email);
+      setEmailEditable(false);
+      snackbar.info('사용자 정보에서 이메일을 가져왔습니다');
+    } else {
+      // 이메일이 없으면 수동 입력 가능
+      setRegisterEmail('');
+      setEmailEditable(true);
+      snackbar.warning('사용자 정보에 이메일이 없습니다. 직접 입력해주세요');
+    }
+  };
+
   // 이메일 등록
   const handleRegisterEmail = async () => {
-    if (!userInfo) {
-      snackbar.warning('먼저 사용자 정보를 조회해주세요');
+    if (!userInfo || !selectedUserId) {
+      snackbar.warning('먼저 사용자를 검색하고 선택해주세요');
       return;
     }
 
@@ -221,13 +264,13 @@ export default function UserEmails() {
       const emailData: EmailRegistrationRequest = {
         email: registerEmail,
       };
-      await notificationService.registerEmail(registerUserId.trim(), emailData);
+      await notificationService.registerEmail(selectedUserId, emailData);
       snackbar.success('이메일이 등록되었습니다');
 
       // 2. 사용자 정보에 이메일이 없었다면 사용자 정보에도 업데이트
       if (emailEditable && (!userInfo.email || !userInfo.email.trim())) {
         try {
-          await userManagementService.updateUser(registerUserId.trim(), {
+          await userManagementService.updateUser(selectedUserId, {
             email: registerEmail,
           });
           snackbar.success('사용자 정보에 이메일이 저장되었습니다');
@@ -543,7 +586,7 @@ export default function UserEmails() {
       <Dialog
         open={registerDialogOpen}
         onClose={() => setRegisterDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>
@@ -558,34 +601,79 @@ export default function UserEmails() {
               회원 가입 시 이벤트 실패로 이메일이 등록되지 않은 경우 사용합니다.
             </Typography>
 
-            {/* 사용자 ID 입력 */}
+            {/* 사용자 검색 */}
             <Box sx={{ mt: 3 }}>
               <TextField
                 fullWidth
-                label="사용자 ID"
-                value={registerUserId}
-                onChange={(e) => setRegisterUserId(e.target.value)}
-                placeholder="사용자 ID를 입력하세요"
+                label="사용자 ID 또는 이름"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="사용자 ID 또는 이름을 입력하세요"
                 disabled={!!userInfo}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearchUsers()}
               />
               <Button
                 fullWidth
                 variant="outlined"
                 startIcon={<SearchIcon />}
-                onClick={handleFetchUserInfo}
-                disabled={!registerUserId.trim() || userInfoLoading || !!userInfo}
+                onClick={handleSearchUsers}
+                disabled={!searchKeyword.trim() || userInfoLoading || !!userInfo}
                 sx={{ mt: 1 }}
               >
-                {userInfoLoading ? '조회 중...' : '사용자 정보 조회'}
+                {userInfoLoading ? '검색 중...' : '사용자 검색'}
               </Button>
             </Box>
 
-            {/* 사용자 정보 표시 */}
+            {/* 검색 결과 리스트 (여러 명인 경우) */}
+            {searchResults.length > 1 && !userInfo && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  검색 결과 ({searchResults.length}명)
+                </Typography>
+                <List
+                  sx={{
+                    maxHeight: 300,
+                    overflow: 'auto',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  {searchResults.map((user, index) => (
+                    <Box key={user.id}>
+                      {index > 0 && <Divider />}
+                      <ListItemButton
+                        selected={selectedUserId === user.id}
+                        onClick={() => handleSelectUser(user)}
+                      >
+                        <ListItemText
+                          primary={user.name}
+                          secondary={
+                            <>
+                              <Typography component="span" variant="body2" color="text.primary">
+                                ID: {user.id}
+                              </Typography>
+                              {' • '}
+                              <Typography component="span" variant="body2">
+                                이메일: {user.email || '(없음)'}
+                              </Typography>
+                            </>
+                          }
+                        />
+                      </ListItemButton>
+                    </Box>
+                  ))}
+                </List>
+              </Box>
+            )}
+
+            {/* 선택된 사용자 정보 표시 */}
             {userInfo && (
               <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                 <Typography variant="subtitle2" color="primary" gutterBottom>
-                  사용자 정보
+                  선택된 사용자 정보
                 </Typography>
+                <Typography variant="body2">ID: {userInfo.id}</Typography>
                 <Typography variant="body2">이름: {userInfo.name}</Typography>
                 <Typography variant="body2">
                   기존 이메일: {userInfo.email || '(없음)'}
@@ -595,6 +683,18 @@ export default function UserEmails() {
                     ⚠ 사용자 정보에 이메일이 없습니다. 등록 시 사용자 정보에도 저장됩니다.
                   </Typography>
                 )}
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setUserInfo(null);
+                    setSelectedUserId('');
+                    setRegisterEmail('');
+                    setSearchResults([]);
+                  }}
+                  sx={{ mt: 1 }}
+                >
+                  다시 검색
+                </Button>
               </Box>
             )}
 
