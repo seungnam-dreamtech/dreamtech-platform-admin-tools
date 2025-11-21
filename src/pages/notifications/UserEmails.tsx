@@ -20,13 +20,15 @@ import {
   ListItemButton,
   ListItemText,
   Divider,
+  Switch,
+  FormControlLabel,
+  Alert,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   Clear as ClearIcon,
-  Email as EmailIcon,
   Add as AddIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
@@ -55,6 +57,9 @@ export default function UserEmails() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [emailToEdit, setEmailToEdit] = useState<EmailManagementResponse | null>(null);
   const [editedEmail, setEditedEmail] = useState('');
+  const [editedIsActive, setEditedIsActive] = useState(true);
+  const [emailUserInfo, setEmailUserInfo] = useState<PlatformUser | null>(null);
+  const [emailMismatch, setEmailMismatch] = useState(false);
 
   // 삭제 다이얼로그
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -105,34 +110,89 @@ export default function UserEmails() {
   }, [paginationModel.page, paginationModel.pageSize]);
 
   // 이메일 수정 다이얼로그 열기
-  const openEditDialog = (email: EmailManagementResponse) => {
+  const openEditDialog = async (email: EmailManagementResponse) => {
     setEmailToEdit(email);
     setEditedEmail(email.email);
+    setEditedIsActive(email.is_active);
+    setEmailMismatch(false);
+    setEmailUserInfo(null);
+
+    // 사용자 정보 조회하여 이메일 불일치 확인
+    try {
+      const user = await userManagementService.getUser(email.user_id);
+      setEmailUserInfo(user);
+
+      // 사용자 정보의 이메일과 알림 서비스의 이메일이 다른 경우
+      if (user.email && user.email.trim() && user.email !== email.email) {
+        setEmailMismatch(true);
+        console.log(
+          '⚠️ Email mismatch detected:',
+          'User profile:',
+          user.email,
+          'Notification service:',
+          email.email
+        );
+      }
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+      // 사용자 정보 조회 실패해도 다이얼로그는 열림
+    }
+
     setEditDialogOpen(true);
+  };
+
+  // 사용자 정보의 이메일로 동기화
+  const handleSyncEmail = () => {
+    if (emailUserInfo && emailUserInfo.email) {
+      setEditedEmail(emailUserInfo.email);
+      setEmailMismatch(false);
+      snackbar.info('사용자 정보의 이메일로 동기화되었습니다');
+    }
   };
 
   // 이메일 수정
   const handleUpdateEmail = async () => {
     if (!emailToEdit) return;
 
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(editedEmail)) {
-      snackbar.warning('올바른 이메일 형식이 아닙니다');
-      return;
-    }
+    // 이메일 주소 또는 활성화 상태가 변경되었는지 확인
+    const emailChanged = editedEmail !== emailToEdit.email;
+    const activeChanged = editedIsActive !== emailToEdit.is_active;
 
-    if (editedEmail === emailToEdit.email) {
+    if (!emailChanged && !activeChanged) {
       snackbar.warning('변경사항이 없습니다');
       return;
     }
 
+    // 이메일 주소가 변경된 경우 형식 검증
+    if (emailChanged) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editedEmail)) {
+        snackbar.warning('올바른 이메일 형식이 아닙니다');
+        return;
+      }
+    }
+
     try {
-      const updateData: EmailUpdateRequest = {
-        email: editedEmail,
-      };
+      const updateData: EmailUpdateRequest = {};
+
+      if (emailChanged) {
+        updateData.email = editedEmail;
+      }
+
+      if (activeChanged) {
+        updateData.is_active = editedIsActive;
+      }
+
       await notificationService.updateEmail(emailToEdit.email_id, updateData);
-      snackbar.success('이메일이 수정되었습니다');
+
+      if (emailChanged && activeChanged) {
+        snackbar.success('이메일과 활성화 상태가 수정되었습니다');
+      } else if (emailChanged) {
+        snackbar.success('이메일이 수정되었습니다');
+      } else {
+        snackbar.success(`알림이 ${editedIsActive ? '활성화' : '비활성화'}되었습니다`);
+      }
+
       fetchEmails();
     } catch (error) {
       snackbar.error('이메일 수정에 실패했습니다');
@@ -528,24 +588,77 @@ export default function UserEmails() {
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <EmailIcon />
-            이메일 수정
+            <EditIcon />
+            이메일 정보 수정
           </Box>
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
+            {/* 사용자 정보 */}
             <Typography variant="body2" color="textSecondary" gutterBottom>
               사용자 ID: {emailToEdit?.user_id}
             </Typography>
+            {emailUserInfo && (
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                사용자 이름: {emailUserInfo.name}
+              </Typography>
+            )}
+
+            {/* 이메일 불일치 경고 */}
+            {emailMismatch && emailUserInfo && (
+              <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+                <Typography variant="body2" gutterBottom>
+                  ⚠️ 사용자 프로필의 이메일과 불일치합니다
+                </Typography>
+                <Typography variant="caption" display="block">
+                  알림 서비스: {emailToEdit?.email}
+                </Typography>
+                <Typography variant="caption" display="block">
+                  사용자 프로필: {emailUserInfo.email}
+                </Typography>
+                <Button size="small" variant="outlined" onClick={handleSyncEmail} sx={{ mt: 1 }}>
+                  사용자 프로필 이메일로 동기화
+                </Button>
+              </Alert>
+            )}
+
+            {/* 알림 수신 활성화 상태 */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={editedIsActive}
+                  onChange={(e) => setEditedIsActive(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2">알림 수신 활성화</Typography>
+                  <Typography variant="caption" color="textSecondary">
+                    {editedIsActive
+                      ? '이메일로 알림을 수신합니다'
+                      : '이메일 알림을 받지 않습니다'}
+                  </Typography>
+                </Box>
+              }
+              sx={{ mt: 2, mb: 2 }}
+            />
+
+            {/* 이메일 주소 */}
             <TextField
-              autoFocus
               fullWidth
               label="이메일 주소"
               type="email"
               value={editedEmail}
               onChange={(e) => setEditedEmail(e.target.value)}
               placeholder="example@domain.com"
-              sx={{ mt: 2 }}
+              disabled={!emailMismatch}
+              helperText={
+                emailMismatch
+                  ? '사용자 프로필과 불일치하여 수정 가능합니다'
+                  : '이메일 주소는 사용자 프로필과 일치할 때 자동으로 잠깁니다'
+              }
+              sx={{ mt: 1 }}
             />
           </Box>
         </DialogContent>
@@ -554,9 +667,12 @@ export default function UserEmails() {
           <Button
             onClick={handleUpdateEmail}
             variant="contained"
-            disabled={!editedEmail.trim() || editedEmail === emailToEdit?.email}
+            disabled={
+              !editedEmail.trim() ||
+              (editedEmail === emailToEdit?.email && editedIsActive === emailToEdit?.is_active)
+            }
           >
-            수정
+            저장
           </Button>
         </DialogActions>
       </Dialog>
