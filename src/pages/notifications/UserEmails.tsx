@@ -24,7 +24,8 @@ import {
   Clear as ClearIcon,
   Email as EmailIcon,
 } from '@mui/icons-material';
-import { DataGrid, GridColDef, GridRenderCellParams, GridPaginationModel } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams, GridPaginationModel } from '@mui/x-data-grid';
 import { notificationService } from '../../services/notificationService';
 import type { EmailManagementResponse, EmailUpdateRequest } from '../../types/notification';
 import { useSnackbar } from '../../contexts/SnackbarContext';
