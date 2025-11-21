@@ -1,4 +1,4 @@
-// 알림 이력 조회 페이지
+// 알림 이력 조회 페이지 (Management API 사용)
 
 import { useState, useEffect } from 'react';
 import {
@@ -12,62 +12,88 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Paper,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Refresh as RefreshIcon,
   Clear as ClearIcon,
   History as HistoryIcon,
-  InfoOutlined,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
-import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams, GridPaginationModel } from '@mui/x-data-grid';
 import { notificationService } from '../../services/notificationService';
 import type {
-  NotificationHistoryResponse,
+  NotificationHistoryManagementResponse,
   NotificationType,
   NotificationStatus,
 } from '../../types/notification';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function NotificationHistory() {
-  const [histories, setHistories] = useState<NotificationHistoryResponse[]>([]);
-  const [filteredHistories, setFilteredHistories] = useState<NotificationHistoryResponse[]>([]);
+  const [histories, setHistories] = useState<NotificationHistoryManagementResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState('');
-  const [searchedUserId, setSearchedUserId] = useState('');
-  const [typeFilter, setTypeFilter] = useState<NotificationType | 'ALL'>('ALL');
-  const [statusFilter, setStatusFilter] = useState<NotificationStatus | 'ALL'>('ALL');
+  const [totalElements, setTotalElements] = useState(0);
+  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+    page: 0,
+    pageSize: 25,
+  });
+
+  // 필터 상태
+  const [userIdFilter, setUserIdFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState<NotificationType | ''>('');
+  const [statusFilter, setStatusFilter] = useState<NotificationStatus | ''>('');
+  const [startDateFilter, setStartDateFilter] = useState('');
+  const [endDateFilter, setEndDateFilter] = useState('');
+
   const snackbar = useSnackbar();
 
   // 알림 이력 목록 조회
-  const fetchHistories = async (targetUserId: string) => {
-    if (!targetUserId.trim()) {
-      snackbar.warning('사용자 ID를 입력해주세요');
-      return;
-    }
-
+  const fetchHistories = async () => {
     setLoading(true);
     try {
-      const data = await notificationService.listNotificationHistories(targetUserId);
-      console.log('📋 Notification Histories fetched:', data);
-      setHistories(data);
-      setFilteredHistories(data);
-      setSearchedUserId(targetUserId);
+      const params: any = {
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['created_at,desc'],
+      };
+
+      if (userIdFilter.trim()) params.userId = userIdFilter.trim();
+      if (typeFilter) params.notificationType = typeFilter;
+      if (statusFilter) params.status = statusFilter;
+      if (startDateFilter) params.startDate = startDateFilter;
+      if (endDateFilter) params.endDate = endDateFilter;
+
+      const response = await notificationService.getAllNotificationHistories(params);
+      console.log('📋 Notification Histories fetched:', response);
+      setHistories(response.content);
+      setTotalElements(response.total_elements);
     } catch (error) {
       snackbar.error('알림 이력 조회에 실패했습니다');
       console.error('Failed to fetch notification histories:', error);
       setHistories([]);
-      setFilteredHistories([]);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
+  // 초기 로드 및 필터/페이징 변경 시 재조회
+  useEffect(() => {
+    fetchHistories();
+  }, [paginationModel.page, paginationModel.pageSize]);
+
+  // 필터 초기화
+  const handleClearFilters = () => {
+    setUserIdFilter('');
+    setTypeFilter('');
+    setStatusFilter('');
+    setStartDateFilter('');
+    setEndDateFilter('');
+  };
+
   // 검색 버튼 클릭
   const handleSearch = () => {
-    fetchHistories(userId);
+    setPaginationModel({ ...paginationModel, page: 0 });
+    fetchHistories();
   };
 
   // Enter 키로 검색
@@ -76,21 +102,6 @@ export default function NotificationHistory() {
       handleSearch();
     }
   };
-
-  // 필터링 적용
-  useEffect(() => {
-    let filtered = [...histories];
-
-    if (typeFilter !== 'ALL') {
-      filtered = filtered.filter((h) => h.notification_type === typeFilter);
-    }
-
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter((h) => h.status === statusFilter);
-    }
-
-    setFilteredHistories(filtered);
-  }, [typeFilter, statusFilter, histories]);
 
   // 알림 타입 색상
   const getTypeColor = (
@@ -153,12 +164,36 @@ export default function NotificationHistory() {
   // DataGrid 컬럼 정의
   const columns: GridColDef[] = [
     {
+      field: 'history_id',
+      headerName: 'ID',
+      flex: 0.3,
+      minWidth: 80,
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
+        <Typography variant="body2" fontWeight={500}>
+          {params.row.history_id}
+        </Typography>
+      ),
+    },
+    {
+      field: 'user_id',
+      headerName: '사용자 ID',
+      flex: 0.6,
+      minWidth: 120,
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
+        <Typography variant="body2">{params.row.user_id}</Typography>
+      ),
+    },
+    {
       field: 'request_id',
       headerName: '요청 ID',
-      flex: 1,
-      minWidth: 200,
-      renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
-        <Typography variant="body2" color="textSecondary" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+      flex: 0.8,
+      minWidth: 180,
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+        >
           {params.row.request_id}
         </Typography>
       ),
@@ -168,8 +203,12 @@ export default function NotificationHistory() {
       headerName: '메시지 ID',
       flex: 0.8,
       minWidth: 180,
-      renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
-        <Typography variant="body2" color="textSecondary" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+        >
           {params.row.message_id}
         </Typography>
       ),
@@ -181,7 +220,7 @@ export default function NotificationHistory() {
       minWidth: 130,
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
         <Chip
           label={getTypeLabel(params.row.notification_type)}
           color={getTypeColor(params.row.notification_type)}
@@ -196,7 +235,7 @@ export default function NotificationHistory() {
       minWidth: 130,
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
         <Chip
           label={getStatusLabel(params.row.status)}
           color={getStatusColor(params.row.status)}
@@ -205,11 +244,33 @@ export default function NotificationHistory() {
       ),
     },
     {
+      field: 'message_event',
+      headerName: '이벤트',
+      flex: 0.6,
+      minWidth: 120,
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
+        <Typography variant="caption" color="textSecondary">
+          {params.row.message_event || '-'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'error_code',
+      headerName: '에러 코드',
+      flex: 0.5,
+      minWidth: 100,
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
+        <Typography variant="caption" color="error">
+          {params.row.error_code || '-'}
+        </Typography>
+      ),
+    },
+    {
       field: 'created_at',
       headerName: '생성일시',
       flex: 0.8,
       minWidth: 160,
-      renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
         <Typography variant="caption" color="textSecondary">
           {new Date(params.row.created_at).toLocaleString('ko-KR')}
         </Typography>
@@ -220,7 +281,7 @@ export default function NotificationHistory() {
       headerName: '수정일시',
       flex: 0.8,
       minWidth: 160,
-      renderCell: (params: GridRenderCellParams<NotificationHistoryResponse>) => (
+      renderCell: (params: GridRenderCellParams<NotificationHistoryManagementResponse>) => (
         <Typography variant="caption" color="textSecondary">
           {new Date(params.row.updated_at).toLocaleString('ko-KR')}
         </Typography>
@@ -232,139 +293,150 @@ export default function NotificationHistory() {
     <Box sx={{ width: '100%', height: '100%' }}>
       {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+        >
           <HistoryIcon />
-          알림 이력 조회 {searchedUserId && `(${filteredHistories.length}건)`}
+          알림 이력 조회 ({totalElements}건)
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-          사용자별 푸시 알림 및 이메일 전송 이력 조회
+          전체 푸시 알림 및 이메일 전송 이력 조회
         </Typography>
       </Box>
 
       {/* 컨텐츠 영역 */}
       <Box>
-        {/* 검색 영역 */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        {/* 필터 영역 - 1행 */}
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', mb: 2, flexWrap: 'wrap' }}>
           <TextField
-            placeholder="사용자 ID를 입력하세요"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
+            label="사용자 ID"
+            placeholder="사용자 ID로 필터"
+            value={userIdFilter}
+            onChange={(e) => setUserIdFilter(e.target.value)}
             onKeyPress={handleKeyPress}
             size="small"
-            sx={{ width: 400 }}
+            sx={{ width: 200 }}
             slotProps={{
               input: {
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
-                endAdornment: userId && (
-                  <IconButton size="small" onClick={() => setUserId('')}>
+                endAdornment: userIdFilter && (
+                  <IconButton size="small" onClick={() => setUserIdFilter('')}>
                     <ClearIcon fontSize="small" />
                   </IconButton>
                 ),
               },
             }}
           />
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="contained"
-              startIcon={<SearchIcon />}
-              onClick={handleSearch}
-              disabled={loading || !userId.trim()}
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>알림 타입</InputLabel>
+            <Select
+              value={typeFilter}
+              label="알림 타입"
+              onChange={(e) => setTypeFilter(e.target.value as NotificationType | '')}
             >
-              조회
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="WEB_PUSH">웹 푸시</MenuItem>
+              <MenuItem value="MOBILE_PUSH">모바일 푸시</MenuItem>
+              <MenuItem value="EMAIL">이메일</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>전송 상태</InputLabel>
+            <Select
+              value={statusFilter}
+              label="전송 상태"
+              onChange={(e) => setStatusFilter(e.target.value as NotificationStatus | '')}
+            >
+              <MenuItem value="">전체</MenuItem>
+              <MenuItem value="NOTIFICATION_SUCCESS">전송 성공</MenuItem>
+              <MenuItem value="TRANSFER_TO_PROVIDER">전송 중</MenuItem>
+              <MenuItem value="NOTIFICATION_FAILED">전송 실패</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField
+            label="시작일"
+            type="date"
+            value={startDateFilter}
+            onChange={(e) => setStartDateFilter(e.target.value)}
+            size="small"
+            sx={{ width: 160 }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <TextField
+            label="종료일"
+            type="date"
+            value={endDateFilter}
+            onChange={(e) => setEndDateFilter(e.target.value)}
+            size="small"
+            sx={{ width: 160 }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="contained" onClick={handleSearch} disabled={loading}>
+              검색
             </Button>
-            {searchedUserId && (
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => fetchHistories(searchedUserId)}
-                disabled={loading}
-              >
-                새로고침
-              </Button>
-            )}
+            <Button
+              variant="outlined"
+              startIcon={<ClearIcon />}
+              onClick={handleClearFilters}
+              disabled={
+                !userIdFilter &&
+                !typeFilter &&
+                !statusFilter &&
+                !startDateFilter &&
+                !endDateFilter
+              }
+            >
+              초기화
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={fetchHistories}
+              disabled={loading}
+            >
+              새로고침
+            </Button>
           </Box>
         </Box>
 
-        {/* 현재 조회 정보 및 필터 */}
-        {searchedUserId && (
-          <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Chip label={`조회 사용자: ${searchedUserId}`} color="primary" variant="outlined" size="small" />
-            <Chip label={`전체: ${histories.length}건`} variant="outlined" size="small" />
-
-            <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>알림 타입</InputLabel>
-                <Select
-                  value={typeFilter}
-                  label="알림 타입"
-                  onChange={(e) => setTypeFilter(e.target.value as NotificationType | 'ALL')}
-                >
-                  <MenuItem value="ALL">전체</MenuItem>
-                  <MenuItem value="WEB_PUSH">웹 푸시</MenuItem>
-                  <MenuItem value="MOBILE_PUSH">모바일 푸시</MenuItem>
-                  <MenuItem value="EMAIL">이메일</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>전송 상태</InputLabel>
-                <Select
-                  value={statusFilter}
-                  label="전송 상태"
-                  onChange={(e) => setStatusFilter(e.target.value as NotificationStatus | 'ALL')}
-                >
-                  <MenuItem value="ALL">전체</MenuItem>
-                  <MenuItem value="NOTIFICATION_SUCCESS">전송 성공</MenuItem>
-                  <MenuItem value="TRANSFER_TO_PROVIDER">전송 중</MenuItem>
-                  <MenuItem value="NOTIFICATION_FAILED">전송 실패</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-        )}
-
-        {/* 테이블 또는 안내 메시지 */}
-        {searchedUserId ? (
-          <Box sx={{ height: 600, width: '100%' }}>
-            <DataGrid
-              rows={filteredHistories}
-              columns={columns}
-              getRowId={(row) => row.request_id}
-              loading={loading}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
-                sorting: { sortModel: [{ field: 'created_at', sort: 'desc' }] },
-              }}
-              disableRowSelectionOnClick
-              sx={{
-                '& .MuiDataGrid-cell': {
-                  display: 'flex !important',
-                  alignItems: 'center !important',
-                  padding: '0 16px !important',
-                },
-                '& .MuiDataGrid-cell:focus': {
-                  outline: 'none',
-                },
-                '& .MuiDataGrid-row:hover': {
-                  backgroundColor: 'action.hover',
-                },
-              }}
-              localeText={{
-                noRowsLabel: '알림 전송 이력이 없습니다',
-              }}
-            />
-          </Box>
-        ) : (
-          <Paper sx={{ p: 3, bgcolor: 'info.lighter', border: '1px solid', borderColor: 'info.main' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <InfoOutlined color="info" />
-              <Typography variant="body2" color="info.dark">
-                사용자 ID를 입력하여 알림 이력을 조회하세요.
-              </Typography>
-            </Box>
-          </Paper>
-        )}
+        {/* 테이블 */}
+        <Box sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={histories}
+            columns={columns}
+            getRowId={(row) => row.history_id}
+            loading={loading}
+            rowCount={totalElements}
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[10, 25, 50, 100]}
+            disableRowSelectionOnClick
+            sx={{
+              '& .MuiDataGrid-cell': {
+                display: 'flex !important',
+                alignItems: 'center !important',
+                padding: '0 16px !important',
+              },
+              '& .MuiDataGrid-cell:focus': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: 'action.hover',
+              },
+            }}
+            localeText={{
+              noRowsLabel: '알림 전송 이력이 없습니다',
+            }}
+          />
+        </Box>
       </Box>
     </Box>
   );
