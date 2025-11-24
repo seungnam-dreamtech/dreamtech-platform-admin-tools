@@ -32,11 +32,10 @@ import {
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import type { PlatformUser, UserType } from '../../types/user-management';
+import type { PlatformUser } from '../../types/user-management';
 import { UserDetailModal } from '../../components/user-management/UserDetailModal';
 import {
   MOCK_USERS,
-  USER_TYPES,
   USER_STATUS_OPTIONS,
 } from '../../constants/user-management';
 import { useSnackbar } from '../../contexts/SnackbarContext';
@@ -53,17 +52,12 @@ export default function PlatformUsers() {
   const [totalElements, setTotalElements] = useState(0);
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterUserType, setFilterUserType] = useState<UserType | 'ALL'>('ALL');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'active' | 'inactive' | 'suspended'>('ALL');
   const snackbar = useSnackbar();
 
   // 삭제 확인 다이얼로그
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
-
-  // User Type Definitions (동적 로드)
-  const [userTypeOptions, setUserTypeOptions] = useState(USER_TYPES);
-  const [loadingUserTypes, setLoadingUserTypes] = useState(false);
 
   // 사용자 목록 조회
   const fetchUsers = async () => {
@@ -92,39 +86,13 @@ export default function PlatformUsers() {
     }
   };
 
-  // User Type Definitions 로드
-  const fetchUserTypes = async () => {
-    setLoadingUserTypes(true);
-    try {
-      const response = await userManagementService.getUserTypeDefinitions({ page: 0, size: 100 });
-      const options = response.content
-        .filter(type => type.is_active)
-        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-        .map(type => ({
-          label: type.display_name || type.type_id,
-          value: type.type_id || '',
-          description: type.description || '',
-        }));
-      setUserTypeOptions(options);
-    } catch (error) {
-      console.error('User Type 목록 로드 실패:', error);
-      // 실패 시 기본값 사용
-    } finally {
-      setLoadingUserTypes(false);
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
   }, [paginationModel.page, paginationModel.pageSize]);
 
-  useEffect(() => {
-    fetchUserTypes();
-  }, []);
-
   // TODO: 검색 및 필터링을 서버 API와 연동 필요
   // 현재는 서버 사이드 페이징만 구현됨
-  // searchKeyword, filterUserType, filterStatus를 API 파라미터로 전달해야 함
+  // searchKeyword, filterStatus를 API 파라미터로 전달해야 함
 
   // 사용자 삭제 확인
   const confirmDelete = (id: string) => {
@@ -190,7 +158,6 @@ export default function PlatformUsers() {
       flex: 0.7,
       minWidth: 130,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
-        const typeInfo = userTypeOptions.find(t => t.value === params.row.userType);
         const getColor = () => {
           if (!params.row.userType) return 'default';
           if (params.row.userType.includes('ADMIN')) return 'error';
@@ -199,13 +166,11 @@ export default function PlatformUsers() {
           return 'default';
         };
         return (
-          <Tooltip title={typeInfo?.description || ''} arrow>
-            <Chip
-              label={typeInfo?.label || params.row.userType || 'N/A'}
-              color={getColor()}
-              size="small"
-            />
-          </Tooltip>
+          <Chip
+            label={params.row.userType || 'N/A'}
+            color={getColor()}
+            size="small"
+          />
         );
       },
     },
@@ -434,19 +399,6 @@ export default function PlatformUsers() {
         {/* 필터/검색 및 버튼 */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControl sx={{ minWidth: 200 }} size="small" disabled={loadingUserTypes}>
-              <InputLabel>User Type</InputLabel>
-              <Select
-                value={filterUserType}
-                onChange={(e) => setFilterUserType(e.target.value as UserType | 'ALL')}
-                label="User Type"
-              >
-                <MenuItem value="ALL">전체 User Type</MenuItem>
-                {userTypeOptions.map(type => (
-                  <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <FormControl sx={{ minWidth: 150 }} size="small">
               <InputLabel>상태</InputLabel>
               <Select
@@ -545,7 +497,6 @@ export default function PlatformUsers() {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        userTypeOptions={userTypeOptions}
       />
 
       {/* 삭제 확인 다이얼로그 */}

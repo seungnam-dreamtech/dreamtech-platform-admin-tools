@@ -26,7 +26,6 @@ interface UserDetailModalProps {
   onSuccess: () => void;
   user?: PlatformUser | null; // null이면 신규 추가, 값이 있으면 편집
   preSelectedServiceId?: string; // 특정 서비스에서 사용자 추가 시 자동 선택
-  userTypeOptions?: Array<{ label: string; value: string; description: string }>;
 }
 
 interface FormData {
@@ -61,7 +60,6 @@ export function UserDetailModal({
   onSuccess,
   user,
   preSelectedServiceId,
-  userTypeOptions,
 }: UserDetailModalProps) {
   const snackbar = useSnackbar();
   const [loading, setLoading] = useState(false);
@@ -259,7 +257,6 @@ export function UserDetailModal({
               onChange={handleChange}
               onSelectChange={handleSelectChange}
               errors={errors}
-              userTypeOptions={userTypeOptions}
             />
           </Box>
         </TabPanel>
