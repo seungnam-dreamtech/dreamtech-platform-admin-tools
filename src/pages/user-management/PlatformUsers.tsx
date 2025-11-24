@@ -88,8 +88,8 @@ export default function PlatformUsers() {
   const fetchUserTypes = async () => {
     setLoadingUserTypes(true);
     try {
-      const types = await userManagementService.getUserTypeDefinitions();
-      const options = types
+      const response = await userManagementService.getUserTypeDefinitions({ page: 0, size: 100 });
+      const options = response.content
         .filter(type => type.is_active)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
         .map(type => ({

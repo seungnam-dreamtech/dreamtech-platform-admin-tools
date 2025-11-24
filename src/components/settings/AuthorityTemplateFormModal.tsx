@@ -120,13 +120,13 @@ export function AuthorityTemplateFormModal({
   const loadData = async () => {
     setLoading(true);
     try {
-      const [globalRolesData, serviceRolesData, userTypesData] = await Promise.all([
-        userManagementService.getGlobalRoles(),
+      const [globalRolesResponse, serviceRolesData, userTypesResponse] = await Promise.all([
+        userManagementService.getGlobalRoles({ page: 0, size: 100 }),
         userManagementService.getServiceRoles(),
-        userManagementService.getUserTypeDefinitions(),
+        userManagementService.getUserTypeDefinitions({ page: 0, size: 100 }),
       ]);
 
-      setAvailableGlobalRoles(globalRolesData);
+      setAvailableGlobalRoles(globalRolesResponse.content);
       setAvailableServiceRoles(serviceRolesData);
 
       // 템플릿 데이터 로드
@@ -141,7 +141,7 @@ export function AuthorityTemplateFormModal({
         });
 
         // 연결된 User Types 찾기
-        const linked = userTypesData.filter((ut) =>
+        const linked = userTypesResponse.content.filter((ut) =>
           ut.default_template_names?.includes(template.name)
         );
         setLinkedUserTypes(linked);

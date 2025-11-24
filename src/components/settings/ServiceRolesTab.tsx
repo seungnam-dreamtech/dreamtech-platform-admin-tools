@@ -56,8 +56,8 @@ export default function ServiceRolesTab() {
   // 서비스 목록 조회 (역할 추가 시 서비스 선택용)
   const fetchServices = async () => {
     try {
-      const data = await userManagementService.getServiceScopes();
-      setServices(data.filter((s) => s.is_active)); // 활성화된 서비스만
+      const response = await userManagementService.getServiceScopes({ page: 0, size: 100 });
+      setServices(response.content.filter((s) => s.is_active)); // 활성화된 서비스만
     } catch (error) {
       console.error('Failed to fetch services:', error);
     }

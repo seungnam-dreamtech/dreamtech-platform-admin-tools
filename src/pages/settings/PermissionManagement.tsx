@@ -68,8 +68,8 @@ export default function PermissionManagement() {
   // 서비스 목록 조회
   const fetchServices = async () => {
     try {
-      const data = await userManagementService.getServiceScopes();
-      setServices(data);
+      const response = await userManagementService.getServiceScopes({ page: 0, size: 100 });
+      setServices(response.content);
     } catch (error) {
       console.error('Failed to fetch services:', error);
     }

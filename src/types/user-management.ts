@@ -499,12 +499,15 @@ export interface TemplateUpdateRequest {
 
 /**
  * 페이지 응답 (Spring Page)
+ * API에서 snake_case와 camelCase를 모두 지원
  */
 export interface PageResponse<T> {
   content: T[];
   pageable: {
     pageNumber: number;
     pageSize: number;
+    page_number?: number;
+    page_size?: number;
     sort: {
       sorted: boolean;
       unsorted: boolean;
@@ -516,6 +519,8 @@ export interface PageResponse<T> {
   };
   totalPages: number;
   totalElements: number;
+  total_pages?: number;
+  total_elements?: number;
   last: boolean;
   size: number;
   number: number;
@@ -525,6 +530,7 @@ export interface PageResponse<T> {
     empty: boolean;
   };
   numberOfElements: number;
+  number_of_elements?: number;
   first: boolean;
   empty: boolean;
 }
@@ -932,44 +938,6 @@ export interface SecurityDashboardData {
   recent_failure_events: AuditEvent[];
   time_range_start: string;
   time_range_end: string;
-}
-
-/**
- * 페이징 정렬 정보
- */
-export interface PageSort {
-  sorted: boolean;
-  unsorted: boolean;
-  empty: boolean;
-}
-
-/**
- * 페이징 정보
- */
-export interface PageableInfo {
-  page_number: number;
-  page_size: number;
-  sort: PageSort;
-  offset?: number;
-  paged?: boolean;
-  unpaged?: boolean;
-}
-
-/**
- * 페이징 응답 (공통)
- */
-export interface PageResponse<T> {
-  content: T[];
-  total_elements: number;
-  total_pages: number;
-  first: boolean;
-  last: boolean;
-  size: number;
-  number: number;
-  number_of_elements: number;
-  empty: boolean;
-  pageable: PageableInfo;
-  sort?: PageSort;
 }
 
 /**

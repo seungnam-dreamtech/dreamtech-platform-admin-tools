@@ -52,7 +52,8 @@ export default function GlobalRolesTab() {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const data = await userManagementService.getGlobalRoles();
+      const response = await userManagementService.getGlobalRoles({ page: 0, size: 100 });
+      const data = response.content;
       console.log('📋 Global Roles fetched:', data);
       console.log('📋 Data type:', typeof data, 'Is Array:', Array.isArray(data));
 

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  TextField,
   Typography,
   Chip,
   IconButton,
@@ -52,7 +51,7 @@ export default function UserTypes() {
       });
       console.log('📋 User Type Definitions fetched:', response);
       setUserTypes(response.content);
-      setTotalElements(response.total_elements);
+      setTotalElements(response.totalElements || response.total_elements || 0);
     } catch (error) {
       snackbar.error('사용자 유형 목록 조회에 실패했습니다');
       console.error('Failed to fetch user types:', error);

@@ -193,8 +193,8 @@ export default function OAuthClients() {
   // User Type Definitions 조회
   const fetchUserTypeDefinitions = async () => {
     try {
-      const data = await userManagementService.getUserTypeDefinitions();
-      const activeTypes = data.filter(type => type.is_active);
+      const response = await userManagementService.getUserTypeDefinitions({ page: 0, size: 100 });
+      const activeTypes = response.content.filter(type => type.is_active);
       setUserTypeDefinitions(activeTypes);
     } catch (error) {
       snackbar.error('User Type 정의 조회에 실패했습니다');
@@ -206,9 +206,9 @@ export default function OAuthClients() {
   const fetchClients = async () => {
     setLoading(true);
     try {
-      const data = await userManagementService.getClients({ includeDeleted: true });
-      setClients(data);
-      setFilteredClients(data);
+      const response = await userManagementService.getClients({ page: 0, size: 1000 });
+      setClients(response.content);
+      setFilteredClients(response.content);
     } catch (error) {
       snackbar.error('OAuth 클라이언트 목록 조회에 실패했습니다');
       console.error(error);
