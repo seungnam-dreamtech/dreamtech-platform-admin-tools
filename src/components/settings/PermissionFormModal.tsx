@@ -118,8 +118,8 @@ export default function PermissionFormModal({
 
   const loadCategories = async () => {
     try {
-      const data = await userManagementService.getCodesByGroup('PERMISSIONS_CATEGORY', true);
-      setCategories(data);
+      const response = await userManagementService.getCodesByGroup('PERMISSIONS_CATEGORY', true, { page: 0, size: 100 });
+      setCategories(response.content);
     } catch (error) {
       console.error('Failed to load categories:', error);
       snackbar.error('카테고리 목록을 불러오는데 실패했습니다');

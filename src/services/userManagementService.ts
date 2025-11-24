@@ -1426,18 +1426,32 @@ class UserManagementService {
   // ============================================
 
   /**
-   * 코드 그룹 목록 조회
+   * 코드 그룹 목록 조회 (페이징 지원)
    * GET /v1/management/codes/groups
    */
-  async getCodeGroups(activeOnly: boolean = false) {
-    const params = new URLSearchParams();
+  async getCodeGroups(
+    activeOnly: boolean = false,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<CodeGroup>> {
+    const queryParams: Record<string, string | string[]> = {};
+
     if (activeOnly) {
-      params.append('activeOnly', 'true');
+      queryParams.activeOnly = 'true';
     }
-    const query = params.toString();
-    return this.request<CodeGroup[]>(
-      `/v1/management/codes/groups${query ? `?${query}` : ''}`
-    );
+
+    // 페이징 파라미터
+    if (params?.page !== undefined) queryParams.page = String(params.page);
+    if (params?.size !== undefined) queryParams.size = String(params.size);
+    if (params?.sort) queryParams.sort = params.sort;
+
+    const queryString = new URLSearchParams(
+      Object.entries(queryParams).flatMap(([key, value]) =>
+        Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+      )
+    ).toString();
+
+    const url = `/v1/management/codes/groups${queryString ? `?${queryString}` : ''}`;
+    return this.request<import('../types/user-management').PageResponse<CodeGroup>>(url);
   }
 
   /**
@@ -1495,18 +1509,33 @@ class UserManagementService {
   }
 
   /**
-   * 특정 그룹의 코드 목록 조회
+   * 특정 그룹의 코드 목록 조회 (페이징 지원)
    * GET /v1/management/codes/groups/{groupId}/codes
    */
-  async getCodesByGroup(groupId: string, activeOnly: boolean = true) {
-    const params = new URLSearchParams();
+  async getCodesByGroup(
+    groupId: string,
+    activeOnly: boolean = true,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<Code>> {
+    const queryParams: Record<string, string | string[]> = {};
+
     if (activeOnly) {
-      params.append('activeOnly', 'true');
+      queryParams.activeOnly = 'true';
     }
-    const query = params.toString();
-    return this.request<Code[]>(
-      `/v1/management/codes/groups/${groupId}/codes${query ? `?${query}` : ''}`
-    );
+
+    // 페이징 파라미터
+    if (params?.page !== undefined) queryParams.page = String(params.page);
+    if (params?.size !== undefined) queryParams.size = String(params.size);
+    if (params?.sort) queryParams.sort = params.sort;
+
+    const queryString = new URLSearchParams(
+      Object.entries(queryParams).flatMap(([key, value]) =>
+        Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+      )
+    ).toString();
+
+    const url = `/v1/management/codes/groups/${groupId}/codes${queryString ? `?${queryString}` : ''}`;
+    return this.request<import('../types/user-management').PageResponse<Code>>(url);
   }
 
   /**
