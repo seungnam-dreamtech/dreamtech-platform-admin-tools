@@ -102,42 +102,38 @@ class UserManagementService {
    * 전체 사용자 목록 조회
    * 실제 API: GET /v1/management/users
    */
-  async getUsers(filter?: UserSearchFilter): Promise<PlatformUser[]> {
-    console.log('🔍 Getting users with filter:', filter);
+  async getUsers(
+    filter?: UserSearchFilter,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<PlatformUser>> {
+    console.log('🔍 Getting users with filter:', filter, 'params:', params);
 
     try {
-      // 실제 API 연동
-      const responses = await this.request<PlatformUserResponse[]>('/v1/management/users');
+      // 페이징 파라미터 구성
+      const queryParams: Record<string, string | string[]> = {};
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
 
-      // API 응답을 UI 타입으로 변환
-      let users = adaptUserResponseArrayToUsers(responses);
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
 
-      // 클라이언트 측 필터링 (서버 측 필터링으로 대체 권장)
-      if (filter?.keyword) {
-        const keyword = filter.keyword.toLowerCase();
-        users = users.filter(user =>
-          user.name.toLowerCase().includes(keyword) ||
-          user.email.toLowerCase().includes(keyword)
-        );
-      }
+      const url = `/v1/management/users${queryString ? `?${queryString}` : ''}`;
 
-      if (filter?.platformRoles && filter.platformRoles.length > 0) {
-        users = users.filter(user =>
-          user.platformRoles.some(role => filter.platformRoles?.includes(role))
-        );
-      }
+      // 실제 API 연동 - 페이징된 응답
+      const response = await this.request<import('../types/user-management').PageResponse<PlatformUserResponse>>(url);
 
-      if (filter?.serviceIds && filter.serviceIds.length > 0) {
-        users = users.filter(user =>
-          user.serviceSubscriptions.some(sub => filter.serviceIds?.includes(sub.serviceId))
-        );
-      }
+      // API 응답의 content를 UI 타입으로 변환
+      const users = adaptUserResponseArrayToUsers(response.content);
 
-      if (filter?.status && filter.status.length > 0) {
-        users = users.filter(user => filter.status?.includes(user.status));
-      }
-
-      return users;
+      // 페이징 응답 구조 유지
+      return {
+        ...response,
+        content: users,
+      };
     } catch (error) {
       console.error('Failed to fetch users from API:', error);
       throw error;

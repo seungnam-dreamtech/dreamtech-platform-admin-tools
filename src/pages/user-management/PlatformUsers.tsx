@@ -44,9 +44,13 @@ import { userManagementService } from '../../services/userManagementService';
 
 export default function PlatformUsers() {
   const [users, setUsers] = useState<PlatformUser[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<PlatformUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
+  const [totalElements, setTotalElements] = useState(0);
   const [selectedUser, setSelectedUser] = useState<PlatformUser | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterUserType, setFilterUserType] = useState<UserType | 'ALL'>('ALL');
@@ -65,10 +69,14 @@ export default function PlatformUsers() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // 실제 API 연동
-      const data = await userManagementService.getUsers();
-      setUsers(data);
-      setFilteredUsers(data);
+      // 실제 API 연동 - 페이징 파라미터 포함
+      const response = await userManagementService.getUsers(undefined, {
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['createdAt,DESC'],
+      });
+      setUsers(response.content);
+      setTotalElements(response.totalElements || response.total_elements || 0);
     } catch (error) {
       snackbar.error('사용자 목록 조회에 실패했습니다');
       console.error(error);
@@ -77,7 +85,7 @@ export default function PlatformUsers() {
         console.warn('🔄 API 실패, Mock 데이터로 대체합니다');
         const data: PlatformUser[] = [...MOCK_USERS];
         setUsers(data);
-        setFilteredUsers(data);
+        setTotalElements(data.length);
       }
     } finally {
       setLoading(false);
@@ -108,38 +116,15 @@ export default function PlatformUsers() {
 
   useEffect(() => {
     fetchUsers();
+  }, [paginationModel.page, paginationModel.pageSize]);
+
+  useEffect(() => {
     fetchUserTypes();
   }, []);
 
-  // 검색 및 필터링
-  useEffect(() => {
-    let filtered = [...users];
-
-    // User Type 필터
-    if (filterUserType !== 'ALL') {
-      filtered = filtered.filter(user => user.userType === filterUserType);
-    }
-
-    // Status 필터
-    if (filterStatus !== 'ALL') {
-      filtered = filtered.filter(user => user.status === filterStatus);
-    }
-
-    // 키워드 검색
-    if (searchKeyword) {
-      const keyword = searchKeyword.toLowerCase();
-      filtered = filtered.filter(
-        user =>
-          user.username?.toLowerCase().includes(keyword) ||
-          user.name?.toLowerCase().includes(keyword) ||
-          user.email?.toLowerCase().includes(keyword) ||
-          user.phoneNumber?.toLowerCase().includes(keyword) ||
-          user.department?.toLowerCase().includes(keyword)
-      );
-    }
-
-    setFilteredUsers(filtered);
-  }, [searchKeyword, filterUserType, filterStatus, users]);
+  // TODO: 검색 및 필터링을 서버 API와 연동 필요
+  // 현재는 서버 사이드 페이징만 구현됨
+  // searchKeyword, filterUserType, filterStatus를 API 파라미터로 전달해야 함
 
   // 사용자 삭제 확인
   const confirmDelete = (id: string) => {
@@ -423,9 +408,10 @@ export default function PlatformUsers() {
     },
   ];
 
-  // 통계 계산
+  // 통계 계산 (현재 페이지 데이터 기준)
   const stats = {
-    total: users.length,
+    total: totalElements, // 전체 사용자 수
+    currentPage: users.length, // 현재 페이지 사용자 수
     active: users.filter(u => u.status === 'active').length,
     inactive: users.filter(u => u.status === 'inactive').length,
     suspended: users.filter(u => u.status === 'suspended').length,
@@ -436,10 +422,10 @@ export default function PlatformUsers() {
       {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>
-          플랫폼 사용자 ({filteredUsers.length}명)
+          플랫폼 사용자 (총 {stats.total}명)
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-          플랫폼에 등록된 모든 사용자 관리 | 활성: {stats.active}명 | 비활성: {stats.inactive}명 | 정지: {stats.suspended}명
+          플랫폼에 등록된 모든 사용자 관리 | 현재 페이지: 활성 {stats.active}명 / 비활성 {stats.inactive}명 / 정지 {stats.suspended}명
         </Typography>
       </Box>
 
@@ -515,13 +501,14 @@ export default function PlatformUsers() {
           minHeight: 400,
         }}>
         <DataGrid
-          rows={filteredUsers}
+          rows={users}
           columns={columns}
           loading={loading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 25 } },
-          }}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={totalElements}
+          pageSizeOptions={[10, 20, 50, 100]}
           getRowHeight={() => 'auto'}
           disableRowSelectionOnClick
           localeText={{
