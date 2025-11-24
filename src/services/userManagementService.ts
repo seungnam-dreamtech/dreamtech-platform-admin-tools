@@ -1086,27 +1086,38 @@ class UserManagementService {
   // ==================== Permission Definitions 관리 ====================
 
   /**
-   * 전체 권한 목록 조회
+   * 전체 권한 목록 조회 (페이징 지원)
    * 실제 API: GET /v1/management/permissions
    */
   async getPermissions(
-    filter?: import('../types/user-management').PermissionSearchFilter
-  ): Promise<import('../types/user-management').PermissionDefinition[]> {
-    console.log('🔍 Getting permissions with filter:', filter);
+    filter?: import('../types/user-management').PermissionSearchFilter,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<import('../types/user-management').PermissionDefinition>> {
+    console.log('🔍 Getting permissions with filter:', filter, 'params:', params);
 
     try {
-      const params = new URLSearchParams();
-      if (filter?.keyword) params.append('keyword', filter.keyword);
-      if (filter?.service_id) params.append('service_id', filter.service_id);
-      if (filter?.category) params.append('category', filter.category);
-      if (filter?.resource) params.append('resource', filter.resource);
-      if (filter?.is_active !== undefined)
-        params.append('is_active', filter.is_active.toString());
+      const queryParams: Record<string, string | string[]> = {};
 
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-      return this.request<import('../types/user-management').PermissionDefinition[]>(
-        `/v1/management/permissions${queryString}`
-      );
+      // 필터 파라미터
+      if (filter?.keyword) queryParams.keyword = filter.keyword;
+      if (filter?.service_id) queryParams.service_id = filter.service_id;
+      if (filter?.category) queryParams.category = filter.category;
+      if (filter?.resource) queryParams.resource = filter.resource;
+      if (filter?.is_active !== undefined) queryParams.is_active = filter.is_active.toString();
+
+      // 페이징 파라미터
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
+
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
+
+      const url = `/v1/management/permissions${queryString ? `?${queryString}` : ''}`;
+      return this.request<import('../types/user-management').PageResponse<import('../types/user-management').PermissionDefinition>>(url);
     } catch (error) {
       console.error('Failed to fetch permissions:', error);
       throw error;
@@ -1415,18 +1426,32 @@ class UserManagementService {
   // ============================================
 
   /**
-   * 코드 그룹 목록 조회
+   * 코드 그룹 목록 조회 (페이징 지원)
    * GET /v1/management/codes/groups
    */
-  async getCodeGroups(activeOnly: boolean = false) {
-    const params = new URLSearchParams();
+  async getCodeGroups(
+    activeOnly: boolean = false,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<CodeGroup>> {
+    const queryParams: Record<string, string | string[]> = {};
+
     if (activeOnly) {
-      params.append('activeOnly', 'true');
+      queryParams.activeOnly = 'true';
     }
-    const query = params.toString();
-    return this.request<CodeGroup[]>(
-      `/v1/management/codes/groups${query ? `?${query}` : ''}`
-    );
+
+    // 페이징 파라미터
+    if (params?.page !== undefined) queryParams.page = String(params.page);
+    if (params?.size !== undefined) queryParams.size = String(params.size);
+    if (params?.sort) queryParams.sort = params.sort;
+
+    const queryString = new URLSearchParams(
+      Object.entries(queryParams).flatMap(([key, value]) =>
+        Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+      )
+    ).toString();
+
+    const url = `/v1/management/codes/groups${queryString ? `?${queryString}` : ''}`;
+    return this.request<import('../types/user-management').PageResponse<CodeGroup>>(url);
   }
 
   /**
@@ -1484,18 +1509,33 @@ class UserManagementService {
   }
 
   /**
-   * 특정 그룹의 코드 목록 조회
+   * 특정 그룹의 코드 목록 조회 (페이징 지원)
    * GET /v1/management/codes/groups/{groupId}/codes
    */
-  async getCodesByGroup(groupId: string, activeOnly: boolean = true) {
-    const params = new URLSearchParams();
+  async getCodesByGroup(
+    groupId: string,
+    activeOnly: boolean = true,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<Code>> {
+    const queryParams: Record<string, string | string[]> = {};
+
     if (activeOnly) {
-      params.append('activeOnly', 'true');
+      queryParams.activeOnly = 'true';
     }
-    const query = params.toString();
-    return this.request<Code[]>(
-      `/v1/management/codes/groups/${groupId}/codes${query ? `?${query}` : ''}`
-    );
+
+    // 페이징 파라미터
+    if (params?.page !== undefined) queryParams.page = String(params.page);
+    if (params?.size !== undefined) queryParams.size = String(params.size);
+    if (params?.sort) queryParams.sort = params.sort;
+
+    const queryString = new URLSearchParams(
+      Object.entries(queryParams).flatMap(([key, value]) =>
+        Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+      )
+    ).toString();
+
+    const url = `/v1/management/codes/groups/${groupId}/codes${queryString ? `?${queryString}` : ''}`;
+    return this.request<import('../types/user-management').PageResponse<Code>>(url);
   }
 
   /**

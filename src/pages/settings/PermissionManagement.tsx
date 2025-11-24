@@ -46,9 +46,13 @@ import { useSnackbar } from '../../contexts/SnackbarContext';
 export default function PermissionManagement() {
   const snackbar = useSnackbar();
   const [permissions, setPermissions] = useState<PermissionDefinition[]>([]);
-  const [filteredPermissions, setFilteredPermissions] = useState<PermissionDefinition[]>([]);
   const [services, setServices] = useState<ServiceScope[]>([]);
   const [loading, setLoading] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
+  const [totalElements, setTotalElements] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | undefined>(undefined);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | undefined>(
@@ -75,7 +79,7 @@ export default function PermissionManagement() {
     }
   };
 
-  // 권한 목록 조회
+  // 권한 목록 조회 (서버 사이드 페이징)
   const fetchPermissions = async () => {
     setLoading(true);
     try {
@@ -85,39 +89,39 @@ export default function PermissionManagement() {
         category: selectedCategoryFilter,
       };
 
-      const data = await userManagementService.getPermissions(filter);
-      console.log('📋 Permissions fetched:', data);
+      const response = await userManagementService.getPermissions(filter, {
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['createdAt,DESC'],
+      });
+      console.log('📋 Permissions fetched:', response);
 
-      const permissionsList = Array.isArray(data) ? data : [];
-
-      if (!Array.isArray(data)) {
-        console.error('⚠️ API response is not an array:', data);
-        snackbar.warning('API 응답 형식이 올바르지 않습니다. 빈 목록으로 표시합니다.');
-      }
-
-      setPermissions(permissionsList);
-      setFilteredPermissions(permissionsList);
+      setPermissions(response.content);
+      setTotalElements(response.totalElements || response.total_elements || 0);
     } catch (error) {
       snackbar.error('권한 목록 조회에 실패했습니다');
       console.error('Failed to fetch permissions:', error);
       setPermissions([]);
-      setFilteredPermissions([]);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchServices();
     fetchPermissions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchKeyword, selectedServiceFilter, selectedCategoryFilter]);
+  }, [paginationModel.page, paginationModel.pageSize, searchKeyword, selectedServiceFilter, selectedCategoryFilter]);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   // 그룹 뷰에서 첫 번째 서비스를 자동 선택
   useEffect(() => {
     if (viewMode === 'grouped' && services.length > 0 && !selectedServiceInGroupView) {
       const servicesWithPermissions = services.filter(s =>
-        filteredPermissions.some(p => p.service_id === s.service_id)
+        permissions.some(p => p.service_id === s.service_id)
       );
       if (servicesWithPermissions.length > 0) {
         setSelectedServiceInGroupView(servicesWithPermissions[0].service_id);
@@ -125,7 +129,7 @@ export default function PermissionManagement() {
         setSelectedServiceInGroupView(services[0].service_id);
       }
     }
-  }, [viewMode, services, filteredPermissions, selectedServiceInGroupView]);
+  }, [viewMode, services, permissions, selectedServiceInGroupView]);
 
   // 모달 열기
   const handleOpenModal = (permission?: PermissionDefinition) => {
@@ -197,7 +201,7 @@ export default function PermissionManagement() {
       !selectedServiceFilter || service.service_id === selectedServiceFilter
     )
     .map(service => {
-      const servicePermissions = filteredPermissions.filter(p => p.service_id === service.service_id);
+      const servicePermissions = permissions.filter(p => p.service_id === service.service_id);
       const activeCount = servicePermissions.filter(p => p.is_active).length;
       return {
         service,
@@ -518,10 +522,10 @@ export default function PermissionManagement() {
       {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>
-          권한 정의 관리 ({filteredPermissions.length}개)
+          권한 정의 관리 (총 {totalElements}개)
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-          서비스별 권한을 정의하고 관리합니다 | 활성: {permissions.filter(p => p.is_active).length}개 | 비활성: {permissions.filter(p => !p.is_active).length}개
+          서비스별 권한을 정의하고 관리합니다 | 현재 페이지: 활성 {permissions.filter(p => p.is_active).length}개 / 비활성 {permissions.filter(p => !p.is_active).length}개
         </Typography>
       </Box>
 
@@ -612,14 +616,15 @@ export default function PermissionManagement() {
             minHeight: 400,
           }}>
           <DataGrid
-            rows={filteredPermissions}
+            rows={permissions}
             columns={columns}
             loading={loading}
             getRowId={(row) => row.id}
-            pageSizeOptions={[10, 25, 50, 100]}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-            }}
+            paginationMode="server"
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            rowCount={totalElements}
+            pageSizeOptions={[10, 20, 50, 100]}
             getRowHeight={() => 'auto'}
             disableRowSelectionOnClick
             localeText={{

@@ -75,9 +75,9 @@ export default function CommonCodes() {
   const loadCodeGroups = async () => {
     setLoadingGroups(true);
     try {
-      const data = await userManagementService.getCodeGroups(false);
-      setCodeGroups(data);
-      console.log('✅ 코드 그룹 목록 로드 완료:', data.length);
+      const response = await userManagementService.getCodeGroups(false, { page: 0, size: 1000 });
+      setCodeGroups(response.content);
+      console.log('✅ 코드 그룹 목록 로드 완료:', response.content.length);
     } catch (error) {
       console.error('❌ 코드 그룹 로드 실패:', error);
       snackbar.error('코드 그룹 목록을 불러오는데 실패했습니다');
@@ -90,9 +90,9 @@ export default function CommonCodes() {
   const loadCodes = async (groupId: string) => {
     setLoadingCodes(true);
     try {
-      const data = await userManagementService.getCodesByGroup(groupId, false);
-      setCodes(data);
-      console.log(`✅ 코드 목록 로드 완료 (${groupId}):`, data.length);
+      const response = await userManagementService.getCodesByGroup(groupId, false, { page: 0, size: 1000 });
+      setCodes(response.content);
+      console.log(`✅ 코드 목록 로드 완료 (${groupId}):`, response.content.length);
     } catch (error) {
       console.error('❌ 코드 로드 실패:', error);
       snackbar.error('코드 목록을 불러오는데 실패했습니다');
