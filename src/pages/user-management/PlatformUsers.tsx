@@ -9,7 +9,6 @@ import {
   Typography,
   Chip,
   IconButton,
-  Tooltip,
   Avatar,
   Dialog,
   DialogTitle,
@@ -19,7 +18,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Badge,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -118,12 +116,12 @@ export default function PlatformUsers() {
   };
 
 
-  // DataGrid 컬럼 정의
+  // DataGrid 컬럼 정의 (필수 정보만 표시)
   const columns: GridColDef[] = [
     {
       field: 'user',
       headerName: '사용자',
-      flex: 1,
+      flex: 1.5,
       minWidth: 250,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -144,8 +142,8 @@ export default function PlatformUsers() {
     {
       field: 'email',
       headerName: '이메일',
-      flex: 1,
-      minWidth: 200,
+      flex: 1.5,
+      minWidth: 220,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Typography variant="body2">
           {params.row.email || '-'}
@@ -153,32 +151,10 @@ export default function PlatformUsers() {
       ),
     },
     {
-      field: 'userType',
-      headerName: 'User Type',
-      flex: 0.7,
-      minWidth: 130,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => {
-        const getColor = () => {
-          if (!params.row.userType) return 'default';
-          if (params.row.userType.includes('ADMIN')) return 'error';
-          if (params.row.userType.includes('MANAGER')) return 'warning';
-          if (params.row.userType.includes('DOCTOR')) return 'info';
-          return 'default';
-        };
-        return (
-          <Chip
-            label={params.row.userType || 'N/A'}
-            color={getColor()}
-            size="small"
-          />
-        );
-      },
-    },
-    {
       field: 'status',
       headerName: '상태',
-      flex: 0.5,
-      minWidth: 90,
+      flex: 0.6,
+      minWidth: 100,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params: GridRenderCellParams<PlatformUser>) => {
@@ -193,142 +169,23 @@ export default function PlatformUsers() {
       },
     },
     {
-      field: 'position',
-      headerName: '부서/직책',
+      field: 'createdAt',
+      headerName: '생성일',
       flex: 0.8,
-      minWidth: 140,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Box>
-          {params.row.department && (
-            <Typography variant="body2">{params.row.department}</Typography>
-          )}
-          {params.row.position && (
-            <Typography variant="caption" color="textSecondary">
-              {params.row.position}
-            </Typography>
-          )}
-          {!params.row.department && !params.row.position && (
-            <Typography variant="body2" color="textSecondary">-</Typography>
-          )}
-        </Box>
-      ),
-    },
-    {
-      field: 'platformRoles',
-      headerName: '플랫폼 역할',
-      flex: 0.7,
-      minWidth: 120,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => {
-        const roles = params.row.platformRoles;
-        return (
-          <Tooltip title={roles.join(', ')}>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {roles.slice(0, 2).map(role => (
-                <Chip key={role} label={role} color="primary" size="small" />
-              ))}
-              {roles.length > 2 && (
-                <Chip label={`+${roles.length - 2}`} size="small" />
-              )}
-            </Box>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      field: 'serviceSubscriptions',
-      headerName: '서비스 가입',
-      flex: 0.5,
-      minWidth: 100,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Badge badgeContent={params.row.serviceSubscriptions.length} color="info" />
-      ),
-    },
-    {
-      field: 'phoneNumber',
-      headerName: '연락처',
-      flex: 0.7,
       minWidth: 120,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
         <Typography variant="body2" color="textSecondary">
-          {params.row.phoneNumber || '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'createdAt',
-      headerName: '생성일',
-      flex: 0.6,
-      minWidth: 100,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="textSecondary">
           {params.row.createdAt ? new Date(params.row.createdAt).toLocaleDateString('ko-KR') : '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'createdBy',
-      headerName: '생성자',
-      flex: 0.5,
-      minWidth: 90,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="textSecondary">
-          {(params.row as any).createdBy || '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'updatedAt',
-      headerName: '수정일',
-      flex: 0.6,
-      minWidth: 100,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="textSecondary">
-          {params.row.updatedAt ? new Date(params.row.updatedAt).toLocaleDateString('ko-KR') : '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'updatedBy',
-      headerName: '수정자',
-      flex: 0.5,
-      minWidth: 90,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="textSecondary">
-          {(params.row as any).updatedBy || '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'deletedAt',
-      headerName: '삭제일',
-      flex: 0.6,
-      minWidth: 100,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="error">
-          {(params.row as any).deletedAt ? new Date((params.row as any).deletedAt).toLocaleDateString('ko-KR') : '-'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'deletedBy',
-      headerName: '삭제자',
-      flex: 0.5,
-      minWidth: 90,
-      renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="error">
-          {(params.row as any).deletedBy || '-'}
         </Typography>
       ),
     },
     {
       field: 'lastLoginAt',
       headerName: '최근 로그인',
-      flex: 0.8,
-      minWidth: 140,
+      flex: 1,
+      minWidth: 160,
       renderCell: (params: GridRenderCellParams<PlatformUser>) => (
-        <Typography variant="caption" color="textSecondary">
+        <Typography variant="body2" color="textSecondary">
           {params.row.lastLoginAt ? new Date(params.row.lastLoginAt).toLocaleString('ko-KR') : '-'}
         </Typography>
       ),
