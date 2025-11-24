@@ -67,8 +67,8 @@ export default function AuthorityTemplates() {
 
   const fetchUserTypes = async () => {
     try {
-      const data = await userManagementService.getUserTypeDefinitions();
-      setUserTypes(data.filter((ut) => ut.is_active));
+      const response = await userManagementService.getUserTypeDefinitions({ page: 0, size: 100 });
+      setUserTypes(response.content.filter((ut) => ut.is_active));
     } catch (error) {
       console.error('Failed to load user types:', error);
     }

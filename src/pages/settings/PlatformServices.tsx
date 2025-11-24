@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  TextField,
   Typography,
   Chip,
   IconButton,
@@ -14,7 +13,6 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Refresh as RefreshIcon,
-  Clear as ClearIcon,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
@@ -25,21 +23,28 @@ import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function PlatformServices() {
   const [services, setServices] = useState<ServiceScope[]>([]);
-  const [filteredServices, setFilteredServices] = useState<ServiceScope[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceScope | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
+  const [totalElements, setTotalElements] = useState(0);
   const snackbar = useSnackbar();
 
   // 서비스 목록 조회
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const data = await userManagementService.getServiceScopes();
-      console.log('📋 Service Scopes fetched:', data);
-      setServices(data);
-      setFilteredServices(data);
+      const response = await userManagementService.getServiceScopes({
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['serviceId,ASC'],
+      });
+      console.log('📋 Service Scopes fetched:', response);
+      setServices(response.content);
+      setTotalElements(response.totalElements || response.total_elements || 0);
     } catch (error) {
       snackbar.error('서비스 목록 조회에 실패했습니다');
       console.error('Failed to fetch services:', error);
@@ -50,22 +55,7 @@ export default function PlatformServices() {
 
   useEffect(() => {
     fetchServices();
-  }, []);
-
-  // 검색 필터링
-  useEffect(() => {
-    if (searchKeyword) {
-      const keyword = searchKeyword.toLowerCase();
-      const filtered = services.filter(
-        (service) =>
-          service.service_id.toLowerCase().includes(keyword) ||
-          service.description.toLowerCase().includes(keyword)
-      );
-      setFilteredServices(filtered);
-    } else {
-      setFilteredServices(services);
-    }
-  }, [searchKeyword, services]);
+  }, [paginationModel.page, paginationModel.pageSize]);
 
   // 서비스 추가/수정
   const handleSave = async (serviceData: ServiceScope) => {
@@ -234,7 +224,7 @@ export default function PlatformServices() {
       {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>
-          플랫폼 서비스 ({filteredServices.length}개)
+          플랫폼 서비스 ({totalElements}개)
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
           플랫폼의 마이크로서비스 스코프 관리
@@ -243,58 +233,40 @@ export default function PlatformServices() {
 
       {/* 컨텐츠 영역 */}
       <Box>
-        {/* 검색 및 버튼 */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <TextField
-            placeholder="서비스명 또는 설명으로 검색"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            size="small"
-            sx={{ width: 400 }}
-            slotProps={{
-              input: {
-                endAdornment: searchKeyword && (
-                  <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
-                ),
-              },
+        {/* 버튼 */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchServices}
+            disabled={loading}
+          >
+            새로고침
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setSelectedService(null);
+              setModalOpen(true);
             }}
-          />
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={fetchServices}
-              disabled={loading}
-            >
-              새로고침
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setSelectedService(null);
-                setModalOpen(true);
-              }}
-            >
-              서비스 추가
-            </Button>
-          </Box>
+          >
+            서비스 추가
+          </Button>
         </Box>
 
         {/* 테이블 */}
         <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
-          rows={filteredServices}
+          rows={services}
           columns={columns}
           getRowId={(row) => row.id}
           loading={loading}
-          pageSizeOptions={[10, 25, 50]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-            sorting: { sortModel: [{ field: 'id', sort: 'asc' }] },
-          }}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={totalElements}
+          pageSizeOptions={[10, 20, 50, 100]}
           disableRowSelectionOnClick
           sx={{
             '& .MuiDataGrid-cell': {

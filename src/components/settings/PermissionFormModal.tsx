@@ -108,8 +108,8 @@ export default function PermissionFormModal({
 
   const loadServices = async () => {
     try {
-      const data = await userManagementService.getServiceScopes();
-      setServices(data);
+      const response = await userManagementService.getServiceScopes({ page: 0, size: 100 });
+      setServices(response.content);
     } catch (error) {
       console.error('Failed to load services:', error);
       snackbar.error('서비스 목록을 불러오는데 실패했습니다');

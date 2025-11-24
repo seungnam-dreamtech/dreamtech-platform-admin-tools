@@ -499,12 +499,15 @@ export interface TemplateUpdateRequest {
 
 /**
  * 페이지 응답 (Spring Page)
+ * API에서 snake_case와 camelCase를 모두 지원
  */
 export interface PageResponse<T> {
   content: T[];
   pageable: {
     pageNumber: number;
     pageSize: number;
+    page_number?: number;
+    page_size?: number;
     sort: {
       sorted: boolean;
       unsorted: boolean;
@@ -516,6 +519,8 @@ export interface PageResponse<T> {
   };
   totalPages: number;
   totalElements: number;
+  total_pages?: number;
+  total_elements?: number;
   last: boolean;
   size: number;
   number: number;
@@ -525,6 +530,7 @@ export interface PageResponse<T> {
     empty: boolean;
   };
   numberOfElements: number;
+  number_of_elements?: number;
   first: boolean;
   empty: boolean;
 }
@@ -919,17 +925,7 @@ export interface AuditEventFilter {
 /**
  * 페이징된 감사 이벤트 응답
  */
-export interface PageAuditEvent {
-  content: AuditEvent[];
-  total_elements: number;
-  total_pages: number;
-  size: number;
-  number: number;
-  number_of_elements: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
-}
+export type PageAuditEvent = PageResponse<AuditEvent>;
 
 /**
  * 보안 대시보드 데이터
@@ -942,4 +938,13 @@ export interface SecurityDashboardData {
   recent_failure_events: AuditEvent[];
   time_range_start: string;
   time_range_end: string;
+}
+
+/**
+ * 페이징 요청 파라미터
+ */
+export interface PageParams {
+  page?: number;      // page 또는 page_number
+  size?: number;      // size 또는 page_size
+  sort?: string[];    // 정렬 (예: ["createdAt,desc"])
 }
