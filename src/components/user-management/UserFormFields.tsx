@@ -1,8 +1,10 @@
 // 사용자 기본 정보 폼 필드 (재사용 컴포넌트)
 
+import { useState, useEffect } from 'react';
 import { TextField, MenuItem, FormControl, InputLabel, Select, Stack, Tooltip, IconButton } from '@mui/material';
 import { Info as InfoIcon } from '@mui/icons-material';
 import { USER_TYPES, USER_STATUS_OPTIONS } from '../../constants/user-management';
+import { userManagementService } from '../../services/userManagementService';
 import type { SelectChangeEvent } from '@mui/material';
 
 interface UserFormFieldsProps {
@@ -30,8 +32,40 @@ export function UserFormFields({
   onChange,
   onSelectChange,
   errors = {},
-  userTypeOptions = USER_TYPES,
+  userTypeOptions: propUserTypeOptions,
 }: UserFormFieldsProps) {
+  // User Type Definitions를 동적으로 로드 (신규 추가 시에만)
+  const [userTypeOptions, setUserTypeOptions] = useState(propUserTypeOptions || USER_TYPES);
+  const [loadingUserTypes, setLoadingUserTypes] = useState(false);
+
+  useEffect(() => {
+    // 신규 추가 모드이고, prop으로 userTypeOptions가 전달되지 않은 경우에만 로드
+    if (!isEditing && !propUserTypeOptions) {
+      const fetchUserTypes = async () => {
+        setLoadingUserTypes(true);
+        try {
+          const response = await userManagementService.getUserTypeDefinitions({ page: 0, size: 100 });
+          const options = response.content
+            .filter(type => type.is_active)
+            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+            .map(type => ({
+              label: type.display_name || type.type_id,
+              value: type.type_id || '',
+              description: type.description || '',
+            }));
+          setUserTypeOptions(options);
+        } catch (error) {
+          console.error('User Type 목록 로드 실패:', error);
+          // 실패 시 기본값 사용
+        } finally {
+          setLoadingUserTypes(false);
+        }
+      };
+
+      fetchUserTypes();
+    }
+  }, [isEditing, propUserTypeOptions]);
+
   return (
     <Stack spacing={2}>
       {isEditing && formData.username && (
@@ -103,7 +137,7 @@ export function UserFormFields({
       />
 
       {!isEditing && (
-        <FormControl fullWidth size="small" required error={!!errors.userType}>
+        <FormControl fullWidth size="small" required error={!!errors.userType} disabled={loadingUserTypes}>
           <InputLabel>사용자 유형</InputLabel>
           <Select
             name="userType"
