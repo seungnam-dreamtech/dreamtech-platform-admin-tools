@@ -29,23 +29,30 @@ import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function UserTypes() {
   const [userTypes, setUserTypes] = useState<UserTypeDefinition[]>([]);
-  const [filteredUserTypes, setFilteredUserTypes] = useState<UserTypeDefinition[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserTypeDefinition | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [userTypeToDelete, setUserTypeToDelete] = useState<string | null>(null);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
+  const [totalElements, setTotalElements] = useState(0);
   const snackbar = useSnackbar();
 
   // User Type 목록 조회
   const fetchUserTypes = async () => {
     setLoading(true);
     try {
-      const data = await userManagementService.getUserTypeDefinitions();
-      console.log('📋 User Type Definitions fetched:', data);
-      setUserTypes(data);
-      setFilteredUserTypes(data);
+      const response = await userManagementService.getUserTypeDefinitions({
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['createdAt,DESC'],
+      });
+      console.log('📋 User Type Definitions fetched:', response);
+      setUserTypes(response.content);
+      setTotalElements(response.total_elements);
     } catch (error) {
       snackbar.error('사용자 유형 목록 조회에 실패했습니다');
       console.error('Failed to fetch user types:', error);
@@ -56,23 +63,7 @@ export default function UserTypes() {
 
   useEffect(() => {
     fetchUserTypes();
-  }, []);
-
-  // 검색 필터링
-  useEffect(() => {
-    if (searchKeyword) {
-      const keyword = searchKeyword.toLowerCase();
-      const filtered = userTypes.filter(
-        (type) =>
-          type.display_name.toLowerCase().includes(keyword) ||
-          type.type_id.toLowerCase().includes(keyword) ||
-          type.description.toLowerCase().includes(keyword)
-      );
-      setFilteredUserTypes(filtered);
-    } else {
-      setFilteredUserTypes(userTypes);
-    }
-  }, [searchKeyword, userTypes]);
+  }, [paginationModel.page, paginationModel.pageSize]);
 
   // User Type 추가/수정
   const handleSave = async (userTypeData: UserTypeDefinition) => {
@@ -287,7 +278,7 @@ export default function UserTypes() {
       {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>
-          사용자 유형 ({filteredUserTypes.length}개)
+          사용자 유형 ({totalElements}개)
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
           사용자 유형과 기본 역할 매핑 관리
@@ -296,44 +287,26 @@ export default function UserTypes() {
 
       {/* 컨텐츠 영역 */}
       <Box>
-        {/* 검색 및 버튼 */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <TextField
-            placeholder="유형명 또는 설명으로 검색"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            size="small"
-            sx={{ width: 400 }}
-            slotProps={{
-              input: {
-                endAdornment: searchKeyword && (
-                  <IconButton size="small" onClick={() => setSearchKeyword('')}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                ),
-              },
+        {/* 버튼 영역 */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2, gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchUserTypes}
+            disabled={loading}
+          >
+            새로고침
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setSelectedUserType(null);
+              setModalOpen(true);
             }}
-          />
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={fetchUserTypes}
-              disabled={loading}
-            >
-              새로고침
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setSelectedUserType(null);
-                setModalOpen(true);
-              }}
-            >
-              사용자 유형 추가
-            </Button>
-          </Box>
+          >
+            사용자 유형 추가
+          </Button>
         </Box>
 
         {/* 테이블 */}
@@ -343,15 +316,15 @@ export default function UserTypes() {
           minHeight: 400,
         }}>
         <DataGrid
-          rows={filteredUserTypes}
+          rows={userTypes}
           columns={columns}
           getRowId={(row) => row.type_id}
           loading={loading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 25 } },
-            sorting: { sortModel: [{ field: 'display_order', sort: 'asc' }] },
-          }}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={totalElements}
+          pageSizeOptions={[10, 20, 50, 100]}
           disableRowSelectionOnClick
           localeText={{
             noRowsLabel: '등록된 사용자 유형이 없습니다',

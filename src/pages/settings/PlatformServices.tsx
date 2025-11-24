@@ -25,21 +25,28 @@ import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export default function PlatformServices() {
   const [services, setServices] = useState<ServiceScope[]>([]);
-  const [filteredServices, setFilteredServices] = useState<ServiceScope[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceScope | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
+  const [totalElements, setTotalElements] = useState(0);
   const snackbar = useSnackbar();
 
   // 서비스 목록 조회
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const data = await userManagementService.getServiceScopes();
-      console.log('📋 Service Scopes fetched:', data);
-      setServices(data);
-      setFilteredServices(data);
+      const response = await userManagementService.getServiceScopes({
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['serviceId,ASC'],
+      });
+      console.log('📋 Service Scopes fetched:', response);
+      setServices(response.content);
+      setTotalElements(response.total_elements);
     } catch (error) {
       snackbar.error('서비스 목록 조회에 실패했습니다');
       console.error('Failed to fetch services:', error);
@@ -50,7 +57,7 @@ export default function PlatformServices() {
 
   useEffect(() => {
     fetchServices();
-  }, []);
+  }, [paginationModel.page, paginationModel.pageSize]);
 
   // 검색 필터링
   useEffect(() => {

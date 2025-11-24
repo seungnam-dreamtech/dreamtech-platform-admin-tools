@@ -350,19 +350,28 @@ class UserManagementService {
   /**
    * 전체 클라이언트 목록 조회
    * 실제 API: GET /v1/management/clients
-   * Query Parameters: includeDeleted (optional)
+   * Query Parameters: page, size, sort
    */
-  async getClients(params?: { includeDeleted?: boolean }): Promise<OAuthClient[]> {
-    console.log('🔍 Getting OAuth clients', params);
+  async getClients(
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<OAuthClient>> {
+    console.log('🔍 Getting OAuth clients with params:', params);
 
     try {
-      const queryParams = new URLSearchParams();
-      if (params?.includeDeleted) {
-        queryParams.append('includeDeleted', 'true');
-      }
+      const queryParams: Record<string, string | string[]> = {};
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
 
-      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      return this.request<OAuthClient[]>(`/v1/management/clients${queryString}`);
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
+
+      const url = `/v1/management/clients${queryString ? `?${queryString}` : ''}`;
+
+      return this.request<import('../types/user-management').PageResponse<OAuthClient>>(url);
     } catch (error) {
       console.error('Failed to fetch OAuth clients:', error);
       throw error;
@@ -577,12 +586,27 @@ class UserManagementService {
    * User Type Definitions 목록 조회
    * 실제 API: GET /v1/management/user-types
    */
-  async getUserTypeDefinitions(): Promise<import('../types/user-management').UserTypeDefinition[]> {
-    console.log('🔍 Getting user type definitions');
+  async getUserTypeDefinitions(
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<import('../types/user-management').UserTypeDefinition>> {
+    console.log('🔍 Getting user type definitions with params:', params);
 
     try {
-      return this.request<import('../types/user-management').UserTypeDefinition[]>(
-        '/v1/management/user-types'
+      const queryParams: Record<string, string | string[]> = {};
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
+
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
+
+      const url = `/v1/management/user-types${queryString ? `?${queryString}` : ''}`;
+
+      return this.request<import('../types/user-management').PageResponse<import('../types/user-management').UserTypeDefinition>>(
+        url
       );
     } catch (error) {
       console.error('Failed to fetch user type definitions:', error);
@@ -684,12 +708,27 @@ class UserManagementService {
    * Service Scopes 목록 조회
    * 실제 API: GET /v1/management/services
    */
-  async getServiceScopes(): Promise<import('../types/user-management').ServiceScope[]> {
-    console.log('🔍 Getting service scopes');
+  async getServiceScopes(
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<import('../types/user-management').ServiceScope>> {
+    console.log('🔍 Getting service scopes with params:', params);
 
     try {
-      return this.request<import('../types/user-management').ServiceScope[]>(
-        '/v1/management/services'
+      const queryParams: Record<string, string | string[]> = {};
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
+
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
+
+      const url = `/v1/management/services${queryString ? `?${queryString}` : ''}`;
+
+      return this.request<import('../types/user-management').PageResponse<import('../types/user-management').ServiceScope>>(
+        url
       );
     } catch (error) {
       console.error('Failed to fetch service scopes:', error);
@@ -767,12 +806,27 @@ class UserManagementService {
    * Global Roles 목록 조회
    * 실제 API: GET /v1/management/roles/global
    */
-  async getGlobalRoles(): Promise<import('../types/user-management').GlobalRole[]> {
-    console.log('🔍 Getting global roles');
+  async getGlobalRoles(
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<import('../types/user-management').GlobalRole>> {
+    console.log('🔍 Getting global roles with params:', params);
 
     try {
-      return this.request<import('../types/user-management').GlobalRole[]>(
-        '/v1/management/roles/global'
+      const queryParams: Record<string, string | string[]> = {};
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
+
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
+
+      const url = `/v1/management/roles/global${queryString ? `?${queryString}` : ''}`;
+
+      return this.request<import('../types/user-management').PageResponse<import('../types/user-management').GlobalRole>>(
+        url
       );
     } catch (error) {
       console.error('Failed to fetch global roles:', error);
@@ -905,13 +959,27 @@ class UserManagementService {
    * 실제 API: GET /v1/management/roles/services/{serviceId}
    */
   async getServiceRolesByService(
-    serviceId: string
-  ): Promise<import('../types/user-management').ServiceRoleDefinition[]> {
-    console.log('🔍 Getting service roles for service:', serviceId);
+    serviceId: string,
+    params?: import('../types/user-management').PageParams
+  ): Promise<import('../types/user-management').PageResponse<import('../types/user-management').ServiceRoleDefinition>> {
+    console.log('🔍 Getting service roles for service:', serviceId, 'with params:', params);
 
     try {
-      return this.request<import('../types/user-management').ServiceRoleDefinition[]>(
-        `/v1/management/roles/services/${serviceId}`
+      const queryParams: Record<string, string | string[]> = {};
+      if (params?.page !== undefined) queryParams.page = String(params.page);
+      if (params?.size !== undefined) queryParams.size = String(params.size);
+      if (params?.sort) queryParams.sort = params.sort;
+
+      const queryString = new URLSearchParams(
+        Object.entries(queryParams).flatMap(([key, value]) =>
+          Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+        )
+      ).toString();
+
+      const url = `/v1/management/roles/services/${serviceId}${queryString ? `?${queryString}` : ''}`;
+
+      return this.request<import('../types/user-management').PageResponse<import('../types/user-management').ServiceRoleDefinition>>(
+        url
       );
     } catch (error) {
       console.error('Failed to fetch service roles for service:', error);

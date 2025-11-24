@@ -919,17 +919,7 @@ export interface AuditEventFilter {
 /**
  * 페이징된 감사 이벤트 응답
  */
-export interface PageAuditEvent {
-  content: AuditEvent[];
-  total_elements: number;
-  total_pages: number;
-  size: number;
-  number: number;
-  number_of_elements: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
-}
+export type PageAuditEvent = PageResponse<AuditEvent>;
 
 /**
  * 보안 대시보드 데이터
@@ -942,4 +932,51 @@ export interface SecurityDashboardData {
   recent_failure_events: AuditEvent[];
   time_range_start: string;
   time_range_end: string;
+}
+
+/**
+ * 페이징 정렬 정보
+ */
+export interface PageSort {
+  sorted: boolean;
+  unsorted: boolean;
+  empty: boolean;
+}
+
+/**
+ * 페이징 정보
+ */
+export interface PageableInfo {
+  page_number: number;
+  page_size: number;
+  sort: PageSort;
+  offset?: number;
+  paged?: boolean;
+  unpaged?: boolean;
+}
+
+/**
+ * 페이징 응답 (공통)
+ */
+export interface PageResponse<T> {
+  content: T[];
+  total_elements: number;
+  total_pages: number;
+  first: boolean;
+  last: boolean;
+  size: number;
+  number: number;
+  number_of_elements: number;
+  empty: boolean;
+  pageable: PageableInfo;
+  sort?: PageSort;
+}
+
+/**
+ * 페이징 요청 파라미터
+ */
+export interface PageParams {
+  page?: number;      // page 또는 page_number
+  size?: number;      // size 또는 page_size
+  sort?: string[];    // 정렬 (예: ["createdAt,desc"])
 }
