@@ -92,9 +92,13 @@ const combineTokenTTL = (value: number, unit: TokenUnit): string => {
 
 export default function OAuthClients() {
   const [clients, setClients] = useState<OAuthClient[]>([]);
-  const [filteredClients, setFilteredClients] = useState<OAuthClient[]>([]);
   const [userTypeDefinitions, setUserTypeDefinitions] = useState<UserTypeDefinition[]>([]);
   const [loading, setLoading] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
+  const [totalElements, setTotalElements] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<OAuthClient | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -202,13 +206,17 @@ export default function OAuthClients() {
     }
   };
 
-  // 클라이언트 목록 조회 (비활성화된 것 포함)
+  // 클라이언트 목록 조회 (서버 사이드 페이징)
   const fetchClients = async () => {
     setLoading(true);
     try {
-      const response = await userManagementService.getClients({ page: 0, size: 1000 });
+      const response = await userManagementService.getClients({
+        page: paginationModel.page,
+        size: paginationModel.pageSize,
+        sort: ['clientIdIssuedAt,DESC'],
+      });
       setClients(response.content);
-      setFilteredClients(response.content);
+      setTotalElements(response.totalElements || response.total_elements || 0);
     } catch (error) {
       snackbar.error('OAuth 클라이언트 목록 조회에 실패했습니다');
       console.error(error);
@@ -218,38 +226,16 @@ export default function OAuthClients() {
   };
 
   useEffect(() => {
-    fetchUserTypeDefinitions();
     fetchClients();
+  }, [paginationModel.page, paginationModel.pageSize]);
+
+  useEffect(() => {
+    fetchUserTypeDefinitions();
   }, []);
 
-  // 검색 및 필터링
-  useEffect(() => {
-    let filtered = [...clients];
-
-    // Client Type 필터 (optional 필드이므로 존재 여부 체크)
-    if (filterClientType !== 'ALL') {
-      filtered = filtered.filter(client => client.client_type === filterClientType);
-    }
-
-    // Enabled 필터 (deleted_at 기반: null이면 활성, 값 있으면 비활성)
-    if (filterEnabled !== 'ALL') {
-      filtered = filtered.filter(client =>
-        filterEnabled === 'enabled' ? !client.deleted_at : !!client.deleted_at
-      );
-    }
-
-    // 키워드 검색
-    if (searchKeyword) {
-      const keyword = searchKeyword.toLowerCase();
-      filtered = filtered.filter(
-        client =>
-          client.client_name.toLowerCase().includes(keyword) ||
-          client.client_id.toLowerCase().includes(keyword)
-      );
-    }
-
-    setFilteredClients(filtered);
-  }, [searchKeyword, filterClientType, filterEnabled, clients]);
+  // TODO: 검색 및 필터링을 서버 API와 연동 필요
+  // 현재는 서버 사이드 페이징만 구현됨
+  // searchKeyword, filterClientType, filterEnabled를 API 파라미터로 전달해야 함
 
   // 폼 검증
   const validateForm = (): boolean => {
@@ -676,7 +662,7 @@ export default function OAuthClients() {
       {/* 페이지 헤더 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={700}>
-          OAuth 클라이언트 ({filteredClients.length}개)
+          OAuth 클라이언트 (총 {totalElements}개)
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
           OAuth2/OpenID Connect 클라이언트 관리
@@ -743,13 +729,14 @@ export default function OAuthClients() {
         {/* 테이블 */}
         <Box sx={{ height: 700, width: '100%' }}>
         <DataGrid
-          rows={filteredClients}
+          rows={clients}
           columns={columns}
           loading={loading}
-          pageSizeOptions={[10, 25, 50]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-          }}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={totalElements}
+          pageSizeOptions={[10, 20, 50, 100]}
           getRowHeight={() => 'auto'}
           disableRowSelectionOnClick
           sx={{
