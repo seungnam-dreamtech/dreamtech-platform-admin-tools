@@ -1,6 +1,6 @@
 // 역할 및 권한 관리 컴포넌트
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Tabs,
   Tab,
@@ -18,7 +18,7 @@ import {
   Divider
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import { PLATFORM_ROLES, SERVICE_ROLES, MOCK_SERVICES } from '../../constants/user-management';
+import { PLATFORM_ROLES, SERVICE_ROLES } from '../../constants/user-management';
 import type { ServiceSubscription } from '../../types/user-management';
 
 interface RoleManagerProps {
@@ -50,7 +50,7 @@ export function RoleManager({
   onServiceSubscriptionsChange,
   userType,
 }: RoleManagerProps) {
-  const [activeTab, setActiveTab] = React.useState(0);
+  const [activeTab, setActiveTab] = useState(0);
 
   // 플랫폼 역할 변경 핸들러
   const handlePlatformRolesChange = (event: SelectChangeEvent<string[]>) => {
@@ -200,9 +200,7 @@ export function RoleManager({
             </Typography>
           ) : (
             serviceSubscriptions.map(subscription => {
-              const service = MOCK_SERVICES.find(s => s.id === subscription.serviceId);
               const availableRoles = SERVICE_ROLES[subscription.serviceId] || [];
-              const defaultServiceRole = service?.defaultRole;
 
               return (
                 <Paper
@@ -212,7 +210,7 @@ export function RoleManager({
                 >
                   <Stack spacing={2}>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <span style={{ fontSize: '18px' }}>{service?.icon}</span>
+                      <span style={{ fontSize: '18px' }}>🔧</span>
                       <Typography variant="subtitle2">{subscription.serviceName}</Typography>
                       <Chip
                         label={subscription.status === 'active' ? '활성' : '비활성'}
@@ -220,12 +218,6 @@ export function RoleManager({
                         size="small"
                       />
                     </Stack>
-
-                    {defaultServiceRole && (
-                      <Alert severity="info" sx={{ fontSize: '12px' }}>
-                        기본 역할: {defaultServiceRole}
-                      </Alert>
-                    )}
 
                     <Box>
                       <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>

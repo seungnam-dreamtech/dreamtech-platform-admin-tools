@@ -38,6 +38,11 @@ interface FormData {
   position?: string;
   status: 'active' | 'inactive' | 'suspended';
   userType?: string;
+  emailVerified?: boolean;
+  enabled?: boolean;
+  accountNonLocked?: boolean;
+  accountNonExpired?: boolean;
+  credentialsNonExpired?: boolean;
 }
 
 interface TabPanelProps {
@@ -91,6 +96,11 @@ export function UserDetailModal({
           position: user.position,
           status: user.status,
           userType: user.userType,
+          emailVerified: user.emailVerified,
+          enabled: user.enabled,
+          accountNonLocked: user.accountNonLocked,
+          accountNonExpired: user.accountNonExpired,
+          credentialsNonExpired: user.credentialsNonExpired,
         });
         setServiceSubscriptions(user.serviceSubscriptions || []);
         setPlatformRoles(user.platformRoles || []);
@@ -233,15 +243,29 @@ export function UserDetailModal({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
       disableEscapeKeyDown
+      PaperProps={{
+        sx: {
+          height: '90vh',
+          maxHeight: '900px',
+        }
+      }}
     >
       <DialogTitle>
         {isEditing ? `사용자 정보 수정 - ${user?.username || user?.email}` : '새 사용자 추가'}
       </DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <DialogContent
+        dividers
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          p: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 2 }}>
           <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
             <Tab label="기본 정보" />
             <Tab label={`서비스 가입 (${serviceSubscriptions.length})`} />
@@ -249,39 +273,41 @@ export function UserDetailModal({
           </Tabs>
         </Box>
 
-        <TabPanel value={activeTab} index={0}>
-          <Box sx={{ maxHeight: 500, overflowY: 'auto', pr: 2 }}>
-            <UserFormFields
-              isEditing={isEditing}
-              formData={formData}
-              onChange={handleChange}
-              onSelectChange={handleSelectChange}
-              errors={errors}
-            />
-          </Box>
-        </TabPanel>
+        <Box sx={{ flex: 1, overflow: 'auto', px: 3 }}>
+          <TabPanel value={activeTab} index={0}>
+            <Box sx={{ py: 2 }}>
+              <UserFormFields
+                isEditing={isEditing}
+                formData={formData}
+                onChange={handleChange}
+                onSelectChange={handleSelectChange}
+                errors={errors}
+              />
+            </Box>
+          </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
-          <Box sx={{ maxHeight: 500, overflowY: 'auto', pr: 2 }}>
-            <ServiceSubscriptionManager
-              value={serviceSubscriptions}
-              onChange={setServiceSubscriptions}
-              preSelectedServiceId={preSelectedServiceId}
-            />
-          </Box>
-        </TabPanel>
+          <TabPanel value={activeTab} index={1}>
+            <Box sx={{ py: 2 }}>
+              <ServiceSubscriptionManager
+                value={serviceSubscriptions}
+                onChange={setServiceSubscriptions}
+                preSelectedServiceId={preSelectedServiceId}
+              />
+            </Box>
+          </TabPanel>
 
-        <TabPanel value={activeTab} index={2}>
-          <Box sx={{ maxHeight: 500, overflowY: 'auto', pr: 2 }}>
-            <RoleManager
-              platformRoles={platformRoles}
-              onPlatformRolesChange={setPlatformRoles}
-              serviceSubscriptions={serviceSubscriptions}
-              onServiceSubscriptionsChange={setServiceSubscriptions}
-              userType={user?.userType || formData.userType}
-            />
-          </Box>
-        </TabPanel>
+          <TabPanel value={activeTab} index={2}>
+            <Box sx={{ py: 2 }}>
+              <RoleManager
+                platformRoles={platformRoles}
+                onPlatformRolesChange={setPlatformRoles}
+                serviceSubscriptions={serviceSubscriptions}
+                onServiceSubscriptionsChange={setServiceSubscriptions}
+                userType={user?.userType || formData.userType}
+              />
+            </Box>
+          </TabPanel>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={loading}>
