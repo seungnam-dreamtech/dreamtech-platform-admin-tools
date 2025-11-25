@@ -9,7 +9,7 @@ import type {
   UserFormData,
   ServiceSubscriptionChange,
   ServiceSubscription,
-  UserServiceResponse,
+  UserServicesResponse,
   UserSearchFilter,
   ServiceSearchFilter,
   CodeGroup,
@@ -165,14 +165,21 @@ class UserManagementService {
    */
   async getUserServices(userId: string): Promise<ServiceSubscription[]> {
     try {
-      const response = await this.request<UserServiceResponse[]>(`/v1/management/users/${userId}/services`);
-      return response.map(service => ({
-        serviceId: service.service_id,
-        serviceName: service.service_name || service.service_id,
-        subscribedAt: service.subscribed_at,
-        status: service.status,
-        roles: service.roles,
-        metadata: service.metadata,
+      const response = await this.request<UserServicesResponse>(`/v1/management/users/${userId}/services`);
+
+      // 서비스 스코프 정보를 가져와서 서비스 이름 매핑
+      const servicesResponse = await this.getServiceScopes({ page: 0, size: 100 });
+      const serviceMap = new Map(
+        servicesResponse.content.map(scope => [scope.service_id, scope.service_name || scope.service_id])
+      );
+
+      // active_services를 ServiceSubscription으로 변환
+      return response.active_services.map(serviceId => ({
+        serviceId,
+        serviceName: serviceMap.get(serviceId) || serviceId,
+        subscribedAt: new Date().toISOString(), // API가 제공하지 않으므로 현재 시각 사용
+        status: 'active' as const,
+        roles: [], // API가 제공하지 않으므로 빈 배열
       }));
     } catch (error) {
       console.error('Failed to fetch user services from API:', error);
