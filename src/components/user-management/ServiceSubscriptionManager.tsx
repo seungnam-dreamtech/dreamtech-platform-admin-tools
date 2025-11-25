@@ -14,14 +14,15 @@ import {
   Stack,
   TextField,
   Chip,
-  InputAdornment
+  InputAdornment,
+  CircularProgress
 } from '@mui/material';
 import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   Search as SearchIcon
 } from '@mui/icons-material';
-import { MOCK_SERVICES } from '../../constants/user-management';
+import { userManagementService } from '../../services/userManagementService';
 import type { ServiceSubscription } from '../../types/user-management';
 
 interface ServiceSubscriptionManagerProps {
@@ -47,19 +48,48 @@ export function ServiceSubscriptionManager({
   const [rightSelected, setRightSelected] = useState<string[]>([]);
   const [leftSearch, setLeftSearch] = useState('');
   const [rightSearch, setRightSearch] = useState('');
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const subscribedIds = value.map(sub => sub.serviceId);
 
+  // 서비스 목록 로드
+  useEffect(() => {
+    const fetchServices = async () => {
+      setLoading(true);
+      try {
+        const response = await userManagementService.getServiceScopes({ page: 0, size: 100 });
+        const serviceItems = response.content
+          .filter(scope => scope.is_active)
+          .map((scope): ServiceItem => ({
+            id: scope.service_id,
+            displayName: scope.service_name || scope.service_id,
+            description: scope.description,
+            icon: '🔧', // 기본 아이콘
+            defaultRole: 'USER', // 기본 역할 (서비스별 역할 정의 필요 시 확장)
+          }));
+        setServices(serviceItems);
+      } catch (error) {
+        console.error('서비스 목록 로드 실패:', error);
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
   // preSelectedServiceId가 있으면 자동 선택
   useEffect(() => {
-    if (preSelectedServiceId && !subscribedIds.includes(preSelectedServiceId)) {
+    if (preSelectedServiceId && !subscribedIds.includes(preSelectedServiceId) && services.length > 0) {
       handleAddService(preSelectedServiceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preSelectedServiceId]);
+  }, [preSelectedServiceId, services]);
 
   const handleAddService = (serviceId: string) => {
-    const service = MOCK_SERVICES.find(s => s.id === serviceId);
+    const service = services.find(s => s.id === serviceId);
     if (!service) return;
 
     const newSubscription: ServiceSubscription = {
@@ -114,7 +144,7 @@ export function ServiceSubscriptionManager({
     setRightSelected(newSelected);
   };
 
-  const availableServices = MOCK_SERVICES.filter(
+  const availableServices = services.filter(
     service => !subscribedIds.includes(service.id)
   );
 
@@ -136,7 +166,11 @@ export function ServiceSubscriptionManager({
     isSubscribed: boolean
   ) => (
     <List dense sx={{ maxHeight: 350, overflow: 'auto' }}>
-      {services.length === 0 ? (
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress size={32} />
+        </Box>
+      ) : services.length === 0 ? (
         <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
           서비스 없음
         </Typography>
@@ -274,13 +308,13 @@ export function ServiceSubscriptionManager({
           </Box>
           {renderServiceList(
             filteredSubscribed.map(sub => {
-              const service = MOCK_SERVICES.find(s => s.id === sub.serviceId);
+              const service = services.find(s => s.id === sub.serviceId);
               return {
                 id: sub.serviceId,
                 displayName: sub.serviceName,
                 description: service?.description || '',
-                icon: service?.icon || '',
-                defaultRole: service?.defaultRole || '',
+                icon: service?.icon || '🔧',
+                defaultRole: service?.defaultRole || 'USER',
               };
             }),
             rightSelected,

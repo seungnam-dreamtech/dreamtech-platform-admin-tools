@@ -109,6 +109,12 @@ export interface PlatformUser {
   isAnonymous?: boolean;
   hasProfile?: boolean;
 
+  // 계정 상태 필드 (상세 정보 표시용)
+  enabled?: boolean;
+  accountNonLocked?: boolean;
+  accountNonExpired?: boolean;
+  credentialsNonExpired?: boolean;
+
   metadata?: Record<string, unknown>;
 }
 

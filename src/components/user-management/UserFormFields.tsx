@@ -1,8 +1,8 @@
 // 사용자 기본 정보 폼 필드 (재사용 컴포넌트)
 
 import { useState, useEffect } from 'react';
-import { TextField, MenuItem, FormControl, InputLabel, Select, Stack, Tooltip, IconButton } from '@mui/material';
-import { Info as InfoIcon } from '@mui/icons-material';
+import { TextField, MenuItem, FormControl, InputLabel, Select, Stack, Tooltip, IconButton, Box, Chip, Typography } from '@mui/material';
+import { Info as InfoIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import { USER_TYPES, USER_STATUS_OPTIONS } from '../../constants/user-management';
 import { userManagementService } from '../../services/userManagementService';
 import type { SelectChangeEvent } from '@mui/material';
@@ -19,6 +19,11 @@ interface UserFormFieldsProps {
     position?: string;
     status?: 'active' | 'inactive' | 'suspended';
     userType?: string;
+    emailVerified?: boolean;
+    enabled?: boolean;
+    accountNonLocked?: boolean;
+    accountNonExpired?: boolean;
+    credentialsNonExpired?: boolean;
   };
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectChange: (e: SelectChangeEvent) => void;
@@ -94,6 +99,55 @@ export function UserFormFields({
         error={!!errors.email}
         helperText={errors.email}
       />
+
+      {isEditing && formData.userType && (
+        <Box>
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+            사용자 유형
+          </Typography>
+          <Chip label={formData.userType} color="primary" size="small" />
+        </Box>
+      )}
+
+      {isEditing && (
+        <Box>
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+            계정 상태
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Chip
+              icon={formData.emailVerified ? <CheckCircleIcon /> : <CancelIcon />}
+              label={formData.emailVerified ? '이메일 인증됨' : '이메일 미인증'}
+              color={formData.emailVerified ? 'success' : 'default'}
+              size="small"
+            />
+            <Chip
+              icon={formData.enabled ? <CheckCircleIcon /> : <CancelIcon />}
+              label={formData.enabled ? '활성화' : '비활성화'}
+              color={formData.enabled ? 'success' : 'error'}
+              size="small"
+            />
+            <Chip
+              icon={formData.accountNonLocked ? <CheckCircleIcon /> : <CancelIcon />}
+              label={formData.accountNonLocked ? '잠금 해제' : '잠김'}
+              color={formData.accountNonLocked ? 'success' : 'error'}
+              size="small"
+            />
+            <Chip
+              icon={formData.accountNonExpired ? <CheckCircleIcon /> : <CancelIcon />}
+              label={formData.accountNonExpired ? '계정 유효' : '계정 만료'}
+              color={formData.accountNonExpired ? 'success' : 'error'}
+              size="small"
+            />
+            <Chip
+              icon={formData.credentialsNonExpired ? <CheckCircleIcon /> : <CancelIcon />}
+              label={formData.credentialsNonExpired ? '자격증명 유효' : '자격증명 만료'}
+              color={formData.credentialsNonExpired ? 'success' : 'warning'}
+              size="small"
+            />
+          </Stack>
+        </Box>
+      )}
 
       {!isEditing && (
         <TextField

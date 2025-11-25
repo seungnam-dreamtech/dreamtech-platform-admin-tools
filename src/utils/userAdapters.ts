@@ -42,6 +42,12 @@ export function adaptUserResponseToUser(response: PlatformUserResponse): Platfor
     addressDetail: response.address_detail,
     isAnonymous: response.is_anonymous,
     hasProfile: response.has_profile,
+
+    // 계정 상태 필드
+    enabled: response.enabled,
+    accountNonLocked: response.account_non_locked,
+    accountNonExpired: response.account_non_expired,
+    credentialsNonExpired: response.credentials_non_expired,
   };
 }
 
