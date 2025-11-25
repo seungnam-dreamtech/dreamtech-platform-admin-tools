@@ -102,7 +102,8 @@ export function UserDetailModal({
           accountNonExpired: user.accountNonExpired,
           credentialsNonExpired: user.credentialsNonExpired,
         });
-        setServiceSubscriptions(user.serviceSubscriptions || []);
+        // ServiceSubscriptionManager가 userId로 API를 호출하여 로드하므로 빈 배열로 초기화
+        setServiceSubscriptions([]);
         setPlatformRoles(user.platformRoles || []);
       } else {
         // 추가 모드: 폼 초기화

@@ -13,16 +13,14 @@ export interface ServiceSubscription {
 }
 
 /**
- * 서비스 가입 정보 API 응답
+ * 사용자 서비스 가입 정보 API 응답
  * API Response: GET /v1/management/users/{userId}/services
  */
-export interface UserServiceResponse {
-  service_id: string;
-  service_name?: string;
-  subscribed_at: string;
-  status: 'active' | 'suspended' | 'expired';
-  roles: string[];
-  metadata?: Record<string, unknown>;
+export interface UserServicesResponse {
+  registered_services: string[];  // 등록된 서비스 ID 목록
+  active_services: string[];      // 활성화된 서비스 ID 목록
+  registered_services_mask: number;
+  active_services_mask: number;
 }
 
 /**
