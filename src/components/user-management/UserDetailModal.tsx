@@ -82,7 +82,7 @@ export function UserDetailModal({
 
   const isEditing = !!user;
 
-  // 모달이 열릴 때 폼 초기화
+  // 모달이 열릴 때 폼 초기화 및 서비스 정보 로드
   useEffect(() => {
     if (open) {
       if (user) {
@@ -102,8 +102,19 @@ export function UserDetailModal({
           accountNonExpired: user.accountNonExpired,
           credentialsNonExpired: user.credentialsNonExpired,
         });
-        // ServiceSubscriptionManager가 userId로 API를 호출하여 로드하므로 빈 배열로 초기화
-        setServiceSubscriptions([]);
+
+        // 서비스 가입 정보 즉시 로드
+        const loadUserServices = async () => {
+          try {
+            const subscriptions = await userManagementService.getUserServices(user.id);
+            setServiceSubscriptions(subscriptions);
+          } catch (error) {
+            console.error('사용자 서비스 정보 로드 실패:', error);
+            setServiceSubscriptions([]);
+          }
+        };
+        loadUserServices();
+
         setPlatformRoles(user.platformRoles || []);
       } else {
         // 추가 모드: 폼 초기화

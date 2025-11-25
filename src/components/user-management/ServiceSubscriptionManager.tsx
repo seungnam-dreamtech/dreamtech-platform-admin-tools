@@ -80,10 +80,18 @@ export function ServiceSubscriptionManager({
     fetchServices();
   }, []);
 
-  // 사용자 서비스 가입 정보 로드 (편집 모드일 때만)
+  // 사용자 서비스 가입 정보 동기화 (편집 모드일 때)
   useEffect(() => {
     if (!userId) return;
 
+    // 부모 컴포넌트에서 이미 로드한 데이터가 있으면 그것을 사용
+    if (value && value.length > 0) {
+      setUserSubscriptions(value);
+      setLoadingUserServices(false);
+      return;
+    }
+
+    // 데이터가 없으면 API 호출 (fallback)
     const fetchUserServices = async () => {
       setLoadingUserServices(true);
       try {
@@ -100,7 +108,7 @@ export function ServiceSubscriptionManager({
     };
 
     fetchUserServices();
-  }, [userId]); // onChange는 의존성에서 제외 (무한 루프 방지)
+  }, [userId, value]); // value를 의존성에 추가하여 부모에서 로드된 데이터 반영
 
   // preSelectedServiceId가 있으면 자동 선택
   useEffect(() => {
