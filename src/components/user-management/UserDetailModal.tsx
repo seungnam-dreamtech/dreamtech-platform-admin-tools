@@ -289,6 +289,7 @@ export function UserDetailModal({
           <TabPanel value={activeTab} index={1}>
             <Box sx={{ py: 2 }}>
               <ServiceSubscriptionManager
+                userId={user?.id}
                 value={serviceSubscriptions}
                 onChange={setServiceSubscriptions}
                 preSelectedServiceId={preSelectedServiceId}
