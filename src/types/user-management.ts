@@ -1,7 +1,7 @@
 // 사용자 관리 관련 타입 정의
 
 /**
- * 서비스 가입 정보
+ * 서비스 가입 정보 (UI)
  */
 export interface ServiceSubscription {
   serviceId: string;
@@ -10,6 +10,19 @@ export interface ServiceSubscription {
   status: 'active' | 'suspended' | 'expired';
   roles: string[];  // 해당 서비스에서의 역할
   metadata?: Record<string, unknown>;  // 서비스별 추가 정보
+}
+
+/**
+ * 서비스 가입 정보 API 응답
+ * API Response: GET /v1/management/users/{userId}/services
+ */
+export interface UserServiceResponse {
+  service_id: string;
+  service_name?: string;
+  subscribed_at: string;
+  status: 'active' | 'suspended' | 'expired';
+  roles: string[];
+  metadata?: Record<string, unknown>;
 }
 
 /**

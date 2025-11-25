@@ -26,6 +26,7 @@ import { userManagementService } from '../../services/userManagementService';
 import type { ServiceSubscription } from '../../types/user-management';
 
 interface ServiceSubscriptionManagerProps {
+  userId?: string; // 사용자 ID (편집 모드일 때만)
   value?: ServiceSubscription[];
   onChange?: (subscriptions: ServiceSubscription[]) => void;
   preSelectedServiceId?: string; // 특정 서비스에서 사용자 추가 시 자동 선택
@@ -40,6 +41,7 @@ interface ServiceItem {
 }
 
 export function ServiceSubscriptionManager({
+  userId,
   value = [],
   onChange,
   preSelectedServiceId,
@@ -50,8 +52,12 @@ export function ServiceSubscriptionManager({
   const [rightSearch, setRightSearch] = useState('');
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingUserServices, setLoadingUserServices] = useState(false);
+  const [userSubscriptions, setUserSubscriptions] = useState<ServiceSubscription[]>([]);
 
-  const subscribedIds = value.map(sub => sub.serviceId);
+  // 편집 모드인지 확인
+  const isEditMode = !!userId;
+  const subscribedIds = (isEditMode ? userSubscriptions : value).map(sub => sub.serviceId);
 
   // 서비스 목록 로드
   useEffect(() => {
@@ -80,6 +86,28 @@ export function ServiceSubscriptionManager({
     fetchServices();
   }, []);
 
+  // 사용자 서비스 가입 정보 로드 (편집 모드일 때만)
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUserServices = async () => {
+      setLoadingUserServices(true);
+      try {
+        const subscriptions = await userManagementService.getUserServices(userId);
+        setUserSubscriptions(subscriptions);
+        // 부모 컴포넌트에도 업데이트
+        onChange?.(subscriptions);
+      } catch (error) {
+        console.error('사용자 서비스 가입 정보 로드 실패:', error);
+        setUserSubscriptions([]);
+      } finally {
+        setLoadingUserServices(false);
+      }
+    };
+
+    fetchUserServices();
+  }, [userId]); // onChange는 의존성에서 제외 (무한 루프 방지)
+
   // preSelectedServiceId가 있으면 자동 선택
   useEffect(() => {
     if (preSelectedServiceId && !subscribedIds.includes(preSelectedServiceId) && services.length > 0) {
@@ -100,7 +128,13 @@ export function ServiceSubscriptionManager({
       roles: [service.defaultRole],
     };
 
-    onChange?.([...value, newSubscription]);
+    if (isEditMode) {
+      const updated = [...userSubscriptions, newSubscription];
+      setUserSubscriptions(updated);
+      onChange?.(updated);
+    } else {
+      onChange?.([...value, newSubscription]);
+    }
   };
 
   const handleMoveToRight = () => {
@@ -113,8 +147,14 @@ export function ServiceSubscriptionManager({
   };
 
   const handleMoveToLeft = () => {
-    const newSubscriptions = value.filter(sub => !rightSelected.includes(sub.serviceId));
-    onChange?.(newSubscriptions);
+    if (isEditMode) {
+      const updated = userSubscriptions.filter(sub => !rightSelected.includes(sub.serviceId));
+      setUserSubscriptions(updated);
+      onChange?.(updated);
+    } else {
+      const updated = value.filter(sub => !rightSelected.includes(sub.serviceId));
+      onChange?.(updated);
+    }
     setRightSelected([]);
   };
 
@@ -154,7 +194,8 @@ export function ServiceSubscriptionManager({
       service.description.toLowerCase().includes(leftSearch.toLowerCase())
   );
 
-  const filteredSubscribed = value.filter(
+  const currentSubscriptions = isEditMode ? userSubscriptions : value;
+  const filteredSubscribed = currentSubscriptions.filter(
     sub =>
       sub.serviceName.toLowerCase().includes(rightSearch.toLowerCase())
   );
@@ -166,7 +207,7 @@ export function ServiceSubscriptionManager({
     isSubscribed: boolean
   ) => (
     <List dense sx={{ maxHeight: 350, overflow: 'auto' }}>
-      {loading ? (
+      {(loading || (isSubscribed && loadingUserServices)) ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress size={32} />
         </Box>
@@ -323,7 +364,7 @@ export function ServiceSubscriptionManager({
           )}
           <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
             <Typography variant="caption" color="text.secondary">
-              {rightSelected.length}/{value.length}개 선택
+              {rightSelected.length}/{currentSubscriptions.length}개 선택
             </Typography>
           </Box>
         </Paper>

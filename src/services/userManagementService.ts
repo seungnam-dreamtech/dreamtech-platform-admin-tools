@@ -8,6 +8,8 @@ import type {
   OAuthClient,
   UserFormData,
   ServiceSubscriptionChange,
+  ServiceSubscription,
+  UserServiceResponse,
   UserSearchFilter,
   ServiceSearchFilter,
   CodeGroup,
@@ -153,6 +155,27 @@ class UserManagementService {
       return users[0];
     } catch (error) {
       console.error('Failed to fetch user from API:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 사용자 서비스 가입 정보 조회
+   * 실제 API: GET /v1/management/users/{userId}/services
+   */
+  async getUserServices(userId: string): Promise<ServiceSubscription[]> {
+    try {
+      const response = await this.request<UserServiceResponse[]>(`/v1/management/users/${userId}/services`);
+      return response.map(service => ({
+        serviceId: service.service_id,
+        serviceName: service.service_name || service.service_id,
+        subscribedAt: service.subscribed_at,
+        status: service.status,
+        roles: service.roles,
+        metadata: service.metadata,
+      }));
+    } catch (error) {
+      console.error('Failed to fetch user services from API:', error);
       throw error;
     }
   }
